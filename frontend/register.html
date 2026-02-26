@@ -1,445 +1,1683 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Join MetroFlow | Create Account</title>
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="description" content="Create your MetroFlow account and start your smart metro journey today.">
+    <title>Register - MetroFlow</title>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         :root {
-            --primary-grad: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --text-dark: #2d3748;
-            --text-muted: #a0aec0;
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --card-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
         }
 
         body {
             font-family: 'Poppins', sans-serif;
-            background: var(--primary-grad);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 40px 20px;
+            padding: 1rem;
+            overflow-x: hidden;
         }
 
-        /* --- Main Card Architecture --- */
-        .auth-card {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.2);
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+
+            33% {
+                transform: translate(30px, -30px) rotate(120deg);
+            }
+
+            66% {
+                transform: translate(-30px, 30px) rotate(240deg);
+            }
+        }
+
+        /* --- Card Entrance Animation --- */
+        @keyframes cardEntrance {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.97);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Card Shimmer Loading */
+        @keyframes shimmer {
+            0% {
+                transform: translateX(-100%);
+            }
+
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        .card-shimmer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.7);
+            pointer-events: none;
             overflow: hidden;
-            width: 100%;
-            max-width: 1000px;
-            display: flex;
-            flex-direction: row;
-            min-height: 600px;
+            transition: opacity 0.5s ease;
         }
 
-        /* --- Left Side (Visuals) --- */
-        .auth-visual {
-            flex: 1;
-            /* RELIABLE BACKGROUND IMAGE (Metro Station) */
-            background: url('https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?q=80&w=1000&auto=format&fit=crop') no-repeat center center;
-            background-size: cover;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 40px;
-            color: white;
-            z-index: 1;
-            text-align: center;
-        }
-
-        /* Gradient Overlay for Text Readability */
-        .auth-visual::before {
+        .card-shimmer::after {
             content: '';
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(to top, rgba(118, 75, 162, 0.9), rgba(102, 126, 234, 0.8));
-            z-index: -1;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+            animation: shimmer 1.2s ease-in-out;
         }
 
-        .floating-img {
-            width: 220px;
-            height: auto;
-            margin-bottom: 30px;
-            filter: drop-shadow(0 15px 30px rgba(0,0,0,0.3));
+        .card-shimmer.loaded {
+            opacity: 0;
+        }
+
+        .auth-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+            width: 100%;
+            max-width: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 1;
+            animation: cardEntrance 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        @media (min-width: 375px) {
+            .auth-card {
+                max-width: 420px;
+                border-radius: 20px;
+            }
+        }
+
+        @media (min-width: 900px) {
+            .auth-card {
+                max-width: 950px;
+                flex-direction: row;
+            }
+        }
+
+        .auth-visual {
+            display: none;
+            flex: 1;
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            padding: 2rem;
+            text-align: center;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        @media (min-width: 900px) {
+            .auth-visual {
+                display: flex;
+                padding: 3rem 2rem;
+            }
+        }
+
+        .signup-hero-img {
+            width: 100%;
+            max-width: 250px;
+            margin-bottom: 1.5rem;
+            filter: drop-shadow(0 10px 20px rgba(102, 126, 234, 0.2));
             animation: floatImg 6s ease-in-out infinite;
         }
 
+        @media (min-width: 900px) {
+            .signup-hero-img {
+                max-width: 280px;
+                margin-bottom: 2rem;
+            }
+        }
+
         @keyframes floatImg {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-15px); }
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-15px);
+            }
         }
 
-        .visual-text h2 {
-            font-weight: 700;
-            margin-bottom: 10px;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
-        }
-
-        .feature-badges {
+        .auth-form-side {
+            flex: 1;
+            padding: 1.5rem;
             display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
+            flex-direction: column;
             justify-content: center;
-            margin-top: 20px;
         }
 
-        .badge-pill {
-            background: rgba(255,255,255,0.2);
-            backdrop-filter: blur(5px);
-            padding: 8px 16px;
-            border-radius: 50px;
-            font-size: 0.85rem;
-            border: 1px solid rgba(255,255,255,0.3);
+        @media (min-width: 375px) {
+            .auth-form-side {
+                padding: 2rem 1.5rem;
+            }
+        }
+
+        @media (min-width: 576px) {
+            .auth-form-side {
+                padding: 2.5rem 2rem;
+            }
+        }
+
+        @media (min-width: 900px) {
+            .auth-form-side {
+                padding: 3rem;
+                max-height: 90vh;
+                overflow-y: auto;
+            }
+        }
+
+        .logo-circle {
+            width: 50px;
+            height: 50px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin: 0 auto 1.5rem;
+        }
+
+        @media (min-width: 900px) {
+            .logo-circle {
+                width: 60px;
+                height: 60px;
+            }
+        }
+
+        .form-header h2 {
+            font-weight: 800;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+            font-size: 1.5rem;
+        }
+
+        @media (min-width: 375px) {
+            .form-header h2 {
+                font-size: 1.75rem;
+            }
+        }
+
+        @media (min-width: 576px) {
+            .form-header h2 {
+                font-size: 2rem;
+            }
+        }
+
+        .form-floating {
+            margin-bottom: 1rem;
+        }
+
+        .form-floating>.form-control {
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            height: 52px;
+            padding-left: 1rem;
+            font-size: 16px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        @media (min-width: 576px) {
+            .form-floating>.form-control {
+                border-radius: 12px;
+                height: 55px;
+            }
+        }
+
+        .form-floating>.form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-floating>label {
+            padding-left: 1rem;
+        }
+
+        /* --- Inline Validation Styles --- */
+        .form-control.is-valid-custom {
+            border-color: #10b981 !important;
+        }
+
+        .form-control.is-invalid-custom {
+            border-color: #ef4444 !important;
+        }
+
+        .validation-feedback {
+            font-size: 0.78rem;
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            min-height: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .validation-feedback.valid {
+            color: #10b981;
+        }
+
+        .validation-feedback.invalid {
+            color: #ef4444;
+        }
+
+        .validation-feedback.checking {
+            color: #f59e0b;
+        }
+
+        .password-toggle {
+            position: absolute;
+            top: 50%;
+            right: 0.75rem;
+            transform: translateY(-50%);
+            cursor: pointer;
+            z-index: 5;
+            color: #a0aec0;
+            font-size: 1rem;
+            padding: 0.5rem;
+            min-width: 44px;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @media (min-width: 576px) {
+            .password-toggle {
+                right: 1rem;
+            }
+        }
+
+        /* Password Requirements Checklist */
+        .pw-requirements {
+            list-style: none;
+            padding: 0;
+            margin: 0.6rem 0 0.3rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px 12px;
+        }
+
+        .pw-requirements li {
+            font-size: 0.73rem;
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 3px 0;
+            transition: color 0.3s ease;
+        }
+
+        .pw-requirements li i {
+            font-size: 0.65rem;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            border: 1.5px solid #cbd5e1;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .pw-requirements li.met {
+            color: #10b981;
+        }
+
+        .pw-requirements li.met i {
+            background: #10b981;
+            border-color: #10b981;
+            color: white;
+        }
+
+        .btn-register {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 1rem;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+            min-height: 50px;
+        }
+
+        @media (min-width: 576px) {
+            .btn-register {
+                font-size: 1.1rem;
+                padding: 1.25rem;
+                border-radius: 12px;
+                min-height: 55px;
+            }
+        }
+
+        .btn-register:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-register:disabled {
+            opacity: 0.7;
+            transform: none;
+            cursor: not-allowed;
+        }
+
+        @media (max-width: 575px) {
+            .modal-dialog {
+                margin: 0.5rem;
+            }
+
+            .modal-body {
+                padding: 1rem !important;
+            }
+
+            .modal-body h5 {
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-height: 500px) and (orientation: landscape) {
+            body {
+                padding: 0.5rem;
+            }
+
+            .auth-form-side {
+                padding: 1rem;
+            }
+
+            .form-floating {
+                margin-bottom: 0.75rem;
+            }
+        }
+
+        /* --- Step Progress Indicator --- */
+        .step-progress {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0;
+            margin-bottom: 1.5rem;
+            padding: 0 10px;
+        }
+
+        .step-item {
             display: flex;
             align-items: center;
             gap: 8px;
         }
 
-        /* --- Right Side (Form) --- */
-        .auth-form-side {
-            flex: 1;
-            padding: 50px;
+        .step-circle {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+            border: 2px solid #e2e8f0;
+            color: #a0aec0;
+            background: white;
+            transition: all 0.4s ease;
+            flex-shrink: 0;
+        }
+
+        .step-circle.active {
+            background: var(--primary-gradient);
+            border-color: #667eea;
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .step-circle.done {
+            background: #10b981;
+            border-color: #10b981;
+            color: white;
+        }
+
+        .step-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #a0aec0;
+            transition: color 0.3s;
+        }
+
+        .step-label.active {
+            color: #667eea;
+        }
+
+        .step-label.done {
+            color: #10b981;
+        }
+
+        .step-line {
+            width: 40px;
+            height: 2px;
+            background: #e2e8f0;
+            margin: 0 8px;
+            transition: background 0.4s;
+        }
+
+        .step-line.done {
+            background: #10b981;
+        }
+
+        /* Step sections */
+        .step-section {
+            display: none;
+            animation: fadeStepIn 0.4s ease;
+        }
+
+        .step-section.active {
+            display: block;
+        }
+
+        @keyframes fadeStepIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .btn-step-back {
+            background: none;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 0.8rem 1.5rem;
+            color: #718096;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-step-back:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        /* --- Success Overlay (Matching Login Page) --- */
+        @keyframes checkDraw {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+
+        @keyframes circleScale {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+
+            60% {
+                transform: scale(1.1);
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .success-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.97);
+            z-index: 9999;
             display: flex;
             flex-direction: column;
+            align-items: center;
             justify-content: center;
-            background: white;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
         }
 
-        .form-header {
-            margin-bottom: 30px;
+        .success-overlay.show {
+            opacity: 1;
+            pointer-events: all;
         }
 
-        .form-header h2 {
-            font-weight: 800;
-            color: var(--text-dark);
-            letter-spacing: -0.5px;
+        .success-overlay svg {
+            animation: circleScale 0.5s ease forwards;
         }
 
-        /* Modern Floating Inputs */
-        .form-floating > .form-control {
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            height: 55px;
-        }
-        
-        .form-floating > .form-control:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        .success-overlay .check-path {
+            stroke-dasharray: 50;
+            stroke-dashoffset: 50;
+            animation: checkDraw 0.4s ease 0.5s forwards;
         }
 
-        .form-floating > label {
-            color: var(--text-muted);
+        .success-overlay h3 {
+            margin-top: 20px;
+            font-weight: 700;
+            color: #1e293b;
+            opacity: 0;
+            animation: circleScale 0.3s ease 0.7s forwards;
         }
 
-        /* Password Strength Meter */
-        .password-strength-container {
-            margin-top: 5px;
-            margin-bottom: 20px;
+        .success-overlay p {
+            color: #64748b;
+            font-size: 0.9rem;
+            opacity: 0;
+            animation: circleScale 0.3s ease 0.85s forwards;
         }
 
-        .strength-bars {
-            display: flex;
-            gap: 3px;
-            height: 4px;
-            margin-bottom: 5px;
-        }
-
-        .bar {
-            flex: 1;
-            background: #edf2f7;
-            border-radius: 2px;
-            transition: background 0.3s ease;
-        }
-
-        .strength-label {
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-align: right;
-            display: block;
+        /* --- Character counter --- */
+        .char-counter {
+            font-size: 0.72rem;
             color: #a0aec0;
-            transition: color 0.3s ease;
-        }
-
-        /* Action Button */
-        .btn-register {
-            background: var(--primary-grad);
-            color: white;
-            border: none;
-            width: 100%;
-            padding: 15px;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 1rem;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
-        }
-
-        .btn-register:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 15px 30px rgba(102, 126, 234, 0.4);
-            color: white;
-        }
-
-        /* Mobile Responsive */
-        @media (max-width: 900px) {
-            .auth-card {
-                flex-direction: column;
-                height: auto;
-                min-height: auto;
-            }
-            .auth-visual {
-                padding: 40px;
-                min-height: 300px;
-            }
-            .auth-form-side {
-                padding: 30px;
-            }
+            text-align: right;
+            margin-top: 2px;
         }
     </style>
+    <link rel="stylesheet" href="css/responsive.css">
 </head>
+
 <body>
 
-    <div class="auth-card" data-aos="zoom-in" data-aos-duration="800">
-        
+    <div class="particles" id="particles"></div>
+
+    <div class="auth-card">
+
+        <div class="card-shimmer" id="cardShimmer"></div>
+
         <div class="auth-visual">
-            <img src="https://cdn-icons-png.flaticon.com/512/6108/6108479.png" 
-                 alt="Booking App" class="floating-img">
+            <div class="logo-circle">
+                <i class="fas fa-train text-primary fs-3"></i>
+            </div>
+
+            <img src="https://img.freepik.com/free-vector/sign-up-concept-illustration_114360-7885.jpg" alt="Sign Up"
+                class="signup-hero-img" loading="lazy">
 
             <div class="visual-text">
-                <h2>Easy Booking</h2>
-                <p class="opacity-75 mb-4">Create your MetroFlow account to unlock smart ticketing, wallet features, and instant travel history.</p>
-                
-                <div class="feature-badges">
-                    <div class="badge-pill"><i class="fas fa-mobile-alt"></i> Mobile First</div>
-                    <div class="badge-pill"><i class="fas fa-qrcode"></i> Instant QR</div>
-                    <div class="badge-pill"><i class="fas fa-history"></i> Travel Logs</div>
-                </div>
+                <h3 class="mb-2">Join MetroFlow!</h3>
+                <p class="text-muted small">
+                    Create your account and start your smart journey
+                </p>
             </div>
         </div>
 
         <div class="auth-form-side">
-            <div class="form-header">
+            <div class="d-block d-lg-none text-center">
+                <div class="logo-circle">
+                    <i class="fas fa-train text-primary fs-4"></i>
+                </div>
+            </div>
+
+            <div class="form-header mb-3 mb-sm-4 text-center text-lg-start">
                 <h2>Create Account</h2>
-                <p class="text-muted">Start your journey in seconds.</p>
+                <p class="text-muted mb-0">Fill in your details to get started</p>
             </div>
 
             <div id="alertContainer"></div>
 
+            <!-- Step Progress Indicator -->
+            <div class="step-progress">
+                <div class="step-item">
+                    <div class="step-circle active" id="stepCircle1">1</div>
+                    <span class="step-label active" id="stepLabel1">Account</span>
+                </div>
+                <div class="step-line" id="stepLine1"></div>
+                <div class="step-item">
+                    <div class="step-circle" id="stepCircle2">2</div>
+                    <span class="step-label" id="stepLabel2">Security</span>
+                </div>
+                <div class="step-line" id="stepLine2"></div>
+                <div class="step-item">
+                    <div class="step-circle" id="stepCircle3">3</div>
+                    <span class="step-label" id="stepLabel3">Done</span>
+                </div>
+            </div>
+
             <form id="registerForm">
-                <div class="form-floating mb-3">
-                    <input type="text" class="form-control" id="username" placeholder="johndoe" required minlength="3">
-                    <label for="username">Username</label>
-                </div>
-
-                <div class="form-floating mb-1 position-relative">
-                    <input type="password" class="form-control" id="password" placeholder="Password" required>
-                    <label for="password">Password</label>
-                    <i class="fas fa-eye position-absolute top-50 end-0 translate-middle-y me-3 text-muted" 
-                       style="cursor: pointer; z-index: 5;" onclick="togglePass('password', this)"></i>
-                </div>
-
-                <div class="password-strength-container">
-                    <div class="strength-bars">
-                        <div class="bar" id="bar1"></div>
-                        <div class="bar" id="bar2"></div>
-                        <div class="bar" id="bar3"></div>
-                        <div class="bar" id="bar4"></div>
+                <!-- Step 1: Account -->
+                <div class="step-section active" id="step1">
+                    <div class="form-floating">
+                        <input type="text" class="form-control" id="username" placeholder="Username" required
+                            autocomplete="username" maxlength="12" oninput="validateUsername()">
+                        <label for="username">
+                            <i class="fas fa-user me-2 text-muted"></i>Username
+                        </label>
                     </div>
-                    <span class="strength-label" id="strengthText">Enter Password</span>
+                    <div class="d-flex justify-content-between">
+                        <div class="validation-feedback" id="usernameFeedback"></div>
+                        <div class="char-counter" id="usernameCounter">0 / 12</div>
+                    </div>
+
+                    <div class="form-floating mt-2">
+                        <input type="email" class="form-control" id="email" placeholder="Email (optional)"
+                            autocomplete="email" oninput="validateEmail()">
+                        <label for="email">
+                            <i class="fas fa-envelope me-2 text-muted"></i>Email (optional)
+                        </label>
+                    </div>
+                    <div class="validation-feedback" id="emailFeedback"></div>
+
+                    <button type="button" class="btn-register mb-3 mt-2" onclick="goToStep(2)">
+                        Continue <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+
+                    <div class="text-center">
+                        <p class="text-muted small mb-0">
+                            Already have an account?
+                            <a href="login.html" class="fw-bold text-primary text-decoration-none">Sign In</a>
+                        </p>
+                    </div>
                 </div>
 
-                <div class="form-floating mb-4">
-                    <input type="password" class="form-control" id="confirmPassword" placeholder="Confirm Password" required>
-                    <label for="confirmPassword">Confirm Password</label>
+                <!-- Step 2: Security -->
+                <div class="step-section" id="step2">
+                    <div class="form-floating position-relative">
+                        <input type="password" class="form-control" id="password" placeholder="Password" required
+                            autocomplete="new-password" maxlength="15" oninput="checkPasswordStrength()">
+                        <label for="password">
+                            <i class="fas fa-lock me-2 text-muted"></i>Password
+                        </label>
+                        <i class="fas fa-eye password-toggle" onclick="togglePassword('password')" id="toggleIcon1"></i>
+                    </div>
+                    <ul class="pw-requirements" id="pwRequirements">
+                        <li id="req-length"><i class="fas fa-circle"></i> 6+ characters</li>
+                        <li id="req-upper"><i class="fas fa-circle"></i> Uppercase</li>
+                        <li id="req-lower"><i class="fas fa-circle"></i> Lowercase</li>
+                        <li id="req-number"><i class="fas fa-circle"></i> Number</li>
+                        <li id="req-special"><i class="fas fa-circle"></i> Special char</li>
+                        <li id="req-counter" style="color:#a0aec0;justify-content:flex-end;"><span
+                                id="passwordCounter">0 / 15</span></li>
+                    </ul>
+
+                    <div class="form-floating position-relative">
+                        <input type="password" class="form-control" id="confirmPassword" placeholder="Confirm Password"
+                            required autocomplete="new-password" maxlength="15" oninput="checkPasswordMatch()">
+                        <label for="confirmPassword">
+                            <i class="fas fa-lock me-2 text-muted"></i>Confirm Password
+                        </label>
+                        <i class="fas fa-eye password-toggle" onclick="togglePassword('confirmPassword')"
+                            id="toggleIcon2"></i>
+                    </div>
+                    <div class="validation-feedback" id="confirmFeedback"></div>
+
+                    <div class="form-check mb-3 mt-2">
+                        <input class="form-check-input" type="checkbox" id="termsCheck" required>
+                        <label class="form-check-label text-muted small" for="termsCheck">
+                            I agree to the
+                            <a href="#" class="text-decoration-none text-primary fw-bold" data-bs-toggle="modal"
+                                data-bs-target="#termsModal">
+                                Terms of Service
+                            </a>
+                        </label>
+                    </div>
+
+                    <div class="d-flex gap-2 mb-3">
+                        <button type="button" class="btn-step-back" onclick="goToStep(1)">
+                            <i class="fas fa-arrow-left me-1"></i> Back
+                        </button>
+                        <button type="submit" class="btn-register" id="registerBtn" style="flex: 1;">
+                            <span id="btnText">
+                                Create Account <i class="fas fa-arrow-right ms-2"></i>
+                            </span>
+                            <div id="btnSpinner" class="spinner-border spinner-border-sm text-white d-none"></div>
+                        </button>
+                    </div>
                 </div>
 
-                <div class="form-check mb-3">
-    <input class="form-check-input" type="checkbox" id="termsCheck" required>
-    <label class="form-check-label text-muted small" for="termsCheck">
-        I agree to the 
-        <a href="#" class="text-decoration-none text-primary fw-bold" data-bs-toggle="modal" data-bs-target="#termsModal">
-            Terms of Service
-        </a>
-    </label>
-</div>
-
-                <button type="submit" class="btn-register" id="registerBtn">
-                    <span id="btnText">Create Account <i class="fas fa-arrow-right ms-2"></i></span>
-                    <div id="btnSpinner" class="spinner-border spinner-border-sm text-white d-none"></div>
-                </button>
-
-                <div class="text-center mt-4">
-                    <p class="text-muted small">Already have an account? <a href="login.html" class="fw-bold text-primary text-decoration-none">Log In</a></p>
+                <!-- Step 3: Done (dynamically shown) -->
+                <div class="step-section" id="step3">
+                    <div class="text-center py-4">
+                        <div
+                            style="width:70px;height:70px;border-radius:50%;background:#10b981;display:grid;place-items:center;margin:0 auto 16px;">
+                            <i class="fas fa-check fa-2x text-white"></i>
+                        </div>
+                        <h4 class="fw-bold mb-2">Account Created!</h4>
+                        <p class="text-muted small">Redirecting to login...</p>
+                    </div>
                 </div>
             </form>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-    <script src="js/app.js"></script>
-    
-    <script>
-        AOS.init();
+    <!-- Success Overlay (Matching Login Page) -->
+    <div class="success-overlay" id="successOverlay">
+        <svg width="80" height="80" viewBox="0 0 80 80">
+            <circle cx="40" cy="40" r="36" fill="none" stroke="#48bb78" stroke-width="4" />
+            <path class="check-path" d="M24 42 L34 52 L56 30" fill="none" stroke="#48bb78" stroke-width="4"
+                stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        <h3 id="successTitle">Account Created!</h3>
+        <p id="successSubtitle">Redirecting to login...</p>
+    </div>
 
-        function togglePass(id, icon) {
-            const input = document.getElementById(id);
-            if (input.type === 'password') {
-                input.type = 'text';
-                icon.classList.replace('fa-eye', 'fa-eye-slash');
-            } else {
-                input.type = 'password';
-                icon.classList.replace('fa-eye-slash', 'fa-eye');
+    <!-- Terms Modal - Professional Design -->
+    <style>
+        .terms-modal .modal-content {
+            border: none;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .terms-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 1.5rem 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .terms-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -30%;
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 50%;
+        }
+
+        .terms-header .modal-title {
+            color: white;
+            font-weight: 700;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .terms-header .btn-close {
+            filter: invert(1);
+            opacity: 0.8;
+        }
+
+        .terms-header .effective-date {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.8rem;
+            margin-top: 4px;
+        }
+
+        .terms-body {
+            padding: 1.5rem 2rem;
+            max-height: 60vh;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(102, 126, 234, 0.3) transparent;
+        }
+
+        .terms-section {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .terms-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .terms-section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 1rem;
+            color: #1a1a2e;
+            margin-bottom: 0.75rem;
+        }
+
+        .terms-section-title .section-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .terms-section p,
+        .terms-section li {
+            font-size: 0.85rem;
+            color: #555;
+            line-height: 1.7;
+        }
+
+        .terms-section ul {
+            padding-left: 1.2rem;
+            margin-bottom: 0;
+        }
+
+        .terms-section ul li {
+            margin-bottom: 4px;
+        }
+
+        .terms-info-box {
+            background: linear-gradient(135deg, #f8f9ff 0%, #f0f4ff 100%);
+            border-left: 3px solid #667eea;
+            border-radius: 0 8px 8px 0;
+            padding: 12px 16px;
+            margin-top: 10px;
+        }
+
+        .terms-info-box p {
+            margin: 0;
+            font-size: 0.82rem;
+            color: #555;
+        }
+
+        .terms-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 10px;
+            font-size: 0.83rem;
+        }
+
+        .terms-table th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 10px 14px;
+            font-weight: 600;
+            text-align: left;
+        }
+
+        .terms-table td {
+            padding: 9px 14px;
+            color: #555;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .terms-table tr:nth-child(even) td {
+            background: #fafbff;
+        }
+
+        .terms-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .terms-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-green {
+            background: #e6f9ef;
+            color: #10b981;
+        }
+
+        .badge-orange {
+            background: #fff4e6;
+            color: #f59e0b;
+        }
+
+        .badge-red {
+            background: #fde8e8;
+            color: #ef4444;
+        }
+
+        .terms-footer {
+            background: #fafbff;
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .terms-footer .contact-text {
+            font-size: 0.78rem;
+            color: #888;
+        }
+
+        .terms-footer .btn-accept {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 28px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .terms-footer .btn-accept:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+        }
+    </style>
+
+    <div class="modal fade terms-modal" id="termsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <!-- Header -->
+                <div class="terms-header">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h5 class="modal-title">
+                                <i class="fas fa-file-contract"></i> Terms of Service
+                            </h5>
+                            <div class="effective-date">Effective: February 1, 2026 · MetroFlow v2.0</div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                </div>
+
+                <!-- Body -->
+                <div class="terms-body">
+
+                    <!-- 1. Acceptance -->
+                    <div class="terms-section">
+                        <div class="terms-section-title">
+                            <div class="section-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                                <i class="fas fa-handshake"></i>
+                            </div>
+                            1. Acceptance of Terms
+                        </div>
+                        <p>By registering for a MetroFlow account, you acknowledge that you have read, understood, and
+                            agree to be bound by these Terms of Service. MetroFlow reserves the right to modify these
+                            terms at any time with prior notice.</p>
+                    </div>
+
+                    <!-- 2. Account & Security -->
+                    <div class="terms-section">
+                        <div class="terms-section-title">
+                            <div class="section-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+                                <i class="fas fa-user-shield"></i>
+                            </div>
+                            2. Account &amp; Security
+                        </div>
+                        <ul>
+                            <li>Username must be at least <strong>3 characters</strong> long and unique across the
+                                platform.</li>
+                            <li>Password must be at least <strong>6 characters</strong>. A combination of uppercase,
+                                lowercase, numbers and symbols is recommended.</li>
+                            <li>You are solely responsible for maintaining the confidentiality of your credentials.</li>
+                            <li>Each account is entitled to one MetroCard and one digital wallet.</li>
+                        </ul>
+                    </div>
+
+                    <!-- 3. Ticketing Rules -->
+                    <div class="terms-section">
+                        <div class="terms-section-title">
+                            <div class="section-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                                <i class="fas fa-ticket-alt"></i>
+                            </div>
+                            3. Ticketing &amp; Booking Rules
+                        </div>
+                        <ul>
+                            <li>Each ticket is valid only for the <strong>selected date, route, and number of
+                                    passengers</strong>.</li>
+                            <li>A maximum of <strong>6 passengers</strong> can be booked per ticket.</li>
+                            <li>QR codes are generated upon successful booking and must be scanned at entry and exit
+                                gates.</li>
+                            <li>Tickets can be downloaded as <strong>PDF</strong> for offline access.</li>
+                            <li>Travel date must be <strong>today or a future date</strong>; past-date bookings are not
+                                allowed.</li>
+                            <li>Source and destination stations must be different.</li>
+                        </ul>
+                    </div>
+
+                    <!-- 4. Fare Calculation -->
+                    <div class="terms-section">
+                        <div class="terms-section-title">
+                            <div class="section-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                                <i class="fas fa-calculator"></i>
+                            </div>
+                            4. Fare Calculation &amp; Peak Hours
+                        </div>
+                        <p>Fares are dynamically calculated based on station-to-station distance:</p>
+                        <table class="terms-table">
+                            <thead>
+                                <tr>
+                                    <th>Component</th>
+                                    <th>Details</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Base Fare</td>
+                                    <td>₹10 (flat)</td>
+                                </tr>
+                                <tr>
+                                    <td>Per Kilometre</td>
+                                    <td>₹5/km</td>
+                                </tr>
+                                <tr>
+                                    <td>Minimum Fare</td>
+                                    <td>₹10</td>
+                                </tr>
+                                <tr>
+                                    <td>Peak Hour Surge</td>
+                                    <td><strong>+25%</strong> surcharge applied</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="terms-info-box">
+                            <p><i class="fas fa-clock text-primary me-1"></i> <strong>Peak Hours:</strong> 8:00 AM –
+                                11:00 AM &amp; 5:00 PM – 7:00 PM. A 25% surge is automatically applied to the base fare
+                                during these hours.</p>
+                        </div>
+                    </div>
+
+                    <!-- 5. Refund & Cancellation -->
+                    <div class="terms-section">
+                        <div class="terms-section-title">
+                            <div class="section-icon" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+                                <i class="fas fa-undo-alt"></i>
+                            </div>
+                            5. Cancellation &amp; Refund Policy
+                        </div>
+                        <p>Tickets may be cancelled before the travel date. Refunds are credited to your MetroFlow
+                            wallet:</p>
+                        <table class="terms-table">
+                            <thead>
+                                <tr>
+                                    <th>Cancellation Window</th>
+                                    <th>Refund</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>More than 24 hours before travel</td>
+                                    <td><strong>80%</strong> of fare</td>
+                                    <td><span class="terms-badge badge-green">Best Rate</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Less than 24 hours before travel</td>
+                                    <td><strong>50%</strong> of fare</td>
+                                    <td><span class="terms-badge badge-orange">Partial</span></td>
+                                </tr>
+                                <tr>
+                                    <td>After travel date / Used ticket</td>
+                                    <td><strong>0%</strong> — No refund</td>
+                                    <td><span class="terms-badge badge-red">Non-refundable</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 6. Wallet -->
+                    <div class="terms-section">
+                        <div class="terms-section-title">
+                            <div class="section-icon" style="background: linear-gradient(135deg, #06b6d4, #0891b2);">
+                                <i class="fas fa-wallet"></i>
+                            </div>
+                            6. Digital Wallet
+                        </div>
+                        <ul>
+                            <li>Every user receives a <strong>digital wallet</strong> upon registration with an initial
+                                balance of ₹0.</li>
+                            <li>Wallet can be recharged with any positive amount.</li>
+                            <li>Ticket fares are <strong>automatically deducted</strong> from the wallet at the time of
+                                booking.</li>
+                            <li>Insufficient wallet balance will prevent ticket booking — please recharge beforehand.
+                            </li>
+                            <li>All wallet transactions (recharges, deductions, refunds) are recorded in your
+                                transaction history.</li>
+                        </ul>
+                    </div>
+
+                    <!-- 7. MetroCard -->
+                    <div class="terms-section">
+                        <div class="terms-section-title">
+                            <div class="section-icon" style="background: linear-gradient(135deg, #f97316, #ea580c);">
+                                <i class="fas fa-credit-card"></i>
+                            </div>
+                            7. MetroCard
+                        </div>
+                        <ul>
+                            <li>Each user can issue <strong>one virtual MetroCard</strong> linked to their account.</li>
+                            <li>MetroCard tracks your total trips and usage statistics.</li>
+                            <li>Auto-recharge alert is triggered when the wallet balance falls below
+                                <strong>₹50</strong>.
+                            </li>
+                            <li>MetroCard cannot be transferred to another user.</li>
+                        </ul>
+                    </div>
+
+                    <!-- 8. Loyalty Points -->
+                    <div class="terms-section">
+                        <div class="terms-section-title">
+                            <div class="section-icon" style="background: linear-gradient(135deg, #10b981, #34d399);">
+                                <i class="fas fa-star"></i>
+                            </div>
+                            8. Green Loyalty Points
+                        </div>
+                        <ul>
+                            <li>Earn <strong>1 Green Point for every ₹2 spent</strong> on ticket bookings.</li>
+                            <li>Points are automatically credited upon successful booking.</li>
+                            <li>Points balance is visible on your dashboard.</li>
+                        </ul>
+                        <div class="terms-info-box">
+                            <p><i class="fas fa-leaf text-success me-1"></i> <strong>Example:</strong> A ₹100 ticket
+                                earns you 50 Green Points automatically.</p>
+                        </div>
+                    </div>
+
+                    <!-- 9. Privacy & Data -->
+                    <div class="terms-section">
+                        <div class="terms-section-title">
+                            <div class="section-icon" style="background: linear-gradient(135deg, #6366f1, #4f46e5);">
+                                <i class="fas fa-lock"></i>
+                            </div>
+                            9. Privacy &amp; Data Protection
+                        </div>
+                        <ul>
+                            <li>Passwords are securely hashed using <strong>SHA-256</strong> encryption before storage.
+                            </li>
+                            <li>Session-based authentication is used to protect your account.</li>
+                            <li>Personal data is stored in a secure MySQL database and is never shared with third
+                                parties.</li>
+                            <li>You may change your password at any time from the dashboard settings.</li>
+                        </ul>
+                    </div>
+
+                    <!-- 10. Limitation -->
+                    <div class="terms-section">
+                        <div class="terms-section-title">
+                            <div class="section-icon" style="background: linear-gradient(135deg, #64748b, #475569);">
+                                <i class="fas fa-gavel"></i>
+                            </div>
+                            10. Limitation of Liability
+                        </div>
+                        <p>MetroFlow is a <strong>Semester 3 Information Technology</strong> academic project developed
+                            for educational purposes. While designed with real-world functionality, it is not a
+                            commercial transit system. The developers are not liable for any service disruptions, data
+                            inconsistencies, or financial discrepancies arising from use of this platform.</p>
+                    </div>
+
+                </div>
+
+                <!-- Footer -->
+                <div class="terms-footer">
+                    <div class="contact-text">
+                        <i class="fas fa-envelope me-1"></i> support@metroflow.com &nbsp;·&nbsp;
+                        <i class="fas fa-phone me-1"></i> 1800-METRO-FLOW
+                    </div>
+                    <button type="button" class="btn-accept" id="termsAcceptBtn" data-bs-dismiss="modal">
+                        I Understand <i class="fas fa-check ms-1"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- app.js with fallback (matching login page pattern) -->
+    <script>
+        // Fallback API object in case app.js is missing or fails
+        if (typeof API === 'undefined') {
+            window.API = {
+                checkAuth: async () => null,
+                call: async (endpoint, method, data) => {
+                    console.log(`Mock API Call to ${endpoint}`, data);
+                    return new Promise(resolve => {
+                        setTimeout(() => resolve({ success: true }), 800);
+                    });
+                }
+            };
+        }
+    </script>
+    <script src="js/app.js" onerror="console.warn('app.js not found - using mock API')"></script>
+
+    <script>
+        // ===========================
+        // PARTICLES
+        // ===========================
+        function createParticles() {
+            const container = document.getElementById('particles');
+            const particleCount = window.innerWidth < 768 ? 8 : 15;
+            container.innerHTML = '';
+
+            for (let i = 0; i < particleCount; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                const size = Math.random() * 40 + 10;
+                p.style.width = `${size}px`;
+                p.style.height = `${size}px`;
+                p.style.left = `${Math.random() * 100}%`;
+                p.style.top = `${Math.random() * 100}%`;
+                p.style.opacity = Math.random() * 0.2;
+                p.style.animationDelay = `${Math.random() * 5}s`;
+                p.style.animationDuration = `${Math.random() * 10 + 10}s`;
+                container.appendChild(p);
             }
         }
 
-        // Logic for Dynamic Strength Text
-        document.getElementById('password').addEventListener('input', function() {
-            const val = this.value;
-            const bars = [
-                document.getElementById('bar1'),
-                document.getElementById('bar2'),
-                document.getElementById('bar3'),
-                document.getElementById('bar4')
-            ];
-            const textEl = document.getElementById('strengthText');
-            
-            // Reset
-            bars.forEach(b => b.style.background = '#edf2f7');
-            
-            // Score Calculation
-            let score = 0;
-            if(val.length > 0) score = 1;
-            if(val.length >= 6) score++;
-            if(val.length >= 8 && /[0-9]/.test(val)) score++;
-            if(val.length >= 10 && /[^A-Za-z0-9]/.test(val)) score++;
+        createParticles();
+        window.addEventListener('resize', createParticles);
 
-            // Config for Text and Color
-            const configs = [
-                { color: '#a0aec0', text: 'Enter Password' }, 
-                { color: '#ef4444', text: 'Too Short' }, 
-                { color: '#f59e0b', text: 'Weak' },      
-                { color: '#3b82f6', text: 'Good' },      
-                { color: '#10b981', text: 'Strong' }     
-            ];
-
-            const current = configs[score] || configs[0];
-            
-            // Update Text
-            textEl.textContent = current.text;
-            textEl.style.color = current.color;
-
-            // Fill Bars
-            for(let i=0; i<4; i++) {
-                if (i < score) {
-                    bars[i].style.background = current.color;
-                }
+        // Fade out loading shimmer
+        window.addEventListener('load', () => {
+            const shimmer = document.getElementById('cardShimmer');
+            if (shimmer) {
+                shimmer.classList.add('loaded');
+                setTimeout(() => shimmer.remove(), 600);
             }
         });
 
+        // ===========================
+        // PASSWORD TOGGLE
+        // ===========================
+        function togglePassword(fieldId) {
+            const input = document.getElementById(fieldId);
+            const icon = document.getElementById(fieldId === 'password' ? 'toggleIcon1' : 'toggleIcon2');
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        // ===========================
+        // REAL-TIME USERNAME VALIDATION
+        // ===========================
+        let usernameCheckTimer = null;
+
+        function validateUsername() {
+            const input = document.getElementById('username');
+            const feedback = document.getElementById('usernameFeedback');
+            const counter = document.getElementById('usernameCounter');
+            const val = input.value.trim();
+
+            // Update counter
+            counter.textContent = `${val.length} / 12`;
+
+            // Clear previous timer
+            if (usernameCheckTimer) clearTimeout(usernameCheckTimer);
+
+            if (val.length === 0) {
+                input.classList.remove('is-valid-custom', 'is-invalid-custom');
+                feedback.innerHTML = '';
+                feedback.className = 'validation-feedback';
+                return;
+            }
+
+            if (val.length < 3) {
+                input.classList.remove('is-valid-custom');
+                input.classList.add('is-invalid-custom');
+                feedback.innerHTML = '<i class="fas fa-times-circle"></i> Minimum 3 characters';
+                feedback.className = 'validation-feedback invalid';
+                return;
+            }
+
+            if (!/^[a-zA-Z0-9@_$]+$/.test(val)) {
+                input.classList.remove('is-valid-custom');
+                input.classList.add('is-invalid-custom');
+                feedback.innerHTML = '<i class="fas fa-times-circle"></i> Only letters, numbers, @, _ and $';
+                feedback.className = 'validation-feedback invalid';
+                return;
+            }
+
+            // Debounced availability check
+            feedback.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
+            feedback.className = 'validation-feedback checking';
+
+            usernameCheckTimer = setTimeout(async () => {
+                try {
+                    const res = await fetch(`/api/check-username/${encodeURIComponent(val)}`);
+                    const data = await res.json();
+
+                    if (data.available) {
+                        input.classList.remove('is-invalid-custom');
+                        input.classList.add('is-valid-custom');
+                        feedback.innerHTML = '<i class="fas fa-check-circle"></i> Available';
+                        feedback.className = 'validation-feedback valid';
+                    } else {
+                        input.classList.remove('is-valid-custom');
+                        input.classList.add('is-invalid-custom');
+                        feedback.innerHTML = `<i class="fas fa-times-circle"></i> ${data.reason}`;
+                        feedback.className = 'validation-feedback invalid';
+                    }
+                } catch (err) {
+                    // Network error — still allow form submission (server will validate)
+                    input.classList.remove('is-invalid-custom');
+                    input.classList.add('is-valid-custom');
+                    feedback.innerHTML = '<i class="fas fa-check-circle"></i> Looks good';
+                    feedback.className = 'validation-feedback valid';
+                }
+            }, 500);
+        }
+
+        // ===========================
+        // EMAIL VALIDATION
+        // ===========================
+        function validateEmail() {
+            const input = document.getElementById('email');
+            const feedback = document.getElementById('emailFeedback');
+            const val = input.value.trim();
+
+            if (val.length === 0) {
+                input.classList.remove('is-valid-custom', 'is-invalid-custom');
+                feedback.innerHTML = '';
+                return;
+            }
+
+            const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            if (emailRegex.test(val)) {
+                input.classList.remove('is-invalid-custom');
+                input.classList.add('is-valid-custom');
+                feedback.innerHTML = '<i class="fas fa-check-circle"></i> Valid email';
+                feedback.className = 'validation-feedback valid';
+            } else {
+                input.classList.remove('is-valid-custom');
+                input.classList.add('is-invalid-custom');
+                feedback.innerHTML = '<i class="fas fa-times-circle"></i> Invalid email format';
+                feedback.className = 'validation-feedback invalid';
+            }
+        }
+
+        // ===========================
+        // PASSWORD REQUIREMENTS CHECKER
+        // ===========================
+        function checkPasswordStrength() {
+            const password = document.getElementById('password').value;
+            const counter = document.getElementById('passwordCounter');
+            counter.textContent = `${password.length} / 15`;
+
+            const rules = [
+                { id: 'req-length', test: password.length >= 6 },
+                { id: 'req-upper', test: /[A-Z]/.test(password) },
+                { id: 'req-lower', test: /[a-z]/.test(password) },
+                { id: 'req-number', test: /[0-9]/.test(password) },
+                { id: 'req-special', test: /[^a-zA-Z0-9]/.test(password) },
+            ];
+
+            rules.forEach(rule => {
+                const el = document.getElementById(rule.id);
+                const icon = el.querySelector('i');
+                if (password.length === 0) {
+                    el.classList.remove('met');
+                    icon.className = 'fas fa-circle';
+                } else if (rule.test) {
+                    el.classList.add('met');
+                    icon.className = 'fas fa-check';
+                } else {
+                    el.classList.remove('met');
+                    icon.className = 'fas fa-circle';
+                }
+            });
+        }
+
+        // ===========================
+        // PASSWORD MATCH CHECK
+        // ===========================
+        function checkPasswordMatch() {
+            const password = document.getElementById('password').value;
+            const confirm = document.getElementById('confirmPassword').value;
+            const feedback = document.getElementById('confirmFeedback');
+            const input = document.getElementById('confirmPassword');
+
+            if (confirm.length === 0) {
+                input.classList.remove('is-valid-custom', 'is-invalid-custom');
+                feedback.innerHTML = '';
+                return;
+            }
+
+            if (password === confirm) {
+                input.classList.remove('is-invalid-custom');
+                input.classList.add('is-valid-custom');
+                feedback.innerHTML = '<i class="fas fa-check-circle"></i> Passwords match';
+                feedback.className = 'validation-feedback valid';
+            } else {
+                input.classList.remove('is-valid-custom');
+                input.classList.add('is-invalid-custom');
+                feedback.innerHTML = '<i class="fas fa-times-circle"></i> Passwords do not match';
+                feedback.className = 'validation-feedback invalid';
+            }
+        }
+
+        // ===========================
+        // TERMS MODAL — AUTO-CHECK
+        // ===========================
+        document.getElementById('termsAcceptBtn').addEventListener('click', function () {
+            document.getElementById('termsCheck').checked = true;
+        });
+
+        // ===========================
+        // STEP NAVIGATION
+        // ===========================
+        function goToStep(step) {
+            // Validate current step before advancing
+            if (step === 2) {
+                const username = document.getElementById('username').value.trim();
+                if (username.length < 3) {
+                    showAlert('Username must be at least 3 characters', 'danger');
+                    document.getElementById('username').focus();
+                    return;
+                }
+                if (!/^[a-zA-Z0-9@_$]+$/.test(username)) {
+                    showAlert('Username can only contain letters, numbers, @, _ and $', 'danger');
+                    return;
+                }
+                // Validate email if provided
+                const email = document.getElementById('email').value.trim();
+                if (email && !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
+                    showAlert('Please enter a valid email address or leave it blank', 'danger');
+                    document.getElementById('email').focus();
+                    return;
+                }
+            }
+
+            // Update step sections
+            document.querySelectorAll('.step-section').forEach(s => s.classList.remove('active'));
+            document.getElementById(`step${step}`).classList.add('active');
+
+            // Update progress indicator
+            for (let i = 1; i <= 3; i++) {
+                const circle = document.getElementById(`stepCircle${i}`);
+                const label = document.getElementById(`stepLabel${i}`);
+                circle.classList.remove('active', 'done');
+                label.classList.remove('active', 'done');
+
+                if (i < step) {
+                    circle.classList.add('done');
+                    circle.innerHTML = '<i class="fas fa-check" style="font-size:0.7rem"></i>';
+                    label.classList.add('done');
+                } else if (i === step) {
+                    circle.classList.add('active');
+                    circle.textContent = i;
+                    label.classList.add('active');
+                } else {
+                    circle.textContent = i;
+                }
+            }
+
+            // Update step lines
+            for (let i = 1; i <= 2; i++) {
+                const line = document.getElementById(`stepLine${i}`);
+                line.classList.toggle('done', i < step);
+            }
+        }
+
+        // ===========================
+        // FORM SUBMISSION
+        // ===========================
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+
             const btn = document.getElementById('registerBtn');
             const btnText = document.getElementById('btnText');
             const spinner = document.getElementById('btnSpinner');
-            
+            const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
-            const confirm = document.getElementById('confirmPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const email = document.getElementById('email').value.trim();
 
-            if (password !== confirm) {
-                showAlert('Passwords do not match', 'danger');
+            // Validation
+            if (username.length < 3 || username.length > 12) {
+                showAlert('Username must be 3–12 characters!', 'danger');
+                return;
+            }
+
+            if (!/^[a-zA-Z0-9@_$]+$/.test(username)) {
+                showAlert('Username can only contain letters, numbers, @, _ and $', 'danger');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showAlert('Passwords do not match!', 'danger');
+                return;
+            }
+
+            if (password.length < 6 || password.length > 15) {
+                showAlert('Password must be 6–15 characters!', 'danger');
+                return;
+            }
+
+            if (!document.getElementById('termsCheck').checked) {
+                showAlert('Please accept the Terms of Service', 'danger');
                 return;
             }
 
             btn.disabled = true;
-            btnText.style.opacity = '0';
+            btnText.classList.add('d-none');
             spinner.classList.remove('d-none');
 
             try {
-                const result = await API.call('/register', 'POST', { 
-                    username: document.getElementById('username').value, 
-                    password: password 
-                });
-                
+                // Hash password with SHA-256 before sending
+                const encoder = new TextEncoder();
+                const data = encoder.encode(password);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                const hashedPassword = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+                const payload = { username, password: hashedPassword };
+                if (email) payload.email = email;
+
+                const result = await API.call('/register', 'POST', payload);
+
                 if (result.success) {
-                    showAlert('Account created! Redirecting...', 'success');
-                    setTimeout(() => window.location.href = 'login.html', 1500);
+                    // Show success overlay animation (like login page)
+                    const overlay = document.getElementById('successOverlay');
+                    document.getElementById('successTitle').textContent = `Welcome, ${username}!`;
+                    document.getElementById('successSubtitle').textContent = 'Your account has been created. Redirecting to login...';
+                    overlay.classList.add('show');
+
+                    // Also advance step indicator to Done
+                    goToStep(3);
+
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 2500);
+                } else {
+                    throw new Error(result.error || 'Registration failed');
                 }
             } catch (error) {
-                showAlert(error.message || 'Registration failed', 'danger');
+                showAlert(error.message || 'Registration failed. Try again.', 'danger');
                 btn.disabled = false;
-                btnText.style.opacity = '1';
+                btnText.classList.remove('d-none');
                 spinner.classList.add('d-none');
             }
         });
 
+        // ===========================
+        // ALERT HELPER
+        // ===========================
         function showAlert(msg, type) {
             const container = document.getElementById('alertContainer');
             container.innerHTML = `
-                <div class="alert alert-${type} d-flex align-items-center border-0 shadow-sm rounded-3 mb-4">
+                <div class="alert alert-${type} d-flex align-items-center border-0 shadow-sm rounded-3 mb-3 fade show">
                     <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} me-2"></i>
                     <div>${msg}</div>
                 </div>`;
-            setTimeout(() => container.innerHTML = '', 4000);
+
+            setTimeout(() => {
+                const alert = container.querySelector('.alert');
+                if (alert) {
+                    alert.classList.remove('show');
+                    setTimeout(() => container.innerHTML = '', 300);
+                }
+            }, 4000);
         }
+
+        // Prevent accidental double-tap zoom on mobile
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', (e) => {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) {
+                e.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
     </script>
-    <div class="modal fade" id="termsModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-scrollable modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-light">
-                <h5 class="modal-title fw-bold">Terms of Service & Privacy Policy</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body px-4 py-3">
-                <h6 class="fw-bold text-uppercase text-primary mb-3">Effective Date: February 1, 2026</h6>
-                
-                <h5 class="fw-bold mt-4">1. Acceptance of Terms</h5>
-                <p class="text-muted small">By creating an account on MetroFlow, you agree to comply with these Terms of Service. These terms govern your use of our website, mobile application, and smart ticketing services.</p>
-
-                <h5 class="fw-bold mt-4">2. Ticketing & Travel Rules</h5>
-                <ul class="text-muted small">
-                    <li><strong>QR Code Validity:</strong> The generated QR code ticket is valid only for the specific travel date and route selected. It is non-transferable.</li>
-                    <li><strong>Entry/Exit:</strong> Users must scan their QR code at the entry and exit gates. Failure to scan at exit may result in a maximum fare penalty deduction from the MetroCard/Wallet.</li>
-                    <li><strong>Peak Hours:</strong> Fares may be subject to dynamic surge pricing during peak hours (08:00–10:00 and 17:00–19:00).</li>
-                </ul>
-
-                <h5 class="fw-bold mt-4">3. Refund & Cancellation Policy</h5>
-                <p class="text-muted small">Cancellations are subject to the following refund tiers based on the time of cancellation relative to the travel date:</p>
-                <ul class="text-muted small">
-                    <li><strong>> 24 Hours before travel:</strong> 80% of the fare will be refunded to your MetroFlow Wallet.</li>
-                    <li><strong>< 24 Hours before travel:</strong> 50% of the fare will be refunded.</li>
-                    <li><strong>After Travel Date:</strong> No refunds will be processed for expired tickets.</li>
-                </ul>
-
-                <h5 class="fw-bold mt-4">4. MetroCard & Wallet</h5>
-                <p class="text-muted small">The "Metro Smart Card" is a virtual prepaid instrument. Funds added to the Wallet are non-transferable to bank accounts and can only be used for MetroFlow services. Auto-recharge triggers when the balance falls below ₹50.</p>
-
-                <h5 class="fw-bold mt-4">5. User Conduct & Safety</h5>
-                <p class="text-muted small">Users are prohibited from carrying dangerous items, engaging in vandalism, or traveling without a valid ticket. MetroFlow reserves the right to suspend accounts found violating safety norms.</p>
-
-                <h5 class="fw-bold mt-4">6. Limitation of Liability</h5>
-                <p class="text-muted small">MetroFlow is not liable for delays caused by technical failures, power grid issues, or force majeure events. We strive for 99% uptime but do not guarantee uninterrupted service.</p>
-
-                <div class="alert alert-light border mt-4">
-                    <small><strong>Contact Us:</strong> For support or legal inquiries, please contact <strong>legal@metroflow.com</strong> or call our 24/7 helpline at <strong>1800-METRO-FLOW</strong>.</small>
-                </div>
-            </div>
-            <div class="modal-footer bg-light">
-                <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">I Understand</button>
-            </div>
-        </div>
-    </div>
-</div>
 </body>
+
 </html>

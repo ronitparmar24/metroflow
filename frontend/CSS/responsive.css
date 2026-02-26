@@ -1,0 +1,684 @@
+/* ========================================
+   METRO RESPONSIVE FRAMEWORK
+   Mobile-First Design for All Pages
+   ======================================== */
+
+/* === RESET & BASE === */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary: #667eea;
+    --primary-dark: #4f46e5;
+    --secondary: #764ba2;
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --info: #3b82f6;
+    --light: #f8fafc;
+    --dark: #1e293b;
+    --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+body {
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* === RESPONSIVE CONTAINER === */
+.container-fluid {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+@media (min-width: 576px) {
+    .container-fluid { padding-left: 20px; padding-right: 20px; }
+}
+
+@media (min-width: 768px) {
+    .container-fluid { padding-left: 30px; padding-right: 30px; }
+}
+
+@media (min-width: 1200px) {
+    .container-fluid { padding-left: 40px; padding-right: 40px; }
+}
+
+/* === RESPONSIVE NAVBAR === */
+.dashboard-navbar,
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1030;
+    padding: 0.75rem 0;
+}
+
+.navbar-brand {
+    font-size: 1.25rem;
+    white-space: nowrap;
+}
+
+@media (min-width: 768px) {
+    .navbar-brand { font-size: 1.5rem; }
+}
+
+/* Mobile Menu Toggle */
+.mobile-menu-toggle {
+    display: block;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+}
+
+@media (min-width: 992px) {
+    .mobile-menu-toggle { display: none; }
+}
+
+/* === RESPONSIVE SIDEBAR === */
+.sidebar {
+    position: fixed;
+    top: 70px;
+    left: 0;
+    width: 280px;
+    height: calc(100vh - 70px);
+    background: white;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    overflow-y: auto;
+    transition: transform 0.3s ease;
+    z-index: 1020;
+}
+
+/* Mobile: Hidden by default */
+@media (max-width: 991px) {
+    .sidebar {
+        transform: translateX(-100%);
+    }
+    
+    .sidebar.show {
+        transform: translateX(0);
+    }
+    
+    /* Overlay for mobile */
+    .sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 1010;
+        display: none;
+    }
+    
+    .sidebar-overlay.show {
+        display: block;
+    }
+}
+
+/* Desktop: Always visible */
+@media (min-width: 992px) {
+    .sidebar {
+        transform: translateX(0);
+    }
+}
+
+/* === RESPONSIVE MAIN CONTENT === */
+.main-content {
+    padding-top: 90px;
+    padding-left: 15px;
+    padding-right: 15px;
+    min-height: 100vh;
+    transition: margin-left 0.3s ease;
+}
+
+@media (min-width: 992px) {
+    .main-content {
+        margin-left: 280px;
+        padding-left: 30px;
+        padding-right: 30px;
+    }
+}
+
+@media (min-width: 1400px) {
+    .main-content {
+        padding-left: 40px;
+        padding-right: 40px;
+    }
+}
+
+/* === RESPONSIVE CARDS === */
+.card,
+.stat-card,
+.dashboard-card {
+    margin-bottom: 1rem;
+    width: 100%;
+}
+
+/* Mobile: Stack cards vertically */
+@media (max-width: 767px) {
+    .row > [class*='col-'] {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+}
+
+/* === RESPONSIVE GRID === */
+@media (max-width: 575px) {
+    .col-sm-6, .col-md-4, .col-md-6, .col-lg-3, .col-lg-4 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+}
+
+/* === RESPONSIVE STAT CARDS === */
+.stat-card {
+    padding: 1.25rem;
+    border-radius: 1rem;
+    min-height: 140px;
+}
+
+@media (min-width: 768px) {
+    .stat-card {
+        padding: 1.5rem;
+        min-height: 160px;
+    }
+}
+
+@media (min-width: 1200px) {
+    .stat-card {
+        padding: 2rem;
+        min-height: 180px;
+    }
+}
+
+/* === RESPONSIVE TYPOGRAPHY === */
+h1, .h1 { font-size: 1.75rem; }
+h2, .h2 { font-size: 1.5rem; }
+h3, .h3 { font-size: 1.25rem; }
+h4, .h4 { font-size: 1.1rem; }
+h5, .h5 { font-size: 1rem; }
+
+@media (min-width: 768px) {
+    h1, .h1 { font-size: 2.25rem; }
+    h2, .h2 { font-size: 1.875rem; }
+    h3, .h3 { font-size: 1.5rem; }
+    h4, .h4 { font-size: 1.25rem; }
+}
+
+@media (min-width: 1200px) {
+    h1, .h1 { font-size: 2.5rem; }
+    h2, .h2 { font-size: 2rem; }
+}
+
+/* === RESPONSIVE BUTTONS === */
+.btn {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.9rem;
+}
+
+@media (min-width: 768px) {
+    .btn {
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+    }
+}
+
+.btn-block-mobile {
+    width: 100%;
+}
+
+@media (min-width: 576px) {
+    .btn-block-mobile {
+        width: auto;
+    }
+}
+
+/* === RESPONSIVE TABLES === */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 767px) {
+    .table {
+        font-size: 0.875rem;
+    }
+    
+    .table th,
+    .table td {
+        padding: 0.5rem;
+    }
+}
+
+/* === RESPONSIVE FORMS === */
+.form-control {
+    font-size: 1rem;
+    padding: 0.75rem;
+}
+
+@media (max-width: 575px) {
+    .form-control {
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+}
+
+/* Form Groups - Stack on mobile */
+@media (max-width: 767px) {
+    .row.g-3 > * {
+        margin-bottom: 1rem;
+    }
+}
+
+/* === RESPONSIVE MODALS === */
+@media (max-width: 575px) {
+    .modal-dialog {
+        margin: 0.5rem;
+    }
+    
+    .modal-content {
+        border-radius: 1rem;
+    }
+}
+
+/* === RESPONSIVE AUTH PAGES (Login/Register) === */
+.auth-card {
+    width: 100%;
+    max-width: 450px;
+    margin: 1rem;
+}
+
+@media (min-width: 768px) {
+    .auth-card {
+        max-width: 900px;
+    }
+}
+
+@media (max-width: 767px) {
+    .auth-visual {
+        display: none !important; /* Hide visual on mobile */
+    }
+    
+    .auth-form-side {
+        padding: 2rem 1.5rem !important;
+    }
+}
+
+/* === RESPONSIVE CHARTS === */
+canvas {
+    max-width: 100%;
+    height: auto !important;
+}
+
+.chart-container {
+    position: relative;
+    height: 250px;
+    width: 100%;
+}
+
+@media (min-width: 768px) {
+    .chart-container {
+        height: 300px;
+    }
+}
+
+@media (min-width: 1200px) {
+    .chart-container {
+        height: 350px;
+    }
+}
+
+/* === RESPONSIVE UTILITIES === */
+
+/* Hide on mobile */
+@media (max-width: 767px) {
+    .d-none-mobile {
+        display: none !important;
+    }
+}
+
+/* Show only on mobile */
+.d-mobile-only {
+    display: none;
+}
+
+@media (max-width: 767px) {
+    .d-mobile-only {
+        display: block !important;
+    }
+}
+
+/* === RESPONSIVE SPACING === */
+@media (max-width: 575px) {
+    .mb-4, .my-4 { margin-bottom: 1.5rem !important; }
+    .mt-4, .my-4 { margin-top: 1.5rem !important; }
+    .p-4 { padding: 1.5rem !important; }
+}
+
+/* === TOUCH-FRIENDLY === */
+@media (max-width: 767px) {
+    .btn,
+    a,
+    button {
+        min-height: 44px; /* Apple's recommended touch target */
+        min-width: 44px;
+    }
+    
+    .nav-link,
+    .sidebar .nav-link {
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+    }
+}
+
+/* === RESPONSIVE ALERTS === */
+.live-updates-banner {
+    font-size: 0.875rem;
+    padding: 0.75rem;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+@media (min-width: 768px) {
+    .live-updates-banner {
+        font-size: 1rem;
+        padding: 1rem;
+    }
+}
+
+/* === LANDSCAPE MOBILE === */
+@media (max-height: 500px) and (orientation: landscape) {
+    .sidebar {
+        top: 60px;
+        height: calc(100vh - 60px);
+    }
+    
+    .dashboard-navbar {
+        padding: 0.5rem 0;
+    }
+    
+    .main-content {
+        padding-top: 70px;
+    }
+}
+
+/* === PRINT STYLES === */
+@media print {
+    .sidebar,
+    .dashboard-navbar,
+    .mobile-menu-toggle,
+    .btn {
+        display: none !important;
+    }
+    
+    .main-content {
+        margin-left: 0 !important;
+        padding: 0 !important;
+    }
+}
+
+/* === SAFE AREA FOR NOTCHED DEVICES (iPhone X+) === */
+@supports (padding-top: env(safe-area-inset-top)) {
+    .dashboard-navbar {
+        padding-top: calc(0.75rem + env(safe-area-inset-top));
+    }
+    
+    .sidebar {
+        top: calc(70px + env(safe-area-inset-top));
+    }
+    
+    .main-content {
+        padding-top: calc(90px + env(safe-area-inset-top));
+    }
+}
+
+/* === ACCESSIBILITY === */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* === DARK MODE SUPPORT === */
+@media (prefers-color-scheme: dark) {
+    /* Add dark mode styles if needed */
+}
+
+/* === METRO CARD RESPONSIVE === */
+@media (max-width: 767px) {
+    #metroCardDetails .glass-card {
+        padding: 1.5rem !important;
+    }
+    
+    #metroCardDetails h1 {
+        font-size: 2rem !important;
+    }
+    
+    #metroCardDetails h3 {
+        font-size: 1rem !important;
+    }
+}
+
+/* === STAT CARDS MOBILE === */
+@media (max-width: 575px) {
+    .stat-value {
+        font-size: 1.75rem !important;
+    }
+    
+    .quick-action-btn {
+        padding: 1rem !important;
+        min-height: 80px;
+    }
+}
+
+/* === BOOKING FORM RESPONSIVE === */
+@media (max-width: 767px) {
+    .booking-form .row {
+        margin-bottom: 0;
+    }
+    
+    .booking-form .col-md-6 {
+        padding-bottom: 1rem;
+    }
+}
+
+/* === TICKET CARD RESPONSIVE === */
+@media (max-width: 575px) {
+    .ticket-card {
+        padding: 1rem !important;
+    }
+    
+    .ticket-card .row {
+        gap: 0.5rem;
+    }
+}
+
+/* === GLASS CARD MOBILE === */
+@media (max-width: 767px) {
+    .glass-card {
+        padding: 1.25rem !important;
+        margin-bottom: 1rem;
+    }
+}
+
+/* === NAVBAR IMPROVEMENTS === */
+@media (max-width: 991px) {
+    .navbar-nav {
+        padding: 1rem 0;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 0.5rem;
+        margin-top: 0.5rem;
+    }
+    
+    .navbar-nav .nav-link {
+        color: var(--dark, #1e293b) !important;
+        padding: 0.75rem 1rem;
+    }
+}
+
+/* ================================================
+   INDEX / LANDING PAGE — MOBILE RESPONSIVE FIXES
+   ================================================ */
+
+/* Ensure no horizontal overflow on any screen */
+html, body {
+    overflow-x: hidden;
+    max-width: 100vw;
+}
+
+/* --- Hero Section Mobile --- */
+@media (max-width: 767px) {
+    .hero-section {
+        padding: 120px 0 60px !important;
+    }
+
+    .hero-title {
+        font-size: 2.2rem !important;
+        line-height: 1.15 !important;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+
+    .hero-section .lead {
+        font-size: 0.95rem !important;
+        padding-right: 0 !important;
+    }
+
+    /* Hide floating cards on small screens — they overflow */
+    .hero-card-float {
+        display: none !important;
+    }
+
+    /* Stats row: reduce gap so numbers don't clip */
+    .hero-section .d-flex.gap-5 {
+        gap: 1.5rem !important;
+        flex-wrap: wrap;
+    }
+
+    .stat-number {
+        font-size: 1.8rem !important;
+    }
+
+    /* CTA buttons: stack vertically */
+    .hero-section .d-flex.gap-3 {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .hero-section .d-flex.gap-3 a {
+        text-align: center;
+    }
+}
+
+@media (max-width: 400px) {
+    .hero-title {
+        font-size: 1.8rem !important;
+    }
+
+    .stat-number {
+        font-size: 1.5rem !important;
+    }
+}
+
+/* --- Process / Feature Section Mobile --- */
+@media (max-width: 767px) {
+    .feature-card {
+        padding: 25px 20px !important;
+    }
+
+    #features .display-5,
+    #process .display-5 {
+        font-size: 1.6rem !important;
+    }
+}
+
+/* --- Live Network Section Mobile --- */
+@media (max-width: 767px) {
+    #network .display-5 {
+        font-size: 1.5rem !important;
+    }
+
+    .station-item {
+        padding: 10px !important;
+        font-size: 0.85rem;
+    }
+}
+
+/* --- Footer Mobile --- */
+@media (max-width: 767px) {
+    .footer-minimal {
+        padding: 40px 0 0 !important;
+    }
+
+    .footer-minimal .container {
+        padding-left: 20px !important;
+        padding-right: 20px !important;
+    }
+
+    .footer-minimal .row.g-5 {
+        --bs-gutter-y: 2rem;
+        --bs-gutter-x: 0;
+    }
+
+    .footer-minimal p,
+    .footer-minimal .ft-links a,
+    .footer-minimal small {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+
+    .ft-brand-name {
+        font-size: 1.2rem !important;
+    }
+
+    .ft-bottom {
+        margin-top: 30px !important;
+        padding: 15px 0 !important;
+    }
+
+    .ft-bottom .row {
+        text-align: center !important;
+    }
+
+    .ft-bottom .col-md-6 {
+        text-align: center !important;
+    }
+}
+
+/* Very small screens (iPhone SE, 375px and below) */
+@media (max-width: 400px) {
+    .footer-minimal .container {
+        padding-left: 15px !important;
+        padding-right: 15px !important;
+    }
+
+    .ft-tech-badge {
+        font-size: 0.7rem !important;
+        padding: 4px 10px !important;
+    }
+
+    .ft-social-link {
+        width: 36px !important;
+        height: 36px !important;
+    }
+}
+
+/* Ensure all containers have safe horizontal padding */
+@media (max-width: 575px) {
+    .container {
+        padding-left: 15px !important;
+        padding-right: 15px !important;
+    }
+}
+

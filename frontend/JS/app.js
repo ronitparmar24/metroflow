@@ -116,12 +116,28 @@ class MetroAPI {
         }, 3000);
     }
     
- logout() {
-        this.call('/logout', 'POST').then(() => {
-            // [NEW] Remove the flag when logging out
+
+
+    async logout() {
+        try {
+            await this.call('/logout', 'POST');
+        } catch (err) {
+            console.warn("Logout warning:", err);
+        } finally {
+            // 1. Clear all local data
+            localStorage.clear();
+            sessionStorage.clear();
+            
+            // 2. Remove specific keys just in case
             localStorage.removeItem('metro_logged_in');
-            window.location.href = 'login.html';
-        });
+            localStorage.removeItem('user_role');
+            localStorage.removeItem('username');
+
+            // 3. CRITICAL SECURITY FIX: 
+            // Use replace() to remove the current page from history.
+            // This prevents the "Back" button from returning to the dashboard.
+            window.location.replace('login.html');
+        }
     }
 }
 
@@ -142,5 +158,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // This prevents the 401 error from appearing in the console
     if (!path.includes('login.html') && !path.includes('register.html')) {
         API.checkAuth();
+    }
+});
+
+// SECURITY: Prevent "Back" button from showing cached pages after logout
+window.addEventListener('pageshow', (event) => {
+    // If the page is loaded from the "back-forward cache" (bfcache)
+    if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+        window.location.reload();
     }
 });

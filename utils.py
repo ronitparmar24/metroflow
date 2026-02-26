@@ -25,7 +25,7 @@ def format_date(date_obj: Optional[date]) -> Optional[str]:
 def format_datetime(dt: Optional[datetime]) -> Optional[str]:
     """Format datetime object to string"""
     if dt is None:
-        return None
+        return ''  # Return empty string instead of None
     if isinstance(dt, datetime):
         return dt.strftime('%Y-%m-%d %H:%M:%S')
     return str(dt)

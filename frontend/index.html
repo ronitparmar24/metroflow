@@ -1,14 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MetroFlow | Smart Urban Mobility</title>
-    
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚆</text></svg>">
+
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚆</text></svg>">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 
     <style>
@@ -16,7 +19,7 @@
             --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
             --text-dark: #2d3748;
-            --card-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
             --hover-shadow: 0 20px 40px rgba(102, 126, 234, 0.2);
         }
 
@@ -25,32 +28,61 @@
             color: var(--text-dark);
             overflow-x: hidden;
             background-color: #fff;
+            scroll-behavior: smooth;
+        }
+
+        html {
+            scroll-behavior: smooth;
         }
 
         /* --- Animations --- */
         @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-15px); }
-            100% { transform: translateY(0px); }
+            0% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-15px);
+            }
+
+            100% {
+                transform: translateY(0px);
+            }
         }
 
         @keyframes pulse-ring {
-            0% { box-shadow: 0 0 0 0 rgba(72, 187, 120, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(72, 187, 120, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(72, 187, 120, 0); }
+            0% {
+                box-shadow: 0 0 0 0 rgba(72, 187, 120, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(72, 187, 120, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(72, 187, 120, 0);
+            }
         }
 
         @keyframes gradient-flow {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
         }
 
         /* --- Navbar --- */
         .navbar {
             background: rgba(255, 255, 255, 0.9);
             backdrop-filter: blur(15px);
-            box-shadow: 0 2px 20px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.05);
             padding: 15px 0;
             transition: all 0.4s ease;
         }
@@ -72,19 +104,23 @@
         .nav-link::after {
             content: '';
             position: absolute;
-            width: 0; height: 3px;
-            bottom: -5px; left: 0;
+            width: 0;
+            height: 3px;
+            bottom: -5px;
+            left: 0;
             background: #764ba2;
             transition: width 0.3s;
             border-radius: 2px;
         }
 
         /* Highlighting Logic: Hover OR Active Class */
-        .nav-link:hover, .nav-link.active {
+        .nav-link:hover,
+        .nav-link.active {
             color: #764ba2 !important;
         }
-        
-        .nav-link:hover::after, .nav-link.active::after {
+
+        .nav-link:hover::after,
+        .nav-link.active::after {
             width: 100%;
         }
 
@@ -121,6 +157,7 @@
             margin-bottom: 25px;
             background: var(--primary-gradient);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
@@ -135,13 +172,13 @@
             background: white;
             padding: 15px 25px;
             border-radius: 15px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
             display: flex;
             align-items: center;
             gap: 15px;
             z-index: 3;
             animation: float 5s ease-in-out infinite;
-            border: 1px solid rgba(255,255,255,0.5);
+            border: 1px solid rgba(255, 255, 255, 0.5);
             backdrop-filter: blur(5px);
         }
 
@@ -150,7 +187,7 @@
             background: white;
             padding: 40px 30px;
             border-radius: 20px;
-            border: 1px solid rgba(0,0,0,0.03);
+            border: 1px solid rgba(0, 0, 0, 0.03);
             box-shadow: var(--card-shadow);
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             height: 100%;
@@ -161,7 +198,10 @@
         .feature-card::before {
             content: '';
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 5px;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
             background: var(--primary-gradient);
             transform: scaleX(0);
             transform-origin: left;
@@ -178,11 +218,14 @@
         }
 
         .icon-circle {
-            width: 70px; height: 70px;
+            width: 70px;
+            height: 70px;
             border-radius: 50%;
             background: #f7fafc;
-            display: grid; place-items: center;
-            font-size: 1.5rem; color: #764ba2;
+            display: grid;
+            place-items: center;
+            font-size: 1.5rem;
+            color: #764ba2;
             margin-bottom: 25px;
             transition: 0.4s;
         }
@@ -195,7 +238,8 @@
 
         /* --- Live Network --- */
         .live-indicator {
-            width: 12px; height: 12px;
+            width: 12px;
+            height: 12px;
             background: #48bb78;
             border-radius: 50%;
             display: inline-block;
@@ -204,16 +248,17 @@
         }
 
         .station-item {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             padding: 15px;
             margin-bottom: 10px;
             border-radius: 10px;
             transition: 0.3s;
             cursor: default;
         }
+
         .station-item:hover {
-            background: rgba(255,255,255,0.15);
+            background: rgba(255, 255, 255, 0.15);
             transform: translateX(10px);
         }
 
@@ -224,11 +269,415 @@
             color: #2d3748;
             background: var(--primary-gradient);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
+        /* ========================================
+           PAGE-WIDE BLOB DECORATIONS
+           ======================================== */
+        .page-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes blobMorph {
+
+            0%,
+            100% {
+                transform: translate(0, 0) scale(1) rotate(0deg);
+                border-radius: 50%;
+            }
+
+            25% {
+                transform: translate(15px, -20px) scale(1.08) rotate(5deg);
+                border-radius: 45% 55% 60% 40%;
+            }
+
+            50% {
+                transform: translate(-10px, 15px) scale(0.95) rotate(-3deg);
+                border-radius: 60% 40% 45% 55%;
+            }
+
+            75% {
+                transform: translate(20px, 10px) scale(1.03) rotate(8deg);
+                border-radius: 40% 60% 55% 45%;
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ========================================
+           FOOTER — WHITE MINIMALIST
+           ======================================== */
+        .footer-minimal {
+            background: #fff;
+            position: relative;
+            overflow: hidden;
+            padding: 70px 0 0;
+            border-top: 3px solid transparent;
+            border-image: linear-gradient(90deg, #667eea, #764ba2, #f093fb) 1;
+        }
+
+        /* Footer Blobs — soft pastel */
+        .ft-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(120px);
+            pointer-events: none;
+            animation: blobMorph 18s ease-in-out infinite;
+        }
+
+        .ft-blob-1 {
+            width: 500px;
+            height: 500px;
+            background: rgba(102, 126, 234, 0.1);
+            top: -120px;
+            left: -100px;
+        }
+
+        .ft-blob-2 {
+            width: 450px;
+            height: 450px;
+            background: rgba(240, 147, 251, 0.08);
+            bottom: -100px;
+            right: -80px;
+            animation-delay: 6s;
+        }
+
+        /* Brand Icon */
+        .ft-brand-icon {
+            width: 46px;
+            height: 46px;
+            background: var(--primary-gradient);
+            border-radius: 14px;
+            display: grid;
+            place-items: center;
+            color: #fff;
+            font-size: 1.2rem;
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.25);
+            transition: transform 0.3s;
+        }
+
+        .ft-brand-icon:hover {
+            transform: rotate(-8deg) scale(1.08);
+        }
+
+        .ft-brand-name {
+            font-size: 1.4rem;
+            font-weight: 800;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Social Icons */
+        .ft-social {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .ft-social-link {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            color: #6b7280;
+            text-decoration: none;
+            font-size: 1rem;
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ft-social-link::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 12px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .ft-social-link:hover {
+            color: #fff;
+            transform: translateY(-4px);
+            border-color: transparent;
+        }
+
+        .ft-social-link:hover::before {
+            opacity: 1;
+        }
+
+        .ft-social-link i {
+            position: relative;
+            z-index: 1;
+        }
+
+        .ft-social-link.ft-linkedin::before {
+            background: #0077b5;
+        }
+
+        .ft-social-link.ft-linkedin:hover {
+            box-shadow: 0 6px 20px rgba(0, 119, 181, 0.3);
+        }
+
+        .ft-social-link.ft-instagram::before {
+            background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+        }
+
+        .ft-social-link.ft-instagram:hover {
+            box-shadow: 0 6px 20px rgba(225, 48, 108, 0.3);
+        }
+
+        .ft-social-link.ft-github::before {
+            background: #333;
+        }
+
+        .ft-social-link.ft-github:hover {
+            box-shadow: 0 6px 20px rgba(51, 51, 51, 0.3);
+        }
+
+        .ft-social-link.ft-twitter::before {
+            background: #1a1a1a;
+        }
+
+        .ft-social-link.ft-twitter:hover {
+            box-shadow: 0 6px 20px rgba(26, 26, 26, 0.3);
+        }
+
+        /* Footer Headings */
+        .ft-heading {
+            color: var(--text-dark);
+            font-weight: 700;
+            font-size: 0.85rem;
+            margin-bottom: 1.2rem;
+        }
+
+        /* Footer Links */
+        .ft-links {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .ft-links li {
+            margin-bottom: 10px;
+        }
+
+        .ft-links a {
+            color: #6b7280;
+            text-decoration: none;
+            font-size: 0.88rem;
+            transition: all 0.3s;
+        }
+
+        .ft-links a:hover {
+            color: #764ba2;
+            padding-left: 4px;
+        }
+
+        /* Tech Badges */
+        .ft-tech-badge {
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            color: #4b5563;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 500;
+            transition: all 0.3s;
+            display: inline-block;
+        }
+
+        .ft-tech-badge:hover {
+            background: var(--primary-gradient);
+            color: #fff;
+            border-color: transparent;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.25);
+        }
+
+        /* Bottom Bar */
+        .ft-bottom {
+            border-top: 1px solid #e5e7eb;
+            padding: 20px 0;
+            margin-top: 50px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .ft-bottom small {
+            color: #9ca3af;
+            font-size: 0.82rem;
+        }
+
+        .ft-bottom .fa-heart {
+            color: #f5576c;
+        }
+
+        /* Gradient bar */
+        .ft-glow-bar {
+            height: 3px;
+            background: linear-gradient(90deg, #667eea, #764ba2, #f093fb, #f5576c, #667eea);
+            background-size: 200% 100%;
+            animation: gradient-flow 6s ease infinite;
+        }
+
+        /* --- Testimonials --- */
+        .testimonial-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 20px;
+            padding: 32px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+            transition: all 0.4s ease;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .testimonial-card::before {
+            content: '\201C';
+            position: absolute;
+            top: 10px;
+            left: 20px;
+            font-size: 5rem;
+            font-family: Georgia, serif;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            opacity: 0.15;
+            line-height: 1;
+        }
+
+        .testimonial-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 50px rgba(118, 75, 162, 0.12);
+        }
+
+        .testimonial-text {
+            color: #4b5563;
+            font-size: 0.95rem;
+            line-height: 1.8;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .testimonial-user {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .testimonial-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-gradient);
+            display: grid;
+            place-items: center;
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        .testimonial-stars {
+            color: #f59e0b;
+            font-size: 0.8rem;
+            margin-top: 2px;
+        }
+
+        /* FAQ Accordion */
+        .accordion-button:not(.collapsed) {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.08), rgba(118, 75, 162, 0.08));
+            color: #764ba2;
+            box-shadow: none;
+        }
+
+        .accordion-button:focus {
+            box-shadow: none;
+            border-color: transparent;
+        }
+
+        .accordion-button::after {
+            filter: hue-rotate(240deg);
+        }
+
+        .accordion-item {
+            border: none !important;
+        }
+
+        /* Back to Top Button */
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            font-size: 1rem;
+            cursor: pointer;
+            z-index: 9998;
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+            pointer-events: none;
+        }
+
+        .back-to-top.visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: all;
+        }
+
+        .back-to-top:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
+        }
+
+        /* Cookie Consent Banner */
+        .cookie-banner {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.97);
+            backdrop-filter: blur(12px);
+            border-top: 1px solid #e2e8f0;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+            z-index: 9999;
+            transition: transform 0.4s ease;
+        }
     </style>
+    <link rel="stylesheet" href="css/responsive.css">
 </head>
+
 <body tabindex="0">
 
     <nav class="navbar navbar-expand-lg fixed-top" id="navbarMain">
@@ -246,7 +695,14 @@
                     <li class="nav-item"><a class="nav-link" href="#process">Process</a></li>
                     <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
                     <li class="nav-item"><a class="nav-link" href="#network">Network</a></li>
-                    <li class="nav-item ms-lg-3">
+                    <li class="nav-item"><a class="nav-link" href="#faq">FAQ</a></li>
+                    <li class="nav-item ms-lg-2">
+                        <a href="register.html" class="btn btn-outline-dark rounded-pill px-3 py-2 fw-bold"
+                            style="font-size: 0.9rem;">
+                            Register
+                        </a>
+                    </li>
+                    <li class="nav-item ms-lg-2">
                         <a href="login.html" class="btn-animated shadow-lg">
                             Login <i class="fas fa-arrow-right ms-2"></i>
                         </a>
@@ -257,8 +713,12 @@
     </nav>
 
     <section id="home" class="hero-section">
-        <div style="position: absolute; top: -50px; left: -50px; width: 300px; height: 300px; background: rgba(118, 75, 162, 0.05); border-radius: 50%; filter: blur(50px);"></div>
-        <div style="position: absolute; bottom: 100px; right: -50px; width: 400px; height: 400px; background: rgba(102, 126, 234, 0.05); border-radius: 50%; filter: blur(60px);"></div>
+        <div
+            style="position: absolute; top: -50px; left: -50px; width: 300px; height: 300px; background: rgba(118, 75, 162, 0.05); border-radius: 50%; filter: blur(50px);">
+        </div>
+        <div
+            style="position: absolute; bottom: 100px; right: -50px; width: 400px; height: 400px; background: rgba(102, 126, 234, 0.05); border-radius: 50%; filter: blur(60px);">
+        </div>
 
         <div class="container position-relative">
             <div class="row align-items-center">
@@ -271,40 +731,47 @@
                             Urban Mobility <br> Reimagined
                         </h1>
                         <p class="lead text-muted mb-5 pe-lg-5">
-                            Seamless, paperless, and intelligent. Experience the future of metro commuting with dynamic QR ticketing and real-time station analytics.
+                            Seamless, paperless, and intelligent. Experience the future of metro commuting with dynamic
+                            QR ticketing and real-time station analytics.
                         </p>
-                        
+
                         <div class="d-flex gap-3 mb-5">
                             <a href="register.html" class="btn-animated">Get Started</a>
-                            <a href="#network" class="btn btn-outline-dark rounded-pill px-4 py-3 fw-bold transition-all">
+                            <a href="#network"
+                                class="btn btn-outline-dark rounded-pill px-4 py-3 fw-bold transition-all">
                                 <i class="fas fa-map-marked-alt me-2"></i>Live Map
                             </a>
                         </div>
 
-                        <div class="d-flex gap-5 border-top pt-4" data-aos="fade-up" data-aos-delay="200">
+                        <div class="d-flex gap-4 flex-wrap border-top pt-4" data-aos="fade-up" data-aos-delay="200">
                             <div>
-                                <h3 class="stat-number" data-target="500">0</h3>
-                                <small class="text-uppercase fw-bold text-muted ls-1">Daily Users</small>
+                                <h3 class="stat-number" id="stat-users" data-target="500" data-suffix="+">0</h3>
+                                <small class="text-uppercase fw-bold text-muted ls-1">Commuters</small>
                             </div>
                             <div>
-                                <h3 class="stat-number" data-target="99">0</h3>
-                                <small class="text-uppercase fw-bold text-muted ls-1">Uptime %</small>
+                                <h3 class="stat-number" id="stat-bookings" data-target="2000" data-suffix="+">0</h3>
+                                <small class="text-uppercase fw-bold text-muted ls-1">Bookings</small>
                             </div>
                             <div>
-                                <h3 class="stat-number" data-target="24">0</h3>
+                                <h3 class="stat-number" id="stat-stations" data-target="50" data-suffix="+">0</h3>
                                 <small class="text-uppercase fw-bold text-muted ls-1">Stations</small>
+                            </div>
+                            <div>
+                                <h3 class="stat-number" id="stat-uptime" data-target="99" data-suffix="%">0</h3>
+                                <small class="text-uppercase fw-bold text-muted ls-1">Uptime</small>
                             </div>
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="col-lg-6 text-center">
                     <div class="hero-img-wrapper" data-aos="zoom-in" data-aos-duration="1200">
-                        <img src="https://images.unsplash.com/photo-1554672408-730436b60dde?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" 
-                             alt="Metro" class="img-fluid rounded-5 shadow-lg border border-5 border-white">
-                        
+                        <img src="https://images.unsplash.com/photo-1554672408-730436b60dde?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
+                            alt="Metro" class="img-fluid rounded-5 shadow-lg border border-5 border-white">
+
                         <div class="hero-card-float" style="bottom: 30px; left: -20px;">
-                            <div class="bg-success text-white rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                            <div class="bg-success text-white rounded-circle p-2 d-flex align-items-center justify-content-center"
+                                style="width: 45px; height: 45px;">
                                 <i class="fas fa-check"></i>
                             </div>
                             <div class="text-start">
@@ -314,7 +781,8 @@
                         </div>
 
                         <div class="hero-card-float" style="top: 40px; right: -30px; animation-delay: 2s;">
-                            <div class="bg-warning text-white rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                            <div class="bg-warning text-white rounded-circle p-2 d-flex align-items-center justify-content-center"
+                                style="width: 45px; height: 45px;">
                                 <i class="fas fa-wallet"></i>
                             </div>
                             <div class="text-start">
@@ -328,8 +796,15 @@
         </div>
     </section>
 
-    <section id="process" class="py-5 bg-light position-relative">
-        <div class="container py-5">
+    <section id="process" class="py-5 bg-light position-relative" style="overflow:hidden;">
+        <!-- Process Blobs -->
+        <div class="page-blob"
+            style="width:300px;height:300px;background:rgba(102,126,234,0.08);top:-80px;right:-60px;animation:blobMorph 18s ease-in-out infinite;">
+        </div>
+        <div class="page-blob"
+            style="width:220px;height:220px;background:rgba(240,147,251,0.06);bottom:-50px;left:-40px;animation:blobMorph 14s ease-in-out infinite 4s;">
+        </div>
+        <div class="container py-5 position-relative" style="z-index:1;">
             <div class="text-center mb-5" data-aos="fade-up">
                 <h6 class="text-primary fw-bold text-uppercase ls-2">Workflow</h6>
                 <h2 class="fw-bold display-5 mt-2">Commuting Simplified</h2>
@@ -376,14 +851,22 @@
         </div>
     </section>
 
-    <section id="features" class="py-5">
-        <div class="container py-5">
+    <section id="features" class="py-5 position-relative" style="overflow:hidden;">
+        <!-- Feature Blobs -->
+        <div class="page-blob"
+            style="width:350px;height:350px;background:rgba(118,75,162,0.06);top:20%;left:-80px;animation:blobMorph 20s ease-in-out infinite 2s;">
+        </div>
+        <div class="page-blob"
+            style="width:280px;height:280px;background:rgba(72,187,120,0.05);bottom:-60px;right:-50px;animation:blobMorph 16s ease-in-out infinite 6s;">
+        </div>
+        <div class="container py-5 position-relative" style="z-index:1;">
             <div class="row align-items-center">
                 <div class="col-lg-5 ps-lg-5 order-lg-2" data-aos="fade-left">
                     <span class="badge bg-light text-primary mb-3">Core Capabilities</span>
                     <h2 class="fw-bold display-5 mb-4">Enterprise-Grade<br>Infrastructure</h2>
-                    <p class="text-muted mb-5">MetroFlow is built on a robust Python-Flask architecture to handle high-concurrency traffic with zero latency.</p>
-                    
+                    <p class="text-muted mb-5">MetroFlow is built on a robust Python-Flask architecture to handle
+                        high-concurrency traffic with zero latency.</p>
+
                     <div class="d-flex mb-4" data-aos="fade-up" data-aos-delay="100">
                         <div class="me-4">
                             <div class="bg-primary bg-opacity-10 p-3 rounded-3 text-primary">
@@ -392,10 +875,11 @@
                         </div>
                         <div>
                             <h5 class="fw-bold">Smart Pricing Engine</h5>
-                            <p class="text-muted small">Dynamic algorithms calculate fares based on precise station geolocation.</p>
+                            <p class="text-muted small">Dynamic algorithms calculate fares based on precise station
+                                geolocation.</p>
                         </div>
                     </div>
-                    
+
                     <div class="d-flex mb-4" data-aos="fade-up" data-aos-delay="200">
                         <div class="me-4">
                             <div class="bg-success bg-opacity-10 p-3 rounded-3 text-success">
@@ -408,7 +892,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="col-lg-7 order-lg-1">
                     <div class="row g-3">
                         <div class="col-6" data-aos="zoom-in-up" data-aos-delay="100">
@@ -445,32 +929,176 @@
         </div>
     </section>
 
+    <!-- ============ TESTIMONIALS ============ -->
+    <section id="testimonials" class="py-5 position-relative"
+        style="overflow: hidden; background: linear-gradient(180deg, #f8f9ff 0%, #fff 100%);">
+        <div class="page-blob"
+            style="width:300px;height:300px;background:rgba(240,147,251,0.06);top:-60px;right:-40px;animation:blobMorph 16s ease-in-out infinite 3s;">
+        </div>
+        <div class="container py-5 position-relative" style="z-index:1;">
+            <div class="text-center mb-5" data-aos="fade-up">
+                <h6 class="text-primary fw-bold text-uppercase ls-2">Testimonials</h6>
+                <h2 class="fw-bold display-5 mt-2">What Commuters Say</h2>
+                <p class="text-muted mt-2">Real feedback from verified MetroFlow users</p>
+            </div>
+
+            <div class="row g-4" id="testimonials-container">
+                <!-- JS injects testimonial cards -->
+                <div class="col-12 text-center py-4">
+                    <div class="spinner-border text-primary" role="status" style="width: 2rem; height: 2rem;"></div>
+                    <p class="mt-2 small text-muted">Loading testimonials...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ FAQ ============ -->
+    <section id="faq" class="py-5" style="background: #fff;">
+        <div class="container py-5">
+            <div class="text-center mb-5" data-aos="fade-up">
+                <h6 class="text-primary fw-bold text-uppercase ls-2">FAQ</h6>
+                <h2 class="fw-bold display-5 mt-2">Frequently Asked Questions</h2>
+                <p class="text-muted mt-2">Everything you need to know about MetroFlow</p>
+            </div>
+
+            <div class="row justify-content-center">
+                <div class="col-lg-8" data-aos="fade-up" data-aos-delay="100">
+                    <div class="accordion" id="faqAccordion">
+                        <div class="accordion-item border-0 mb-3 rounded-4 shadow-sm">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button rounded-4 fw-bold" type="button"
+                                    data-bs-toggle="collapse" data-bs-target="#faq1" aria-expanded="true">
+                                    <i class="fas fa-ticket-alt text-primary me-3"></i>How does QR ticketing work?
+                                </button>
+                            </h2>
+                            <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body text-muted">
+                                    After booking a ticket through your dashboard, a unique QR code is generated
+                                    instantly. Simply scan this QR code at the metro station entry gates — no paper
+                                    tickets needed. The QR code is valid for the date and route you selected.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item border-0 mb-3 rounded-4 shadow-sm">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed rounded-4 fw-bold" type="button"
+                                    data-bs-toggle="collapse" data-bs-target="#faq2">
+                                    <i class="fas fa-wallet text-primary me-3"></i>How do I add money to my wallet?
+                                </button>
+                            </h2>
+                            <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body text-muted">
+                                    Navigate to the Wallet section in your dashboard and click "Recharge". You can add
+                                    any amount between ₹50 and ₹5,000. The balance reflects instantly and can be used
+                                    for booking tickets, purchasing monthly passes, or topping up your Metro Card.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item border-0 mb-3 rounded-4 shadow-sm">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed rounded-4 fw-bold" type="button"
+                                    data-bs-toggle="collapse" data-bs-target="#faq3">
+                                    <i class="fas fa-undo text-primary me-3"></i>Can I cancel or refund a ticket?
+                                </button>
+                            </h2>
+                            <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body text-muted">
+                                    Tickets can be cancelled up to 30 minutes before the scheduled departure time. A
+                                    full refund is credited back to your MetroFlow wallet within seconds. Expired or
+                                    used tickets are not eligible for refund.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item border-0 mb-3 rounded-4 shadow-sm">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed rounded-4 fw-bold" type="button"
+                                    data-bs-toggle="collapse" data-bs-target="#faq4">
+                                    <i class="fas fa-id-card text-primary me-3"></i>What is the MetroFlow Card?
+                                </button>
+                            </h2>
+                            <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body text-muted">
+                                    The MetroFlow Card is a virtual smart card linked to your account. It stores your
+                                    balance, monthly pass, and travel history. You can use it for quick tap-and-go entry
+                                    at stations without needing to book individual tickets each time.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item border-0 mb-3 rounded-4 shadow-sm">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed rounded-4 fw-bold" type="button"
+                                    data-bs-toggle="collapse" data-bs-target="#faq5">
+                                    <i class="fas fa-shield-alt text-primary me-3"></i>Is my data secure?
+                                </button>
+                            </h2>
+                            <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body text-muted">
+                                    Yes. All passwords are encrypted using SHA-256 hashing, and sessions are managed
+                                    securely with server-side cookies. We never store plain-text passwords, and all API
+                                    communications are protected. Your transaction data is stored in an encrypted MySQL
+                                    database.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item border-0 mb-3 rounded-4 shadow-sm">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed rounded-4 fw-bold" type="button"
+                                    data-bs-toggle="collapse" data-bs-target="#faq6">
+                                    <i class="fas fa-calendar-check text-primary me-3"></i>How do monthly passes work?
+                                </button>
+                            </h2>
+                            <div id="faq6" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body text-muted">
+                                    Monthly passes give you unlimited travel between any two stations for 30 days.
+                                    They're significantly cheaper than buying daily tickets. You can purchase one from
+                                    your dashboard and it activates immediately. Your pass status is always visible in
+                                    the Metro Card section.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <section id="network" class="py-5 bg-dark text-white position-relative overflow-hidden">
-        <div style="position: absolute; width: 200%; height: 200%; top: -50%; left: -50%; background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.03) 10px, rgba(255,255,255,0.03) 20px); transform: rotate(15deg);"></div>
-        
+        <div
+            style="position: absolute; width: 200%; height: 200%; top: -50%; left: -50%; background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.03) 10px, rgba(255,255,255,0.03) 20px); transform: rotate(15deg);">
+        </div>
+
         <div class="container py-5 position-relative">
             <div class="row">
                 <div class="col-lg-4 mb-5" data-aos="fade-right">
                     <h2 class="fw-bold display-5 mb-3">Live Network</h2>
                     <p class="opacity-75 mb-4">Real-time operational status of the entire metro grid.</p>
-                    
-                    <div class="p-4 rounded-4 bg-white bg-opacity-10 border border-white border-opacity-10 backdrop-blur">
+
+                    <div
+                        class="p-4 rounded-4 bg-white bg-opacity-10 border border-white border-opacity-10 backdrop-blur">
                         <div class="d-flex align-items-center mb-3">
                             <span class="live-indicator"></span>
                             <span class="fw-bold">System Normal</span>
                         </div>
-                        <p class="small opacity-75 mb-0">All servers operational. Zero latency detected on ticket validation nodes.</p>
+                        <p class="small opacity-75 mb-0">All servers operational. Zero latency detected on ticket
+                            validation nodes.</p>
                     </div>
                 </div>
 
-                <div class="col-lg-8" data-aos="fade-left">
-                    <div class="p-4 rounded-4 bg-black bg-opacity-25 border border-white border-opacity-10" style="min-height: 400px;">
-                        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom border-white border-opacity-10 pb-3">
+                <div class="col-lg-8">
+                    <div class="p-4 rounded-4 bg-black bg-opacity-25 border border-white border-opacity-10">
+                        <div
+                            class="d-flex justify-content-between align-items-center mb-4 border-bottom border-white border-opacity-10 pb-3">
                             <h5 class="fw-bold m-0">Station Status</h5>
                             <span class="badge bg-success">ONLINE</span>
                         </div>
-                        
-                        <div id="stationsList" class="row g-2" style="max-height: 350px; overflow-y: auto;">
+
+                        <div id="stationsList" class="row g-2"
+                            style="max-height: 400px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.2) transparent;">
                             <div class="col-12 text-center py-5">
                                 <div class="spinner-border text-light" role="status"></div>
                                 <p class="mt-2 small opacity-50">Connecting to server...</p>
@@ -482,46 +1110,129 @@
         </div>
     </section>
 
-    <footer class="py-5 bg-white border-top">
-        <div class="container">
-            <div class="row g-4">
-                <div class="col-md-5">
-                    <a class="navbar-brand d-flex align-items-center gap-2 mb-3" href="#" style="color: #764ba2;">
-                        <i class="fas fa-train"></i>
-                        <span class="fw-bold">MetroFlow</span>
-                    </a>
-                    <p class="text-muted small mb-0">
-                        Designed & Developed for Semester 3 Computer Science Project. 
-                        Demonstrating Full-Stack capabilities using Python, MySQL, and Modern Web Tech.
+    <!-- Back to Top Button -->
+    <button class="back-to-top" id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <!-- Cookie Consent Banner -->
+    <div class="cookie-banner" id="cookieBanner">
+        <div class="container d-flex flex-wrap align-items-center justify-content-between gap-3 py-3">
+            <div class="d-flex align-items-center gap-3" style="flex:1;min-width:200px;">
+                <i class="fas fa-cookie-bite fa-lg" style="color:#f59e0b;"></i>
+                <p class="mb-0 small text-muted">We use cookies to enhance your experience. By continuing to visit this
+                    site you agree to our use of cookies.</p>
+            </div>
+            <div class="d-flex gap-2 flex-shrink-0">
+                <button class="btn btn-sm btn-outline-secondary rounded-pill px-3"
+                    onclick="document.getElementById('cookieBanner').remove()">Learn More</button>
+                <button class="btn btn-sm text-white rounded-pill px-4 fw-bold"
+                    style="background:linear-gradient(135deg,#667eea,#764ba2);border:none;"
+                    onclick="acceptCookies()">Accept</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ FOOTER ============ -->
+    <footer class="footer-minimal">
+        <!-- Soft Blobs -->
+        <div class="ft-blob ft-blob-1"></div>
+        <div class="ft-blob ft-blob-2"></div>
+
+        <div class="container position-relative" style="z-index: 2;">
+            <div class="row g-5">
+                <!-- Brand + Description + Social -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="ft-brand-icon">
+                            <i class="fas fa-train"></i>
+                        </div>
+                        <span class="ft-brand-name">MetroFlow</span>
+                    </div>
+                    <p class="text-muted mb-0" style="font-size: 0.9rem; line-height: 1.8;">
+                        Smart metro ticketing with QR-based contactless entry,
+                        real-time analytics & intelligent fare computation.
                     </p>
+                    <div class="ft-social">
+                        <a href="https://linkedin.com" target="_blank" class="ft-social-link ft-linkedin"
+                            title="LinkedIn">
+                            <i class="fab fa-linkedin-in"></i>
+                        </a>
+                        <a href="https://instagram.com" target="_blank" class="ft-social-link ft-instagram"
+                            title="Instagram">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="https://github.com" target="_blank" class="ft-social-link ft-github" title="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <a href="https://twitter.com" target="_blank" class="ft-social-link ft-twitter"
+                            title="X / Twitter">
+                            <i class="fab fa-x-twitter"></i>
+                        </a>
+                    </div>
                 </div>
-                <div class="col-md-3 offset-md-1">
-                    <h6 class="fw-bold mb-3">Quick Links</h6>
-                    <ul class="list-unstyled small">
-                        <li class="mb-2"><a href="#home" class="text-decoration-none text-muted hover-primary">Home</a></li>
-                        <li class="mb-2"><a href="login.html" class="text-decoration-none text-muted hover-primary">Commuter Login</a></li>
-                        <li class="mb-2"><a href="admin.html" class="text-decoration-none text-muted hover-primary">Admin Portal</a></li>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6">
+                    <h6 class="ft-heading">Quick Links</h6>
+                    <ul class="ft-links">
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#process">How It Works</a></li>
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#network">Live Network</a></li>
+                        <li><a href="login.html">Commuter Login</a></li>
+                        <li><a href="admin.html">Admin Portal</a></li>
                     </ul>
                 </div>
-                <div class="col-md-3">
-                    <h6 class="fw-bold mb-3">Tech Stack</h6>
+
+                <!-- Tech Stack -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="ft-heading">Tech Stack</h6>
                     <div class="d-flex flex-wrap gap-2">
-                        <span class="badge bg-light text-dark border">Python</span>
-                        <span class="badge bg-light text-dark border">Flask</span>
-                        <span class="badge bg-light text-dark border">MySQL</span>
-                        <span class="badge bg-light text-dark border">Bootstrap 5</span>
+                        <span class="ft-tech-badge">Python</span>
+                        <span class="ft-tech-badge">Flask</span>
+                        <span class="ft-tech-badge">MySQL</span>
+                        <span class="ft-tech-badge">Bootstrap 5</span>
+                        <span class="ft-tech-badge">JavaScript</span>
+                        <span class="ft-tech-badge">QR Code</span>
+                        <span class="ft-tech-badge">Jinja2</span>
+                    </div>
+                </div>
+
+                <!-- Project Info -->
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="ft-heading">About Project</h6>
+                    <p class="text-muted mb-2" style="font-size: 0.88rem; line-height: 1.8;">
+                        A Semester 3 Information Technology project showcasing end-to-end
+                        full-stack development using Python, MySQL & modern web technologies.
+                    </p>
+                    <a href="register.html" class="btn-animated shadow-sm mt-2"
+                        style="font-size: 0.85rem; padding: 10px 24px;">
+                        Get Started <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Bottom -->
+            <div class="ft-bottom">
+                <div class="row align-items-center">
+                    <div class="col-md-6 text-center text-md-start">
+                        <small>© 2026 MetroFlow. Made with <i class="fas fa-heart"></i> for academic excellence.</small>
+                    </div>
+                    <div class="col-md-6 text-center text-md-end mt-2 mt-md-0">
+                        <small>Semester 3 · Information Technology · Full-Stack</small>
                     </div>
                 </div>
             </div>
-            <div class="border-top mt-5 pt-4 text-center">
-                <small class="text-muted">© 2026 MetroFlow. All rights reserved.</small>
-            </div>
         </div>
+
+        <!-- Gradient Bar -->
+        <div class="ft-glow-bar"></div>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-    
+
     <script>
         // Init AOS
         AOS.init({
@@ -537,13 +1248,13 @@
         window.addEventListener('scroll', () => {
             const sections = document.querySelectorAll('section');
             const navLinks = document.querySelectorAll('.nav-link');
-            
+
             let current = '';
-            
+
             sections.forEach(section => {
                 const sectionTop = section.offsetTop;
                 const sectionHeight = section.clientHeight;
-                
+
                 // Active Logic:
                 // If we have scrolled past the top of the section (minus 150px buffer for navbar)
                 // then this section becomes the "current" one.
@@ -565,7 +1276,7 @@
                     link.classList.add('active');
                 }
             });
-            
+
             // Update Navbar Shadow
             const nav = document.querySelector('.navbar');
             if (window.scrollY > 50) {
@@ -577,36 +1288,119 @@
             }
         });
 
-        // 3. Animated Counters
-        const counters = document.querySelectorAll('.stat-number');
-        counters.forEach(counter => {
-            counter.innerText = '0';
-            const updateCounter = () => {
-                const target = +counter.getAttribute('data-target');
-                const c = +counter.innerText;
-                const increment = target / 100;
-                
-                if(c < target) {
-                    counter.innerText = `${Math.ceil(c + increment)}`;
-                    setTimeout(updateCounter, 20);
-                } else {
-                    counter.innerText = target + (counter.getAttribute('data-target') > 90 ? '%' : '+');
+        // 3. Live Stats from API + Animated Counters
+        async function loadLiveStats() {
+            try {
+                const res = await fetch('/api/public/stats');
+                const data = await res.json();
+                if (data.success && data.stats) {
+                    const s = data.stats;
+                    const el = (id) => document.getElementById(id);
+                    if (el('stat-users')) el('stat-users').setAttribute('data-target', s.total_users);
+                    if (el('stat-bookings')) el('stat-bookings').setAttribute('data-target', s.total_bookings);
+                    if (el('stat-stations')) el('stat-stations').setAttribute('data-target', s.stations_count);
+                    if (el('stat-uptime')) el('stat-uptime').setAttribute('data-target', Math.round(s.uptime_pct));
                 }
-            };
-            // Trigger animation only when in view (simple timeout for demo)
-            setTimeout(updateCounter, 1000);
-        });
+            } catch (e) {
+                // fallback: keep default data-target values
+            }
 
-        // 4. Load Stations
+            // Animate all stat counters
+            document.querySelectorAll('.stat-number').forEach(counter => {
+                counter.innerText = '0';
+                const target = +counter.getAttribute('data-target');
+                const suffix = counter.getAttribute('data-suffix') || '+';
+                const duration = 2000;
+                const startTime = performance.now();
+
+                function animate(now) {
+                    const elapsed = now - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    // Ease-out cubic
+                    const eased = 1 - Math.pow(1 - progress, 3);
+                    const current = Math.ceil(eased * target);
+                    counter.innerText = current.toLocaleString();
+                    if (progress < 1) {
+                        requestAnimationFrame(animate);
+                    } else {
+                        counter.innerText = target.toLocaleString() + suffix;
+                    }
+                }
+                setTimeout(() => requestAnimationFrame(animate), 800);
+            });
+        }
+
+        // 4. Load Testimonials from API
+        async function loadTestimonials() {
+            const container = document.getElementById('testimonials-container');
+            try {
+                const res = await fetch('/api/public/testimonials');
+                const data = await res.json();
+
+                if (data.success && data.testimonials.length > 0) {
+                    const stars = '<i class="fas fa-star"></i>'.repeat(5);
+                    container.innerHTML = data.testimonials.map((t, i) => `
+                        <div class="col-md-4" data-aos="fade-up" data-aos-delay="${i * 100}">
+                            <div class="testimonial-card">
+                                <p class="testimonial-text">${t.text}</p>
+                                <div class="testimonial-user">
+                                    <div class="testimonial-avatar">${t.user.charAt(0).toUpperCase()}</div>
+                                    <div>
+                                        <div class="fw-bold" style="font-size: 0.9rem;">${t.user}</div>
+                                        <div class="testimonial-stars">${stars}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = `
+                        <div class="col-md-4" data-aos="fade-up">
+                            <div class="testimonial-card">
+                                <p class="testimonial-text">The QR ticketing makes my daily commute so much faster! No more queues.</p>
+                                <div class="testimonial-user">
+                                    <div class="testimonial-avatar">R</div>
+                                    <div><div class="fw-bold" style="font-size: 0.9rem;">Ro***</div>
+                                    <div class="testimonial-stars">${'<i class="fas fa-star"></i>'.repeat(5)}</div></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+                            <div class="testimonial-card">
+                                <p class="testimonial-text">Dynamic pricing is fair and transparent. Best metro app I've used.</p>
+                                <div class="testimonial-user">
+                                    <div class="testimonial-avatar">A</div>
+                                    <div><div class="fw-bold" style="font-size: 0.9rem;">Am***</div>
+                                    <div class="testimonial-stars">${'<i class="fas fa-star"></i>'.repeat(5)}</div></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+                            <div class="testimonial-card">
+                                <p class="testimonial-text">Love the real-time station status. I can plan my journey perfectly now.</p>
+                                <div class="testimonial-user">
+                                    <div class="testimonial-avatar">P</div>
+                                    <div><div class="fw-bold" style="font-size: 0.9rem;">Pr***</div>
+                                    <div class="testimonial-stars">${'<i class="fas fa-star"></i>'.repeat(5)}</div></div>
+                                </div>
+                            </div>
+                        </div>`;
+                }
+            } catch (e) {
+                container.innerHTML = '<div class="col-12 text-center text-muted py-3"><i class="fas fa-comments fa-2x mb-2"></i><p class="small">Testimonials unavailable</p></div>';
+            }
+        }
+
+        // 5. Load Stations
         async function loadStations() {
             try {
                 const response = await fetch('/api/stations');
                 const data = await response.json();
                 const list = document.getElementById('stationsList');
-                
+
                 if (data.success && data.stations.length > 0) {
                     list.innerHTML = data.stations.map((st, i) => `
-                        <div class="col-md-6" data-aos="fade-up" data-aos-delay="${i * 50}">
+                        <div class="col-md-6" style="animation: fadeInUp 0.3s ease ${i * 0.03}s both;">
                             <div class="station-item d-flex justify-content-between align-items-center text-white">
                                 <div class="d-flex align-items-center gap-3">
                                     <div class="bg-success rounded-circle" style="width: 8px; height: 8px;"></div>
@@ -627,8 +1421,36 @@
                     </div>`;
             }
         }
-        
-        document.addEventListener('DOMContentLoaded', loadStations);
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadLiveStats();
+            loadTestimonials();
+            loadStations();
+
+            // Back-to-top button visibility
+            window.addEventListener('scroll', function () {
+                const btn = document.getElementById('backToTop');
+                if (window.scrollY > 300) {
+                    btn.classList.add('visible');
+                } else {
+                    btn.classList.remove('visible');
+                }
+            });
+
+            // Cookie consent
+            if (localStorage.getItem('cookieAccepted')) {
+                const banner = document.getElementById('cookieBanner');
+                if (banner) banner.remove();
+            }
+        });
+
+        function acceptCookies() {
+            localStorage.setItem('cookieAccepted', 'true');
+            const banner = document.getElementById('cookieBanner');
+            banner.style.transform = 'translateY(100%)';
+            setTimeout(() => banner.remove(), 400);
+        }
     </script>
 </body>
+
 </html>

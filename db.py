@@ -9,10 +9,8 @@ from mysql.connector import Error
 from typing import List, Dict, Optional, Set, Any
 from datetime import datetime, date
 import logging
-from contextlib import contextmanager
 
 from config import Config
-from utils import hash_password
 
 # Setup logging
 logging.basicConfig(
@@ -27,11 +25,29 @@ logger = logging.getLogger(__name__)
 # ============================================================================
 
 def get_db_connection():
-    """Get a simple database connection"""
+    """Get a simple database connection. Auto-creates the database if missing."""
     try:
         conn = mysql.connector.connect(**Config.get_db_config())
         return conn
     except Error as e:
+        # Auto-create database if it doesn't exist (error 1049)
+        if e.errno == 1049:
+            try:
+                db_config = Config.get_db_config().copy()
+                db_name = db_config.pop('database')
+                db_config.pop('raise_on_warnings', None)
+                conn = mysql.connector.connect(**db_config)
+                cursor = conn.cursor()
+                cursor.execute(f"CREATE DATABASE `{db_name}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
+                conn.commit()
+                cursor.close()
+                conn.close()
+                logger.info(f"✅ Auto-created database '{db_name}'")
+                # Reconnect with the new database
+                return mysql.connector.connect(**Config.get_db_config())
+            except Error as create_err:
+                logger.error(f"❌ Failed to auto-create database: {create_err}")
+                raise
         logger.error(f"❌ Database connection error: {e}")
         raise
 
@@ -71,6 +87,7 @@ def setup_database():
                 fare DOUBLE NOT NULL,
                 travelDate DATE NOT NULL,
                 cancelled BOOLEAN NOT NULL,
+                status VARCHAR(20) DEFAULT 'ACTIVE',
                 bookingDate DATETIME NOT NULL,
                 FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
             )
@@ -151,6 +168,42 @@ def setup_database():
                 contact_number VARCHAR(15) DEFAULT '1800-11-2233'
             )
         """)
+        
+        # LOST & FOUND TABLE
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS lost_found (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                username VARCHAR(50),
+                item VARCHAR(100),
+                description TEXT,
+                status VARCHAR(20) DEFAULT 'SEARCHING',
+                reportDate DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        # NOTIFICATIONS TABLE
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS notifications (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                username VARCHAR(50),
+                message VARCHAR(255),
+                is_read BOOLEAN DEFAULT FALSE,
+                date DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        # WALLET HISTORY TABLE
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS wallet_history (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                username VARCHAR(50),
+                amount DOUBLE,
+                type VARCHAR(20),
+                description VARCHAR(100),
+                date DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
         # MIGRATION: If table exists but cols don't, add them (Safe Migration)
         try:
             cursor.execute("ALTER TABLE station_locations ADD COLUMN has_wifi BOOLEAN DEFAULT FALSE")
@@ -161,6 +214,53 @@ def setup_database():
             cursor.execute("ALTER TABLE station_locations ADD COLUMN contact_number VARCHAR(15) DEFAULT '1800-11-2233'")
         except:
             pass # Columns likely exist
+        
+        # Migration: Add status column to tickets table
+        try:
+            cursor.execute("ALTER TABLE tickets ADD COLUMN status VARCHAR(20) DEFAULT 'ACTIVE'")
+            # Retroactively mark all cancelled tickets as REFUNDED
+            cursor.execute("UPDATE tickets SET status = 'REFUNDED' WHERE cancelled = TRUE AND (status IS NULL OR status = 'ACTIVE')")
+            logger.info("✅ Added status column to tickets table and marked cancelled tickets as REFUNDED")
+        except:
+            pass  # Column likely exists already
+        
+        # Migration: Add last_login column to users table
+        try:
+            cursor.execute("ALTER TABLE users ADD COLUMN last_login DATETIME DEFAULT NULL")
+            logger.info("✅ Added last_login column to users table")
+        except:
+            pass  # Column likely exists already
+        
+        # Migration: Add email column to users table
+        try:
+            cursor.execute("ALTER TABLE users ADD COLUMN email VARCHAR(100) DEFAULT NULL")
+            logger.info("✅ Added email column to users table")
+        except:
+            pass  # Column likely exists already
+        
+        # Migration: Add planType and status columns to monthly_passes table
+        try:
+            cursor.execute("ALTER TABLE monthly_passes ADD COLUMN planType VARCHAR(20) DEFAULT 'basic'")
+            logger.info("✅ Added planType column to monthly_passes table")
+        except:
+            pass  # Column likely exists already
+        try:
+            cursor.execute("ALTER TABLE monthly_passes ADD COLUMN status VARCHAR(20) DEFAULT 'active'")
+            logger.info("✅ Added status column to monthly_passes table")
+        except:
+            pass  # Column likely exists already
+        # Auto-expire old passes
+        try:
+            cursor.execute("UPDATE monthly_passes SET status = 'expired' WHERE expiryDate < CURRENT_DATE AND status = 'active'")
+        except:
+            pass
+        
+        # Migration: Add tripsUsed column to monthly_passes table
+        try:
+            cursor.execute("ALTER TABLE monthly_passes ADD COLUMN tripsUsed INT DEFAULT 0")
+            logger.info("✅ Added tripsUsed column to monthly_passes table")
+        except:
+            pass  # Column likely exists already
         
         conn.commit()
         cursor.close()
@@ -179,7 +279,7 @@ def get_station_details(station_name):
     conn = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(dictionary=True, buffered=True)
         sql = "SELECT * FROM station_locations WHERE name = %s"
         cursor.execute(sql, (station_name,))
         station = cursor.fetchone()
@@ -194,14 +294,18 @@ def get_station_details(station_name):
 # USER OPERATIONS
 # ============================================================================
 
-def insert_user(username: str, password_hash: str, wallet_balance: float, role: str) -> bool:
+def insert_user(username: str, password_hash: str, wallet_balance: float, role: str, email: str = None) -> bool:
     """Insert new user into the users table"""
     conn = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        sql = "INSERT INTO users (username, password, walletBalance, role) VALUES (%s, %s, %s, %s)"
-        cursor.execute(sql, (username, password_hash, wallet_balance, role))
+        if email:
+            sql = "INSERT INTO users (username, password, walletBalance, role, email) VALUES (%s, %s, %s, %s, %s)"
+            cursor.execute(sql, (username, password_hash, wallet_balance, role, email))
+        else:
+            sql = "INSERT INTO users (username, password, walletBalance, role) VALUES (%s, %s, %s, %s)"
+            cursor.execute(sql, (username, password_hash, wallet_balance, role))
         conn.commit()
         success = cursor.rowcount > 0
         cursor.close()
@@ -244,31 +348,28 @@ def get_user_by_username(username: str) -> Optional[Dict[str, Any]]:
     conn = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(dictionary=True, buffered=True)
         
-        # 1. Try to get everything (including points)
         try:
             sql = "SELECT username, password, walletBalance, role, loyaltyPoints FROM users WHERE username = %s"
             cursor.execute(sql, (username,))
             user = cursor.fetchone()
         except Exception as e:
-            # 2. FALLBACK: If that fails (column missing), reset cursor and try basic fetch
-            print(f"⚠️ Recovering from DB error for {username}: {e}")
+            logger.warning(f"Recovering from DB error for {username}: {e}")
             try:
-                cursor.close() # Close broken cursor
-                cursor = conn.cursor(dictionary=True) # Open fresh cursor
-                
+                cursor.close()
+                cursor = conn.cursor(dictionary=True, buffered=True)
                 sql = "SELECT username, password, walletBalance, role FROM users WHERE username = %s"
                 cursor.execute(sql, (username,))
                 user = cursor.fetchone()
             except:
-                return None # Truly failed
+                return None
             
         cursor.close()
         return user
         
     except Exception as e:
-        logger.error(f"❌ Critical Error fetching user '{username}': {e}")
+        logger.error(f"Critical Error fetching user '{username}': {e}")
         return None
     finally:
         if conn and conn.is_connected():
@@ -353,7 +454,7 @@ def get_all_users() -> List[Dict[str, Any]]:
     conn = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(dictionary=True, buffered=True)
         sql = "SELECT username, password, walletBalance, role FROM users WHERE role = 'USER'"
         cursor.execute(sql)
         users = cursor.fetchall()
@@ -372,22 +473,21 @@ def get_all_users() -> List[Dict[str, Any]]:
 # TICKET OPERATIONS
 # ============================================================================
 
-# db.py - UPDATE THIS FUNCTION
-# db.py - UPDATE THIS FUNCTION
-def insert_ticket(username: str, source: str, destination: str, passengers: int, fare: float, travel_date: date, distance: float = 0.0, cancelled: bool = False) -> int:
-    """Insert ticket with DISTANCE and return ticketId"""
+
+def insert_ticket(username: str, source: str, destination: str, passengers: int, fare: float, travel_date: date, distance: float = 0.0, cancelled: bool = False, travel_time: str = 'now') -> int:
+    """Insert ticket with DISTANCE and TRAVEL TIME, return ticketId"""
     conn = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # SQL query updated to include 'distance'
+        # SQL query includes 'distance' and 'travelTime'
         sql = """
             INSERT INTO tickets 
-            (username, source, destination, passengers, fare, travelDate, distance, cancelled, bookingDate) 
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW())
+            (username, source, destination, passengers, fare, travelDate, distance, cancelled, bookingDate, travelTime) 
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW(), %s)
         """
-        cursor.execute(sql, (username, source, destination, passengers, fare, travel_date, distance, cancelled))
+        cursor.execute(sql, (username, source, destination, passengers, fare, travel_date, distance, cancelled, travel_time))
         conn.commit()
         ticket_id = cursor.lastrowid
         cursor.close()
@@ -405,7 +505,7 @@ def get_tickets_by_user(username: str) -> List[Dict[str, Any]]:
     conn = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(dictionary=True, buffered=True)
         sql = "SELECT * FROM tickets WHERE username = %s ORDER BY bookingDate DESC"
         cursor.execute(sql, (username,))
         tickets = cursor.fetchall()
@@ -426,7 +526,7 @@ def cancel_ticket(ticket_id: int) -> bool:
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        sql = "UPDATE tickets SET cancelled = TRUE WHERE ticketId = %s"
+        sql = "UPDATE tickets SET cancelled = TRUE, status = 'REFUNDED' WHERE ticketId = %s"
         cursor.execute(sql, (ticket_id,))
         conn.commit()
         success = cursor.rowcount > 0
@@ -451,7 +551,7 @@ def get_ticket_by_id(ticket_id: int) -> Optional[Dict[str, Any]]:
     conn = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(dictionary=True, buffered=True)
         sql = "SELECT * FROM tickets WHERE ticketId = %s"
         cursor.execute(sql, (ticket_id,))
         ticket = cursor.fetchone()
@@ -501,7 +601,7 @@ def get_feedbacks_by_username(username: str) -> List[Dict[str, Any]]:
     conn = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(dictionary=True, buffered=True)
         sql = "SELECT feedbackId, username, text, type, timestamp FROM feedbacks WHERE username = %s ORDER BY timestamp DESC"
         cursor.execute(sql, (username,))
         feedbacks = cursor.fetchall()
@@ -521,7 +621,7 @@ def get_all_feedbacks() -> List[Dict[str, Any]]:
     conn = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(dictionary=True, buffered=True)
         sql = "SELECT feedbackId, username, text, type, timestamp FROM feedbacks ORDER BY timestamp DESC"
         cursor.execute(sql)
         feedbacks = cursor.fetchall()
@@ -594,7 +694,7 @@ def get_assigned_tickets_by_staff(staff_username: str) -> List[Dict[str, Any]]:
     conn = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(dictionary=True, buffered=True)
         sql = """
             SELECT st.ticketId, st.status, st.createdDate, st.resolvedDate,
                    fb.username, fb.text, fb.type
@@ -614,14 +714,14 @@ def get_assigned_tickets_by_staff(staff_username: str) -> List[Dict[str, Any]]:
     finally:
         if conn and conn.is_connected():
             conn.close()
-# --- ADD THIS TO db.py ---
+
 def insert_lost_found(username: str, item: str, description: str) -> bool:
     """Insert a lost item report into the correct table"""
     conn = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        sql = "INSERT INTO lost_found (username, item, description, status) VALUES (%s, %s, %s, 'SEARCHING')"
+        sql = "INSERT INTO lost_found (username, item, description, status, reportDate) VALUES (%s, %s, %s, 'SEARCHING', NOW())"
         cursor.execute(sql, (username, item, description))
         conn.commit()
         success = cursor.rowcount > 0
@@ -639,41 +739,52 @@ def insert_lost_found(username: str, item: str, description: str) -> bool:
 # METRO CARD OPERATIONS
 # ============================================================================
 
-# In db.py, find insert_metro_card and make sure it matches this:
 
-def insert_metro_card(username: str, balance: float, auto_recharge_enabled: bool, min_balance_threshold: float) -> int:
-    """Insert metro card and return cardNumber"""
+
+def insert_metro_card(username, balance, auto_recharge, min_threshold, card_number=None):
     conn = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        
-        # Ensure your table has these columns!
         sql = """
-            INSERT INTO metro_cards 
-            (username, balance, autoRechargeEnabled, minBalanceThreshold) 
+            INSERT INTO metro_cards (username, balance, autoRechargeEnabled, minBalanceThreshold)
             VALUES (%s, %s, %s, %s)
         """
-        # Convert boolean to integer (1 or 0) for MySQL if needed, though MySQL handles True/False usually
-        cursor.execute(sql, (username, balance, int(auto_recharge_enabled), min_balance_threshold))
-        
+        cursor.execute(sql, (username, balance, auto_recharge, min_threshold))
         conn.commit()
-        card_number = cursor.lastrowid
+        cursor.close()
+        return True
+    except Error as e:
+        logger.error(f"Error inserting metro card: {e}")
+        if conn: conn.rollback()
+        return False
+    finally:
+        if conn and conn.is_connected(): conn.close()
+
+def get_metro_card_by_username(username):
+    conn = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True, buffered=True)
+        cursor.execute("SELECT * FROM metro_cards WHERE username = %s", (username,))
+        card = cursor.fetchone()
         cursor.close()
         
-        if card_number > 0:
-            logger.info(f"✅ Metro card #{card_number} created for '{username}'")
-        return card_number
-        
+        if card:
+            return {
+                'cardNumber': card['cardNumber'],
+                'username': card['username'],
+                'balance': card['balance'],
+                'autoRechargeEnabled': card['autoRechargeEnabled'],
+                'minBalanceThreshold': card['minBalanceThreshold']
+            }
+        return None
     except Error as e:
-        logger.error(f"❌ Error inserting metro card: {e}")
-        if conn:
-            conn.rollback()
-        return -1
+        logger.error(f"Error fetching metro card for '{username}': {e}")
+        return None
     finally:
-        if conn and conn.is_connected():
-            conn.close()
-
+        if conn and conn.is_connected(): conn.close()
+            
 def update_metro_card(card_number: int, balance: float, auto_recharge_enabled: bool, min_balance_threshold: float) -> bool:
     """Update metro card details"""
     conn = None
@@ -701,31 +812,13 @@ def update_metro_card(card_number: int, balance: float, auto_recharge_enabled: b
             conn.close()
 
 
-def get_metro_card_by_username(username: str) -> Optional[Dict[str, Any]]:
-    """Get metro card details by username"""
-    conn = None
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        sql = "SELECT * FROM metro_cards WHERE username = %s"
-        cursor.execute(sql, (username,))
-        card = cursor.fetchone()
-        cursor.close()
-        return card
-        
-    except Error as e:
-        logger.error(f"❌ Error fetching metro card for '{username}': {e}")
-        return None
-    finally:
-        if conn and conn.is_connected():
-            conn.close()
 
 
 # ============================================================================
 # MONTHLY PASS OPERATIONS
 # ============================================================================
 
-def insert_monthly_pass(username: str, source: str, destination: str, purchase_date: date, expiry_date: date, price: float) -> int:
+def insert_monthly_pass(username: str, source: str, destination: str, purchase_date: date, expiry_date: date, price: float, plan_type: str = 'basic') -> int:
     """Insert monthly pass and return passId"""
     conn = None
     try:
@@ -733,16 +826,16 @@ def insert_monthly_pass(username: str, source: str, destination: str, purchase_d
         cursor = conn.cursor()
         sql = """
             INSERT INTO monthly_passes 
-            (username, source, destination, purchaseDate, expiryDate, price) 
-            VALUES (%s, %s, %s, %s, %s, %s)
+            (username, source, destination, purchaseDate, expiryDate, price, planType, status) 
+            VALUES (%s, %s, %s, %s, %s, %s, %s, 'active')
         """
-        cursor.execute(sql, (username, source, destination, purchase_date, expiry_date, price))
+        cursor.execute(sql, (username, source, destination, purchase_date, expiry_date, price, plan_type))
         conn.commit()
         pass_id = cursor.lastrowid
         cursor.close()
         
         if pass_id > 0:
-            logger.info(f"✅ Monthly pass #{pass_id} created for '{username}'")
+            logger.info(f"✅ Monthly pass #{pass_id} ({plan_type}) created for '{username}'")
         return pass_id
         
     except Error as e:
@@ -750,6 +843,36 @@ def insert_monthly_pass(username: str, source: str, destination: str, purchase_d
         if conn:
             conn.rollback()
         return -1
+    finally:
+        if conn and conn.is_connected():
+            conn.close()
+
+
+def get_all_monthly_passes(username: str) -> list:
+    """Get all monthly passes (active + expired) for pass history"""
+    conn = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        sql = """
+            SELECT passId, source, destination, purchaseDate, expiryDate, price,
+                   COALESCE(planType, 'basic') as planType,
+                   CASE 
+                       WHEN expiryDate >= CURRENT_DATE THEN 'active'
+                       ELSE 'expired'
+                   END as status
+            FROM monthly_passes 
+            WHERE username = %s
+            ORDER BY purchaseDate DESC
+        """
+        cursor.execute(sql, (username,))
+        passes = cursor.fetchall()
+        cursor.close()
+        return passes
+        
+    except Error as e:
+        logger.error(f"❌ Error fetching pass history for '{username}': {e}")
+        return []
     finally:
         if conn and conn.is_connected():
             conn.close()
@@ -835,7 +958,7 @@ def get_station_location(name: str) -> Optional[Dict[str, Any]]:
     conn = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(dictionary=True, buffered=True)
         sql = "SELECT name, x, y FROM station_locations WHERE name = %s"
         cursor.execute(sql, (name,))
         location = cursor.fetchone()
@@ -885,7 +1008,7 @@ def get_all_announcements() -> List[Dict[str, Any]]:
     conn = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(dictionary=True, buffered=True)
         sql = "SELECT * FROM announcements ORDER BY createdDate DESC"
         cursor.execute(sql)
         announcements = cursor.fetchall()
@@ -899,7 +1022,30 @@ def get_all_announcements() -> List[Dict[str, Any]]:
         if conn and conn.is_connected():
             conn.close()
 
-
+def delete_announcement(announcement_id: int) -> bool:
+    """Delete an announcement by ID"""
+    conn = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        sql = "DELETE FROM announcements WHERE id = %s"
+        cursor.execute(sql, (announcement_id,))
+        conn.commit()
+        success = cursor.rowcount > 0
+        cursor.close()
+        
+        if success:
+            logger.info(f"✅ Announcement {announcement_id} deleted")
+        return success
+        
+    except Error as e:
+        logger.error(f"❌ Error deleting announcement: {e}")
+        if conn:
+            conn.rollback()
+        return False
+    finally:
+        if conn and conn.is_connected():
+            conn.close()
 # ============================================================================
 # UTILITY OPERATIONS
 # ============================================================================
@@ -941,7 +1087,7 @@ def clear_all_data() -> bool:
         if conn and conn.is_connected():
             conn.close()
 
-# --- ADD TO db.py ---
+
 
 # 1. FOR LOST & FOUND ADMIN
 def get_all_lost_found_items() -> List[Dict[str, Any]]:
@@ -949,7 +1095,7 @@ def get_all_lost_found_items() -> List[Dict[str, Any]]:
     conn = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(dictionary=True, buffered=True)
         sql = "SELECT * FROM lost_found ORDER BY reportDate DESC"
         cursor.execute(sql)
         items = cursor.fetchall()
@@ -1001,7 +1147,7 @@ def get_recent_global_tickets(limit=20):
     conn = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(dictionary=True, buffered=True)
         # Fetch tickets with username
         cursor.execute("""
             SELECT ticketId, username, source, destination, fare, bookingDate 
@@ -1018,7 +1164,7 @@ def get_station_traffic_stats():
     conn = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(dictionary=True, buffered=True)
         cursor.execute("SELECT source as station, COUNT(*) as count FROM tickets GROUP BY source")
         return cursor.fetchall()
     except Exception as e:
@@ -1031,7 +1177,7 @@ def get_top_users_by_balance(limit=5):
     conn = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(dictionary=True, buffered=True)
         cursor.execute("SELECT username, walletBalance FROM users ORDER BY walletBalance DESC LIMIT %s", (limit,))
         return cursor.fetchall()
     except Exception as e:
@@ -1039,13 +1185,13 @@ def get_top_users_by_balance(limit=5):
     finally:
         if conn and conn.is_connected(): conn.close()
 
-# --- NEW FEATURES FOR ADMIN PRO ---
+
 
 def get_peak_hour_stats():
     """Returns ticket counts by hour of day (0-23) for analytics"""
     conn = get_db_connection()
     try:
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(dictionary=True, buffered=True)
         # Extracts the HOUR from bookingDate and counts tickets
         cursor.execute("""
             SELECT HOUR(bookingDate) as hour, COUNT(*) as count 
@@ -1061,7 +1207,7 @@ def get_feedback_sentiment():
     """Categorizes feedback as Positive/Negative based on keywords"""
     conn = get_db_connection()
     try:
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(dictionary=True, buffered=True)
         cursor.execute("SELECT text FROM feedbacks")
         all_feedback = cursor.fetchall()
         
@@ -1090,19 +1236,19 @@ def get_refund_stats():
     # or you can add a 'status' column to tickets later.
     conn = get_db_connection()
     try:
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(dictionary=True, buffered=True)
         cursor.execute("SELECT COUNT(*) as count, SUM(fare) as total FROM tickets WHERE bookingDate < NOW()") 
         # In a real app, you'd filter by status='CANCELLED'
         return cursor.fetchone() 
     finally:
         conn.close()
 
-# --- ADMIN FEATURES ---
+
 def get_all_tickets_full():
     """Fetch all tickets with user details for the Admin Validator"""
     conn = get_db_connection()
     try:
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(dictionary=True, buffered=True)
         cursor.execute("SELECT * FROM tickets ORDER BY bookingDate DESC LIMIT 50")
         return cursor.fetchall()
     finally:
@@ -1114,63 +1260,218 @@ def toggle_station_status(station_name, status):
     return True
 
 # ============================================================================
-# TEST THE MODULE
+# AUDIT LOG OPERATIONS
 # ============================================================================
 
-if __name__ == "__main__":
-    print("=" * 60)
-    print("Testing Database Module")
-    print("=" * 60)
-    
-    # Test imports
-    print("\n1. Testing imports...")
-    try:
-        import mysql.connector
-        print("✅ mysql.connector imported successfully!")
-    except ImportError as e:
-        print(f"❌ mysql.connector import failed: {e}")
-        print("\nPlease run: pip install mysql-connector-python")
-        exit(1)
-    
-    # Test database connection
-    print("\n2. Testing database connection...")
+def get_recent_audit_logs(limit: int = 50) -> List[Dict[str, Any]]:
+    """Get most recent audit log entries"""
+    conn = None
     try:
         conn = get_db_connection()
-        if conn.is_connected():
-            print("✅ Database connection successful!")
+        cursor = conn.cursor(dictionary=True, buffered=True)
+        sql = """
+            SELECT log_id, table_name, operation, record_id, 
+                   old_value, new_value, changed_at, changed_by
+            FROM audit_logs 
+            ORDER BY changed_at DESC 
+            LIMIT %s
+        """
+        cursor.execute(sql, (limit,))
+        logs = cursor.fetchall()
+        cursor.close()
+        return logs
+    except Error as e:
+        logger.error(f"❌ Error fetching audit logs: {e}")
+        return []
+    finally:
+        if conn and conn.is_connected():
             conn.close()
-    except Exception as e:
-        print(f"❌ Database connection failed: {e}")
-        print("\nMake sure:")
-        print("  1. MySQL server is running (start XAMPP)")
-        print("  2. Database 'metrosystemdb' exists")
-        print("  3. config.py has correct credentials")
-        exit(1)
-    
-    # Test database setup
-    print("\n3. Setting up database tables...")
-    if setup_database():
-        print("✅ Database tables created successfully!")
-    
-    # Test user operations
-    print("\n4. Testing user operations...")
-    from utils import hash_password
-    
-    test_user = "testuser123"
-    test_pass = hash_password("password123")
-    
-    # Check if user already exists
-    if username_exists(test_user):
-        print(f"ℹ️  User '{test_user}' already exists, skipping insert")
-    else:
-        if insert_user(test_user, test_pass, 100.0, "USER"):
-            print(f"✅ User '{test_user}' created!")
-    
-    # Fetch user
-    user_data = get_user_by_username(test_user)
-    if user_data:
-        print(f"✅ User data retrieved: {user_data['username']}, Balance: {user_data['walletBalance']}")
-    
-    print("\n" + "=" * 60)
-    print("✅ All tests passed! Database module is working correctly.")
-    print("=" * 60)
+
+def get_audit_logs_by_table(table_name: str, limit: int = 50) -> List[Dict[str, Any]]:
+    """Get audit logs for a specific table"""
+    conn = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True, buffered=True)
+        sql = """
+            SELECT log_id, table_name, operation, record_id, 
+                   old_value, new_value, changed_at, changed_by
+            FROM audit_logs 
+            WHERE table_name = %s
+            ORDER BY changed_at DESC 
+            LIMIT %s
+        """
+        cursor.execute(sql, (table_name, limit))
+        logs = cursor.fetchall()
+        cursor.close()
+        return logs
+    except Error as e:
+        logger.error(f"❌ Error fetching audit logs for table '{table_name}': {e}")
+        return []
+    finally:
+        if conn and conn.is_connected():
+            conn.close()
+
+def get_audit_logs_by_user(username: str, limit: int = 50) -> List[Dict[str, Any]]:
+    """Get audit logs for changes made by a specific user"""
+    conn = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True, buffered=True)
+        sql = """
+            SELECT log_id, table_name, operation, record_id, 
+                   old_value, new_value, changed_at, changed_by
+            FROM audit_logs 
+            WHERE changed_by = %s
+            ORDER BY changed_at DESC 
+            LIMIT %s
+        """
+        cursor.execute(sql, (username, limit))
+        logs = cursor.fetchall()
+        cursor.close()
+        return logs
+    except Error as e:
+        logger.error(f"❌ Error fetching audit logs for user '{username}': {e}")
+        return []
+    finally:
+        if conn and conn.is_connected():
+            conn.close()
+
+def get_audit_logs_by_operation(operation: str, limit: int = 50) -> List[Dict[str, Any]]:
+    """Get audit logs for a specific operation type (INSERT, UPDATE, DELETE)"""
+    conn = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True, buffered=True)
+        sql = """
+            SELECT log_id, table_name, operation, record_id, 
+                   old_value, new_value, changed_at, changed_by
+            FROM audit_logs 
+            WHERE operation = %s
+            ORDER BY changed_at DESC 
+            LIMIT %s
+        """
+        cursor.execute(sql, (operation.upper(), limit))
+        logs = cursor.fetchall()
+        cursor.close()
+        return logs
+    except Error as e:
+        logger.error(f"❌ Error fetching audit logs for operation '{operation}': {e}")
+        return []
+    finally:
+        if conn and conn.is_connected():
+            conn.close()
+
+def get_audit_logs_filtered(
+    table_name: Optional[str] = None,
+    operation: Optional[str] = None,
+    username: Optional[str] = None,
+    start_date: Optional[datetime] = None,
+    end_date: Optional[datetime] = None,
+    limit: int = 50
+) -> List[Dict[str, Any]]:
+    """Get audit logs with multiple filters"""
+    conn = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True, buffered=True)
+        
+        # Build dynamic query
+        conditions = []
+        params = []
+        
+        if table_name:
+            conditions.append("table_name = %s")
+            params.append(table_name)
+        
+        if operation:
+            conditions.append("operation = %s")
+            params.append(operation.upper())
+        
+        if username:
+            conditions.append("changed_by = %s")
+            params.append(username)
+        
+        if start_date:
+            conditions.append("changed_at >= %s")
+            params.append(start_date)
+        
+        if end_date:
+            conditions.append("changed_at <= %s")
+            params.append(end_date)
+        
+        where_clause = " AND ".join(conditions) if conditions else "1=1"
+        
+        sql = f"""
+            SELECT log_id, table_name, operation, record_id, 
+                   old_value, new_value, changed_at, changed_by
+            FROM audit_logs 
+            WHERE {where_clause}
+            ORDER BY changed_at DESC 
+            LIMIT %s
+        """
+        params.append(limit)
+        
+        cursor.execute(sql, tuple(params))
+        logs = cursor.fetchall()
+        cursor.close()
+        return logs
+    except Error as e:
+        logger.error(f"❌ Error fetching filtered audit logs: {e}")
+        return []
+    finally:
+        if conn and conn.is_connected():
+            conn.close()
+
+def get_audit_stats() -> Dict[str, Any]:
+    """Get audit log statistics"""
+    conn = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True, buffered=True)
+        
+        # Total logs
+        cursor.execute("SELECT COUNT(*) as total FROM audit_logs")
+        total = cursor.fetchone()['total']
+        
+        # Logs by operation
+        cursor.execute("""
+            SELECT operation, COUNT(*) as count 
+            FROM audit_logs 
+            GROUP BY operation
+        """)
+        by_operation = {row['operation']: row['count'] for row in cursor.fetchall()}
+        
+        # Logs by table
+        cursor.execute("""
+            SELECT table_name, COUNT(*) as count 
+            FROM audit_logs 
+            GROUP BY table_name 
+            ORDER BY count DESC 
+            LIMIT 10
+        """)
+        by_table = cursor.fetchall()
+        
+        # Recent activity (last 24 hours)
+        cursor.execute("""
+            SELECT COUNT(*) as count 
+            FROM audit_logs 
+            WHERE changed_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
+        """)
+        last_24h = cursor.fetchone()['count']
+        
+        cursor.close()
+        
+        return {
+            'total_logs': total,
+            'by_operation': by_operation,
+            'by_table': by_table,
+            'last_24_hours': last_24h
+        }
+    except Error as e:
+        logger.error(f"❌ Error fetching audit stats: {e}")
+        return {}
+    finally:
+        if conn and conn.is_connected():
+            conn.close()
+

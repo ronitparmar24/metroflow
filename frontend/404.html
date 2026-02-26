@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Station Not Found — MetroFlow</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Animated background blobs */
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.4;
+            animation: blobFloat 8s ease-in-out infinite alternate;
+        }
+
+        .blob-1 {
+            width: 400px;
+            height: 400px;
+            background: rgba(118, 75, 162, 0.15);
+            top: -100px;
+            left: -100px;
+        }
+
+        .blob-2 {
+            width: 350px;
+            height: 350px;
+            background: rgba(102, 126, 234, 0.12);
+            bottom: -80px;
+            right: -80px;
+            animation-delay: 3s;
+        }
+
+        .blob-3 {
+            width: 200px;
+            height: 200px;
+            background: rgba(240, 147, 251, 0.1);
+            top: 50%;
+            left: 60%;
+            animation-delay: 5s;
+        }
+
+        @keyframes blobFloat {
+            to {
+                transform: translate(30px, -20px) scale(1.1);
+            }
+        }
+
+        .container {
+            text-align: center;
+            position: relative;
+            z-index: 2;
+            max-width: 520px;
+            padding: 20px;
+        }
+
+        /* Animated train */
+        .train-track {
+            position: relative;
+            height: 120px;
+            margin-bottom: 30px;
+        }
+
+        .train {
+            font-size: 64px;
+            position: absolute;
+            animation: trainMove 4s ease-in-out infinite;
+        }
+
+        .track-line {
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg,
+                    transparent 0%, #764ba2 15%, #667eea 50%, #764ba2 85%, transparent 100%);
+            border-radius: 2px;
+        }
+
+        .track-dots {
+            position: absolute;
+            bottom: 5px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 40px;
+        }
+
+        .track-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            border: 2px solid #ccc;
+        }
+
+        .track-dot.missed {
+            background: #ef4444;
+            border-color: #dc2626;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes trainMove {
+            0% {
+                left: -60px;
+                opacity: 0;
+            }
+
+            20% {
+                opacity: 1;
+            }
+
+            50% {
+                left: calc(50% - 30px);
+            }
+
+            80% {
+                opacity: 1;
+            }
+
+            100% {
+                left: calc(100% + 60px);
+                opacity: 0;
+            }
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+            }
+
+            50% {
+                box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+            }
+        }
+
+        .error-code {
+            font-size: 8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #764ba2, #667eea);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .error-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 12px;
+        }
+
+        .error-message {
+            color: #64748b;
+            font-size: 1rem;
+            line-height: 1.7;
+            margin-bottom: 32px;
+        }
+
+        .btn-home {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 36px;
+            background: linear-gradient(135deg, #764ba2, #667eea);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(118, 75, 162, 0.3);
+        }
+
+        .btn-home:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(118, 75, 162, 0.45);
+        }
+
+        .footer-note {
+            margin-top: 40px;
+            color: #94a3b8;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+
+    <div class="container">
+        <div class="train-track">
+            <div class="train">🚇</div>
+            <div class="track-line"></div>
+            <div class="track-dots">
+                <div class="track-dot"></div>
+                <div class="track-dot"></div>
+                <div class="track-dot missed"></div>
+                <div class="track-dot"></div>
+                <div class="track-dot"></div>
+            </div>
+        </div>
+
+        <div class="error-code">404</div>
+        <h1 class="error-title">Station Not Found</h1>
+        <p class="error-message">
+            Looks like this route doesn't exist on our network.<br>
+            The page you're looking for may have been moved or removed.
+        </p>
+
+        <a href="/frontend/index.html" class="btn-home">
+            ← Back to Home Station
+        </a>
+
+        <p class="footer-note">MetroFlow Transit System</p>
+    </div>
+</body>
+
+</html>
