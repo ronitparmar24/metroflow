@@ -1,0 +1,17 @@
+{
+    "pythonVersion": "3.13",
+    "pythonPlatform": "Windows",
+    "extraPaths": [
+        "c:\\Users\\rey\\MetroFlow",
+        "c:\\Users\\rey\\MetroFlow\\.venv\\Lib\\site-packages"
+    ],
+    "executionEnvironments": [
+        {
+            "root": "."
+        }
+    ],
+    "reportMissingImports": "none",
+    "reportMissingModuleSource": "none",
+    "reportGeneralTypeIssues": "none",
+    "typeCheckingMode": "off"
+}

@@ -30,34 +30,37 @@
             overflow-x: hidden;
         }
 
-        /* Particles Background */
-        .particles {
+        /* Metro Line SVG Background */
+        .metro-bg {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            inset: 0;
             z-index: 0;
             pointer-events: none;
+            overflow: hidden;
         }
-
-        .particle {
+        .metro-bg svg {
             position: absolute;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            animation: float 20s infinite ease-in-out;
+            width: 100%;
+            height: 100%;
+        }
+        .metro-line-path {
+            fill: none;
+            stroke-width: 3;
+            stroke-linecap: round;
+            opacity: 0.12;
+        }
+        .metro-train-dot {
+            fill: rgba(255,255,255,0.6);
+        }
+        .metro-station-dot {
+            fill: rgba(255,255,255,0.2);
+            stroke: rgba(255,255,255,0.3);
+            stroke-width: 2;
         }
 
-        @keyframes float {
-
-            0%,
-            100% {
-                transform: translate(0, 0);
-            }
-
-            50% {
-                transform: translate(30px, -30px);
-            }
+        /* 3D Card Tilt */
+        .auth-card {
+            transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
         }
 
         /* Card Entrance Animation */
@@ -450,7 +453,42 @@
 
 <body>
 
-    <div class="particles" id="particles"></div>
+    <!-- Animated Metro Line SVG Background -->
+    <div class="metro-bg">
+        <svg viewBox="0 0 1200 800" preserveAspectRatio="none">
+            <!-- Line 1: Horizontal -->
+            <path class="metro-line-path" stroke="rgba(255,255,255,0.8)" d="M -50,200 C 200,200 300,350 500,350 S 800,200 1050,200 L 1300,200">
+                <animate attributeName="d" dur="20s" repeatCount="indefinite" values="M -50,200 C 200,200 300,350 500,350 S 800,200 1050,200 L 1300,200;M -50,250 C 200,180 300,300 500,380 S 800,250 1050,180 L 1300,250;M -50,200 C 200,200 300,350 500,350 S 800,200 1050,200 L 1300,200" />
+            </path>
+            <circle class="metro-train-dot" r="5">
+                <animateMotion dur="8s" repeatCount="indefinite"><mpath href="#loginLine1" /></animateMotion>
+            </circle>
+            <path id="loginLine1" d="M -50,200 C 200,200 300,350 500,350 S 800,200 1050,200 L 1300,200" fill="none" />
+
+            <!-- Line 2: Diagonal -->
+            <path class="metro-line-path" stroke="rgba(255,255,255,0.6)" d="M -50,600 C 150,500 400,400 600,450 S 900,550 1100,400 L 1300,350" />
+            <circle class="metro-train-dot" r="4">
+                <animateMotion dur="12s" repeatCount="indefinite"><mpath href="#loginLine2" /></animateMotion>
+            </circle>
+            <path id="loginLine2" d="M -50,600 C 150,500 400,400 600,450 S 900,550 1100,400 L 1300,350" fill="none" />
+
+            <!-- Line 3: Top sweep -->
+            <path class="metro-line-path" stroke="rgba(255,255,255,0.5)" d="M -50,80 Q 300,160 600,80 T 1300,120" />
+            <circle class="metro-train-dot" r="3.5">
+                <animateMotion dur="10s" repeatCount="indefinite"><mpath href="#loginLine3" /></animateMotion>
+            </circle>
+            <path id="loginLine3" d="M -50,80 Q 300,160 600,80 T 1300,120" fill="none" />
+
+            <!-- Station dots -->
+            <circle class="metro-station-dot" cx="200" cy="200" r="6" />
+            <circle class="metro-station-dot" cx="500" cy="350" r="6" />
+            <circle class="metro-station-dot" cx="800" cy="200" r="6" />
+            <circle class="metro-station-dot" cx="400" cy="420" r="5" />
+            <circle class="metro-station-dot" cx="900" cy="450" r="5" />
+            <circle class="metro-station-dot" cx="300" cy="100" r="4" />
+            <circle class="metro-station-dot" cx="800" cy="90" r="4" />
+        </svg>
+    </div>
 
     <div class="auth-card">
 
@@ -495,9 +533,27 @@
 
                 <div class="form-floating mb-3 position-relative">
                     <input type="password" class="form-control" id="password" placeholder="Password" required
-                        autocomplete="current-password">
+                        autocomplete="current-password" oninput="checkLoginStrength()">
                     <label for="password"><i class="fas fa-lock me-2 text-muted"></i>Password</label>
                     <i class="fas fa-eye password-toggle" onclick="togglePassword()" id="toggleIcon"></i>
+                </div>
+                <!-- Feature P: Password Strength Bar -->
+                <div id="strengthBarWrap" style="display:none;margin:-8px 0 12px;">
+                    <div style="display:flex;gap:3px;margin-bottom:4px;">
+                        <div id="sb1"
+                            style="height:3px;flex:1;border-radius:2px;background:#e2e8f0;transition:background 0.25s;">
+                        </div>
+                        <div id="sb2"
+                            style="height:3px;flex:1;border-radius:2px;background:#e2e8f0;transition:background 0.25s;">
+                        </div>
+                        <div id="sb3"
+                            style="height:3px;flex:1;border-radius:2px;background:#e2e8f0;transition:background 0.25s;">
+                        </div>
+                        <div id="sb4"
+                            style="height:3px;flex:1;border-radius:2px;background:#e2e8f0;transition:background 0.25s;">
+                        </div>
+                    </div>
+                    <div id="strengthLabel" style="font-size:11px;color:#94a3b8;"></div>
                 </div>
 
                 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -533,6 +589,13 @@
                             <i class="fas fa-user me-1"></i> User
                         </button>
                     </div>
+                </div>
+
+                <!-- Feature P: Secure connection badge -->
+                <div style="display:flex;align-items:center;justify-content:center;gap:6px;
+                    margin-top:16px;font-size:11px;color:#94a3b8;">
+                    <i class="fas fa-lock" style="color:#22c55e;font-size:10px;"></i>
+                    Secured with SHA-256 · Your data is safe
                 </div>
             </form>
         </div>
@@ -744,13 +807,44 @@
             }
         });
 
+        // Feature DD: Shake animation on failed login
+        const _ddStyle = document.createElement('style');
+        _ddStyle.textContent = `
+            @keyframes loginShake {
+                0%,100% { transform: translateX(0); }
+                15%      { transform: translateX(-8px) rotate(-1deg); }
+                30%      { transform: translateX(8px)  rotate(1deg);  }
+                45%      { transform: translateX(-6px); }
+                60%      { transform: translateX(6px);  }
+                75%      { transform: translateX(-3px); }
+                90%      { transform: translateX(3px);  }
+            }
+            .login-shake { animation: loginShake 0.55s cubic-bezier(.36,.07,.19,.97) both; }
+            .form-control-modern:focus {
+                box-shadow: 0 0 0 3px rgba(102,126,234,0.22) !important;
+                border-color: #667eea !important;
+            }
+        `;
+        document.head.appendChild(_ddStyle);
+
         function showAlert(msg, type) {
             const container = document.getElementById('alertContainer');
             container.innerHTML = `
-                <div class="alert alert-${type} d-flex align-items-center border-0 shadow-sm rounded-3 mb-3 fade show">
+                <div class="alert alert-${type} d-flex align-items-center border-0 shadow-sm rounded-3 mb-3 fade show"
+                    style="${type === 'danger' ? 'border-left:4px solid #ef4444!important;background:rgba(239,68,68,0.08);color:#b91c1c;' : ''}">
                     <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} me-2"></i>
                     <div>${msg}</div>
                 </div>`;
+            if (type === 'danger') {
+                // Shake the login card
+                const card = document.querySelector('.auth-card, .login-card, form');
+                if (card) {
+                    card.classList.remove('login-shake');
+                    void card.offsetWidth; // force reflow
+                    card.classList.add('login-shake');
+                    card.addEventListener('animationend', () => card.classList.remove('login-shake'), { once: true });
+                }
+            }
             setTimeout(() => {
                 if (container.firstChild) container.innerHTML = '';
             }, 3000);
@@ -786,6 +880,35 @@
             }, 1500);
         }
 
+        // Feature P: Password Strength Meter
+        function checkLoginStrength() {
+            const pw = document.getElementById('password').value;
+            const wrap = document.getElementById('strengthBarWrap');
+            const lbl = document.getElementById('strengthLabel');
+            if (!wrap) return;
+            wrap.style.display = pw.length ? 'block' : 'none';
+            if (!pw.length) return;
+
+            let score = 0;
+            if (pw.length >= 6) score++;
+            if (/[A-Z]/.test(pw)) score++;
+            if (/[0-9]/.test(pw)) score++;
+            if (/[^A-Za-z0-9]/.test(pw)) score++;
+
+            const colors = ['#ef4444', '#f59e0b', '#3b82f6', '#22c55e'];
+            const labels = ['', 'Weak', 'Fair', 'Good', 'Strong'];
+            const col = colors[score - 1] || '#e2e8f0';
+            for (let i = 1; i <= 4; i++) {
+                const seg = document.getElementById('sb' + i);
+                if (seg) seg.style.background = i <= score ? col : '#e2e8f0';
+            }
+            if (lbl) { lbl.textContent = labels[score]; lbl.style.color = col; }
+
+            // Glow border on strong
+            const pwEl = document.getElementById('password');
+            pwEl.style.borderColor = score >= 4 ? '#22c55e' : (score >= 3 ? '#3b82f6' : score >= 2 ? '#f59e0b' : '#ef4444');
+        }
+
         // Reset modal state when reopened
         document.getElementById('forgotModal').addEventListener('hidden.bs.modal', function () {
             document.getElementById('forgotForm').style.display = 'block';
@@ -793,6 +916,23 @@
             document.getElementById('forgotUsername').value = '';
             document.getElementById('forgotError').style.display = 'none';
         });
+
+        // 3D Card Tilt Effect
+        (() => {
+            const card = document.querySelector('.auth-card');
+            if (!card || window.innerWidth < 900) return;
+            card.addEventListener('mousemove', e => {
+                const rect = card.getBoundingClientRect();
+                const x = (e.clientX - rect.left) / rect.width - 0.5;
+                const y = (e.clientY - rect.top) / rect.height - 0.5;
+                card.style.transform = `perspective(1000px) rotateY(${x * 6}deg) rotateX(${-y * 6}deg) scale(1.01)`;
+                card.style.boxShadow = `${-x*20}px ${y*20}px 60px rgba(0,0,0,0.2)`;
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'perspective(1000px) rotateY(0) rotateX(0) scale(1)';
+                card.style.boxShadow = '';
+            });
+        })();
     </script>
 </body>
 

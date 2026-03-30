@@ -262,6 +262,18 @@ def setup_database():
         except:
             pass  # Column likely exists already
         
+        # Migration: Add ticketClass, coachPreference, paymentMethod to tickets table
+        for col_name, col_def in [
+            ('ticketClass', "VARCHAR(20) DEFAULT 'standard'"),
+            ('coachPreference', "VARCHAR(20) DEFAULT 'general'"),
+            ('paymentMethod', "VARCHAR(20) DEFAULT 'wallet'"),
+        ]:
+            try:
+                cursor.execute(f"ALTER TABLE tickets ADD COLUMN {col_name} {col_def}")
+                logger.info(f"✅ Added {col_name} column to tickets table")
+            except:
+                pass  # Column likely exists already
+        
         conn.commit()
         cursor.close()
         logger.info("✅ All database tables created successfully")
@@ -474,20 +486,19 @@ def get_all_users() -> List[Dict[str, Any]]:
 # ============================================================================
 
 
-def insert_ticket(username: str, source: str, destination: str, passengers: int, fare: float, travel_date: date, distance: float = 0.0, cancelled: bool = False, travel_time: str = 'now') -> int:
-    """Insert ticket with DISTANCE and TRAVEL TIME, return ticketId"""
+def insert_ticket(username: str, source: str, destination: str, passengers: int, fare: float, travel_date: date, distance: float = 0.0, cancelled: bool = False, travel_time: str = 'now', ticket_class: str = 'standard', coach_preference: str = 'general', payment_method: str = 'wallet') -> int:
+    """Insert ticket with DISTANCE, TRAVEL TIME, CLASS, COACH, and PAYMENT METHOD. Return ticketId."""
     conn = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # SQL query includes 'distance' and 'travelTime'
         sql = """
             INSERT INTO tickets 
-            (username, source, destination, passengers, fare, travelDate, distance, cancelled, bookingDate, travelTime) 
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW(), %s)
+            (username, source, destination, passengers, fare, travelDate, distance, cancelled, bookingDate, travelTime, ticketClass, coachPreference, paymentMethod) 
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW(), %s, %s, %s, %s)
         """
-        cursor.execute(sql, (username, source, destination, passengers, fare, travel_date, distance, cancelled, travel_time))
+        cursor.execute(sql, (username, source, destination, passengers, fare, travel_date, distance, cancelled, travel_time, ticket_class, coach_preference, payment_method))
         conn.commit()
         ticket_id = cursor.lastrowid
         cursor.close()

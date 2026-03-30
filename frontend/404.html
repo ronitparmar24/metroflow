@@ -207,6 +207,80 @@
             color: #94a3b8;
             font-size: 0.8rem;
         }
+
+        /* Mini-Game Styles */
+        .mini-game-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 16px;
+            padding: 10px 24px;
+            background: rgba(102,126,234,0.08);
+            border: 1px solid rgba(102,126,234,0.15);
+            color: #667eea;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .mini-game-toggle:hover {
+            background: rgba(102,126,234,0.15);
+            transform: scale(1.05);
+        }
+        .game-area {
+            display: none;
+            margin-top: 24px;
+            background: rgba(255,255,255,0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(102,126,234,0.1);
+            padding: 20px;
+            text-align: center;
+            animation: fadeIn 0.4s ease;
+        }
+        .game-area.show { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .game-field {
+            position: relative;
+            height: 80px;
+            background: linear-gradient(to bottom, #f8fafc, #f1f5f9);
+            border-radius: 14px;
+            overflow: hidden;
+            cursor: crosshair;
+            margin: 12px 0;
+            border: 1px solid #e2e8f0;
+        }
+        .game-train {
+            position: absolute;
+            font-size: 40px;
+            top: 16px;
+            cursor: pointer;
+            transition: none;
+            user-select: none;
+        }
+        .game-track {
+            position: absolute;
+            bottom: 12px;
+            left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #667eea 20%, #764ba2 80%, transparent);
+        }
+        .game-score {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            font-size: 14px;
+            font-weight: 700;
+            color: #334155;
+        }
+        .game-score span { color: #667eea; font-size: 22px; font-weight: 900; }
+        .game-msg {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-top: 8px;
+        }
     </style>
 </head>
 
@@ -239,8 +313,117 @@
             ← Back to Home Station
         </a>
 
+        <div>
+            <button class="mini-game-toggle" onclick="toggleGame()">
+                🎮 Play while you wait!
+            </button>
+        </div>
+
+        <div class="game-area" id="gameArea">
+            <div style="font-weight:800;font-size:1rem;color:#1e293b;margin-bottom:4px;">🚂 Catch the Train!</div>
+            <div class="game-score">
+                Score: <span id="gameScore">0</span>
+                &nbsp;|&nbsp;
+                Best: <span id="gameBest">0</span>
+            </div>
+            <div class="game-field" id="gameField">
+                <div class="game-train" id="gameTrain" onclick="catchTrain()">🚇</div>
+                <div class="game-track"></div>
+            </div>
+            <div class="game-msg" id="gameMsg">Click the train before it escapes! 🏃‍♂️</div>
+        </div>
+
         <p class="footer-note">MetroFlow Transit System</p>
     </div>
+
+    <script>
+        let gameActive = false;
+        let score = 0;
+        let speed = 3000;
+        let trainInterval = null;
+        const best = parseInt(localStorage.getItem('metroflow_404_best') || '0');
+        const bestEl = document.getElementById('gameBest');
+        if (bestEl) bestEl.textContent = best;
+
+        function toggleGame() {
+            const area = document.getElementById('gameArea');
+            if (area.classList.contains('show')) {
+                area.classList.remove('show');
+                stopGame();
+            } else {
+                area.classList.add('show');
+                startGame();
+            }
+        }
+
+        function startGame() {
+            score = 0;
+            speed = 3000;
+            document.getElementById('gameScore').textContent = '0';
+            document.getElementById('gameMsg').textContent = 'Click the train before it escapes! 🏃‍♂️';
+            gameActive = true;
+            moveTrain();
+        }
+
+        function stopGame() {
+            gameActive = false;
+            clearTimeout(trainInterval);
+        }
+
+        function moveTrain() {
+            if (!gameActive) return;
+            const train = document.getElementById('gameTrain');
+            const field = document.getElementById('gameField');
+            if (!train || !field) return;
+
+            const fieldW = field.offsetWidth - 50;
+            const startLeft = Math.random() > 0.5 ? -50 : fieldW + 50;
+            const endLeft = startLeft < 0 ? fieldW + 50 : -50;
+
+            train.style.transition = `left ${speed}ms linear`;
+            train.style.left = startLeft + 'px';
+
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    train.style.left = endLeft + 'px';
+                });
+            });
+
+            trainInterval = setTimeout(() => {
+                if (gameActive) {
+                    document.getElementById('gameMsg').textContent = 'You missed it! 😅 Try again...';
+                    moveTrain();
+                }
+            }, speed + 100);
+        }
+
+        function catchTrain() {
+            if (!gameActive) return;
+            clearTimeout(trainInterval);
+
+            score++;
+            document.getElementById('gameScore').textContent = score;
+
+            // Speed up!
+            speed = Math.max(800, speed - 150);
+
+            // Effects
+            const msgs = ['Nice catch! 🎉', 'Amazing! 🚀', 'You\'re fast! ⚡', 'Metro master! 🏆', 'Incredible! 💥', 'On fire! 🔥'];
+            document.getElementById('gameMsg').textContent = msgs[Math.min(score - 1, msgs.length - 1)];
+
+            // Update best
+            if (score > best) {
+                localStorage.setItem('metroflow_404_best', score);
+                document.getElementById('gameBest').textContent = score;
+            }
+
+            // Brief pause then next train
+            const train = document.getElementById('gameTrain');
+            train.style.transition = 'none';
+            train.style.left = '-60px';
+            setTimeout(moveTrain, 600);
+        }
+    </script>
 </body>
 
 </html>

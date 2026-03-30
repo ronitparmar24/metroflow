@@ -1,6 +1,6 @@
 class MetroAPI {
     constructor() {
-        this.baseUrl = 'http://localhost:5000/api';
+        this.baseUrl = '/api';
     }
 
     // Generic API Call Function
@@ -17,7 +17,7 @@ class MetroAPI {
 
         try {
             const response = await fetch(`${this.baseUrl}${endpoint}`, options);
-            
+
             // 1. Parse JSON first (so we can read server error messages)
             let data = {};
             try {
@@ -31,26 +31,28 @@ class MetroAPI {
                 // EXCEPTION: If we are trying to Log In, return the failure to the form
                 // so it can show "Invalid Password" instead of redirecting.
                 if (endpoint === '/login') {
-                    return data; 
+                    return data;
                 }
 
                 // For all other checks (like /me), handle redirection
                 const path = window.location.pathname;
-                
+
                 // If we are INSIDE the app (Dashboard/Profile), kick user out
                 if (path.includes('dashboard') || path.includes('profile') || path.includes('ticket')) {
                     window.location.href = 'login.html';
                     throw new Error('Session expired. Redirecting...');
                 }
-                
+
                 // If we are on Login/Register page, just return failure silently
                 return { success: false, error: 'Not logged in' };
             }
 
             // 3. Handle General Errors
-            if (!data.success && !data.message && !data.token) {
-                // If the server says success: false, throw error
-                throw new Error(data.error || 'API Error');
+            // Only throw if the HTTP response was NOT ok AND the server returned an error field.
+            // DO NOT throw just because a valid response lacks a 'success' key —
+            // some endpoints (analytics, balance, etc.) return plain data objects.
+            if (!response.ok && data.error) {
+                throw new Error(data.error);
             }
 
             return data;
@@ -85,7 +87,7 @@ class MetroAPI {
         }
         return null;
     }
-    
+
     // --- Helper Functions ---
 
     formatDate(dateStr) {
@@ -97,9 +99,9 @@ class MetroAPI {
     formatDateTime(dateStr) {
         if (!dateStr) return '';
         const date = new Date(dateStr);
-        return date.toLocaleString('en-US', { 
-            year: 'numeric', month: 'short', day: 'numeric', 
-            hour: '2-digit', minute: '2-digit' 
+        return date.toLocaleString('en-US', {
+            year: 'numeric', month: 'short', day: 'numeric',
+            hour: '2-digit', minute: '2-digit'
         });
     }
 
@@ -109,13 +111,13 @@ class MetroAPI {
         alertDiv.style.zIndex = '9999';
         alertDiv.innerHTML = `<i class="fas fa-info-circle me-2"></i>${message}`;
         document.body.appendChild(alertDiv);
-        
+
         setTimeout(() => {
             alertDiv.style.opacity = '0';
             setTimeout(() => alertDiv.remove(), 500);
         }, 3000);
     }
-    
+
 
 
     async logout() {
@@ -127,7 +129,7 @@ class MetroAPI {
             // 1. Clear all local data
             localStorage.clear();
             sessionStorage.clear();
-            
+
             // 2. Remove specific keys just in case
             localStorage.removeItem('metro_logged_in');
             localStorage.removeItem('user_role');
@@ -153,7 +155,7 @@ window.showAlert = (msg, type) => API.showAlert(msg, type);
 // 3. Auto-run Auth Check (Updated to skip Login/Register pages)
 document.addEventListener('DOMContentLoaded', () => {
     const path = window.location.pathname;
-    
+
     // Only check if we are NOT on the auth pages
     // This prevents the 401 error from appearing in the console
     if (!path.includes('login.html') && !path.includes('register.html')) {

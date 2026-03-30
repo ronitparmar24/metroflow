@@ -29,9 +29,11 @@ import qrcode
 import psutil
 
 import db
-from models import User, Admin, Feedback, Role, SupportTicketStatus
+from models import (User, Admin, SupportStaff, Ticket, Feedback,
+                    SupportTicket, MetroCard, MonthlyPass,
+                    Role, SupportTicketStatus)
 from utils import hash_password, verify_password, format_date, format_datetime
-from ds import MetroDataStore, Queue
+from ds import MetroDataStore, Queue, StationInfo
 
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
@@ -60,17 +62,84 @@ datastore = MetroDataStore.get_instance()
 booking_queue = Queue()
 MAX_QUEUE_SIZE = 50  # Keep only the 50 most recent bookings in memory
 
+# Feature LL: Server startup time tracking
+import time as _time_mod
+_server_start_time = _time_mod.time()
+
+
+# ============================================================================
+# Feature LL: /api/health — System Health Endpoint
+# ============================================================================
+@app.route('/api/health', methods=['GET'])
+def api_health():
+    """Live system health check — used by admin health monitor panel."""
+    # DB ping
+    db_ok = False
+    try:
+        conn = db.get_connection()
+        conn.execute('SELECT 1').fetchone()
+        conn.close()
+        db_ok = True
+    except Exception:
+        pass
+
+    # Uptime
+    elapsed = _time_mod.time() - _server_start_time
+    hours   = int(elapsed // 3600)
+    minutes = int((elapsed % 3600) // 60)
+    uptime_str = f"{hours}h {minutes}m" if hours else f"{minutes}m"
+
+    # System stats (psutil is already imported)
+    try:
+        cpu_pct = psutil.cpu_percent(interval=None)
+        mem     = psutil.virtual_memory()
+        mem_pct = mem.percent
+    except Exception:
+        cpu_pct = 0
+        mem_pct = 0
+
+    return jsonify({
+        'status':  'ok' if db_ok else 'degraded',
+        'db_ok':   db_ok,
+        'uptime':  uptime_str,
+        'version': '1.0.0',
+        'cpu':     cpu_pct,
+        'mem':     mem_pct,
+    }), 200
+
 
 # ============================================================================
 # HELPER FUNCTIONS
 # ============================================================================
 
 def get_current_user() -> Optional[Dict[str, Any]]:
-    """Get currently logged-in user from session"""
+    """Get currently logged-in user from session (returns dict for backward compatibility)"""
     username = session.get('username')
     if username:
         return db.get_user_by_username(username)
     return None
+
+
+def get_current_user_object():
+    """
+    Get currently logged-in user as a proper model object (User/Admin/SupportStaff).
+    Uses OOP classes from models.py for business logic.
+    Returns None if not logged in or user not found.
+    """
+    username = session.get('username')
+    if not username:
+        return None
+    user_data = db.get_user_by_username(username)
+    if not user_data:
+        return None
+    role = user_data.get('role', Role.USER)
+    if role == Role.ADMIN:
+        return Admin(user_data['username'], user_data['password'])
+    elif role == Role.SUPPORT_STAFF:
+        return SupportStaff(user_data['username'], user_data['password'])
+    else:
+        return User(user_data['username'], user_data['password'],
+                    float(user_data.get('walletBalance', 0.0)))
 
 
 def require_login(func):
@@ -154,6 +223,15 @@ def api_register():
         if db.insert_user(username, password, initial_balance, role, email):
             # Create metro card for new user
             db.insert_metro_card(username, 0.0, False, 50.0)
+            
+            # Create model object and add to datastore (OOP integration)
+            if role == Role.ADMIN:
+                user_obj = Admin(username, password)
+            elif role == Role.SUPPORT_STAFF:
+                user_obj = SupportStaff(username, password)
+            else:
+                user_obj = User(username, password, initial_balance)
+            datastore.add_user(user_obj)
             
             logger.info(f"New user registered: {username} (Role: {role})")
             return jsonify({
@@ -291,17 +369,43 @@ def api_logout():
 @app.route('/api/me', methods=['GET'])
 @require_login
 def api_get_current_user():
-    """Get current logged-in user details"""
+    """Get current logged-in user details with profile summary data"""
     user = get_current_user()
     if user:
-        # Calculate totals for better dashboard accuracy
+        # Fetch extra profile data: memberSince, totalTrips
+        member_since = 'January 2026'
+        total_trips = 0
+        try:
+            conn = db.get_db_connection()
+            cursor = conn.cursor(dictionary=True, buffered=True)
+            # Get earliest booking date as "Member Since"
+            cursor.execute(
+                "SELECT MIN(bookingDate) as first_booking, COUNT(*) as trip_count "
+                "FROM tickets WHERE username = %s AND cancelled = FALSE",
+                (user['username'],)
+            )
+            row = cursor.fetchone()
+            if row and row.get('first_booking'):
+                fb = row['first_booking']
+                if hasattr(fb, 'strftime'):
+                    member_since = fb.strftime('%B %Y')
+                else:
+                    member_since = str(fb)[:7]  # 'YYYY-MM'
+            total_trips = int(row.get('trip_count', 0)) if row else 0
+            cursor.close()
+            conn.close()
+        except Exception as e:
+            logger.warning(f"Profile extra data fetch error: {e}")
+
         return jsonify({
             'success': True,
             'user': {
                 'username': user['username'],
-                'walletBalance': float(user['walletBalance']), # Ensure it returns a float, not Decimal
+                'walletBalance': float(user['walletBalance']),
                 'role': user['role'],
-                'loyaltyPoints': user.get('loyaltyPoints', 0)
+                'loyaltyPoints': user.get('loyaltyPoints', 0),
+                'memberSince': member_since,
+                'totalTrips': total_trips,
             }
         }), 200
     else:
@@ -309,6 +413,10 @@ def api_get_current_user():
 # ============================================================================
 # USER ROUTES (Wallet, Profile)
 # ============================================================================
+
+# Note: /api/user/analytics is defined later with full monthly_spending, favorite_routes, daily_trips data
+
+
 
 @app.route('/api/user/wallet/recharge', methods=['POST'])
 @require_login
@@ -374,38 +482,7 @@ def api_get_wallet_balance():
     }), 200
 
 
-@app.route('/api/metrocard/create', methods=['POST'])
-@require_login
-def api_create_metro_card():
-    try:
-        user = get_current_user()
-        username = user['username']
-        
-
-
-        # 1. Check existing
-        if db.get_metro_card_by_username(username):
-            return jsonify({'success': False, 'error': 'Card already exists'}), 400
-
-        # 2. Insert (db.py will handle column names automatically now)
-        if db.insert_metro_card(username, 0.0, 0, 50.0):
-            
-            # 3. Fetch immediately
-            new_card = db.get_metro_card_by_username(username)
-            if new_card:
-                return jsonify({
-                    'success': True,
-                    'message': 'MetroCard Issued!',
-                    'card': new_card
-                })
-            else:
-                 return jsonify({'success': False, 'error': 'Card created but could not be fetched'}), 500
-        else:
-            return jsonify({'success': False, 'error': 'Database insert failed. Check server console.'}), 500
-
-    except Exception as e:
-        logger.error(f"Metro card API error: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
+# /api/metrocard/create is defined later in the file (see api_issue_metro_card)
 @app.route('/api/user/change-password', methods=['POST'])
 @require_login
 def api_change_password():
@@ -609,12 +686,25 @@ def generate_ticket_pdf(ticket_id):
 @app.route('/api/tickets/book', methods=['POST'])
 @require_login
 def api_book_ticket():
+    # --- Promo code definitions (server-side truth) ---
+    PROMO_CODES = {
+        'METRO10': {'type': 'percent', 'value': 10, 'label': '10% Off'},
+        'FIRST50': {'type': 'flat', 'value': 50, 'label': '₹50 Off'},
+        'SAVE20': {'type': 'percent', 'value': 20, 'label': '20% Off'},
+    }
+    
     try:
         data = request.json
         source = data.get('source', '').lower().strip()
         destination = data.get('destination', '').lower().strip()
         passengers = int(data.get('passengers', 1))
         travel_date_str = data.get('travelDate', '')
+        
+        # New booking fields
+        ticket_class = data.get('ticketClass', 'standard').lower().strip()
+        coach_preference = data.get('coachPreference', 'general').lower().strip()
+        payment_method = data.get('paymentMethod', 'wallet').lower().strip()
+        promo_code = data.get('promoCode', '').upper().strip()
         
         # 1. Validation
         if not source or not destination:
@@ -625,6 +715,13 @@ def api_book_ticket():
         
         if passengers < 1 or passengers > 6:
             return jsonify({'success': False, 'error': 'Passengers must be between 1 and 6'}), 400
+        
+        if ticket_class not in ('standard', 'business'):
+            ticket_class = 'standard'
+        if coach_preference not in ('general', 'ladies', 'senior_citizen'):
+            coach_preference = 'general'
+        if payment_method not in ('wallet', 'metrocard'):
+            payment_method = 'wallet'
         
         # 2. Parse travel date
         try:
@@ -662,6 +759,29 @@ def api_book_ticket():
         fare, distance, time, is_peak = calculate_dynamic_fare(
             source, destination, passengers, travel_hour=travel_hour
         )
+        
+        # ---------------------------------------------------------
+        # 3.2  TICKET CLASS MULTIPLIER (Business = 1.5x)
+        # ---------------------------------------------------------
+        class_multiplier = 1.5 if ticket_class == 'business' else 1.0
+        if class_multiplier != 1.0:
+            fare = round(fare * class_multiplier / 5) * 5  # Round to nearest ₹5
+        
+        # ---------------------------------------------------------
+        # 3.3  PROMO CODE DISCOUNT
+        # ---------------------------------------------------------
+        promo_discount = 0.0
+        promo_label = ''
+        if promo_code and promo_code in PROMO_CODES:
+            promo = PROMO_CODES[promo_code]
+            if promo['type'] == 'percent':
+                promo_discount = round(fare * promo['value'] / 100)
+            else:
+                promo_discount = min(promo['value'], fare)
+            # Cap promo discount at 50% of fare
+            promo_discount = min(promo_discount, fare * 0.5)
+            fare = max(10, fare - promo_discount)  # Minimum fare ₹10
+            promo_label = promo['label']
         
         # Get user details
         user = get_current_user()
@@ -726,19 +846,34 @@ def api_book_ticket():
             logger.error(f"Monthly pass check error (non-fatal): {mp_err}")
             # Don't fail booking if pass check fails — just charge normal fare
         
-        # 4. Check wallet balance (against possibly-discounted fare)
-        if fare > user['walletBalance']:
-            return jsonify({
-                'success': False,
-                'error': f'Insufficient balance. Required: Rs. {fare:.2f}, Available: Rs. {user["walletBalance"]:.2f}'
-            }), 400
+        # 4. Payment — Wallet or MetroCard
+        new_balance = user['walletBalance']  # track wallet balance regardless
         
-        # 5. Deduct from wallet
-        new_balance = user['walletBalance'] - fare
-        if not db.update_user_wallet_balance(user['username'], new_balance):
-            return jsonify({'success': False, 'error': 'Failed to update wallet balance'}), 500
+        if payment_method == 'metrocard':
+            card = db.get_metro_card_by_username(user['username'])
+            if not card:
+                return jsonify({'success': False, 'error': 'You do not have a Metro Card. Please create one first.'}), 400
+            card_balance = float(card['balance'])
+            if fare > card_balance:
+                return jsonify({
+                    'success': False,
+                    'error': f'Insufficient Metro Card balance. Required: ₹{fare:.2f}, Available: ₹{card_balance:.2f}'
+                }), 400
+            # Deduct from metro card
+            new_card_balance = card_balance - fare
+            db.update_metro_card(card['cardNumber'], new_card_balance, card['autoRechargeEnabled'], card['minBalanceThreshold'])
+        else:
+            # Default: Wallet payment
+            if fare > user['walletBalance']:
+                return jsonify({
+                    'success': False,
+                    'error': f'Insufficient wallet balance. Required: ₹{fare:.2f}, Available: ₹{user["walletBalance"]:.2f}'
+                }), 400
+            new_balance = user['walletBalance'] - fare
+            if not db.update_user_wallet_balance(user['username'], new_balance):
+                return jsonify({'success': False, 'error': 'Failed to update wallet balance'}), 500
         
-        # 6. Insert ticket (with travel time for QR gate validation)
+        # 6. Insert ticket (with travel time, class, coach, payment method)
         travel_time_val = data.get('travelTime', 'now')
         ticket_id = db.insert_ticket(
             user['username'],
@@ -749,7 +884,10 @@ def api_book_ticket():
             travel_date,
             distance,
             False,
-            travel_time_val
+            travel_time_val,
+            ticket_class,
+            coach_preference,
+            payment_method
         )
         if ticket_id > 0:
             # --- NEW: AWARD LOYALTY POINTS (1 Point per Rs 2 spent) ---
@@ -824,8 +962,11 @@ def api_book_ticket():
                     'passengers': passengers,
                     'fare': fare,
                     'travelDate': travel_date_str,
-                    'time': time,        # Optional: Send est. time back
-                    'is_peak': is_peak   # Optional: Send peak status back
+                    'time': time,
+                    'is_peak': is_peak,
+                    'ticketClass': ticket_class,
+                    'coachPreference': coach_preference,
+                    'paymentMethod': payment_method
                 },
                 'newBalance': new_balance,
                 'autoRecharged': auto_recharged,
@@ -833,7 +974,11 @@ def api_book_ticket():
                 'passDiscount': pass_discount,
                 'originalFare': original_fare,
                 'passId': matched_pass_id,
-                'passPlanType': matched_plan_type
+                'passPlanType': matched_plan_type,
+                'promoDiscount': promo_discount,
+                'promoCode': promo_code if promo_discount > 0 else '',
+                'promoLabel': promo_label,
+                'classMultiplier': class_multiplier
             }), 200
         else:
             # Refund if ticket insertion fails
@@ -889,33 +1034,43 @@ def api_cancel_ticket(ticket_id):
     try:
         user = get_current_user()
         
-        # Get ticket
-        ticket = db.get_ticket_by_id(ticket_id)
+        # Get ticket data from DB
+        ticket_data = db.get_ticket_by_id(ticket_id)
         
-        if not ticket:
+        if not ticket_data:
             return jsonify({'success': False, 'error': 'Ticket not found'}), 404
         
-        if ticket['username'] != user['username']:
+        if ticket_data['username'] != user['username']:
             return jsonify({'success': False, 'error': 'This ticket does not belong to you'}), 403
         
-        if ticket['cancelled']:
+        if ticket_data['cancelled']:
             return jsonify({'success': False, 'error': 'Ticket already cancelled'}), 400
         
-        # Calculate refund
-        travel_datetime = datetime.combine(ticket['travelDate'], datetime.min.time())
+        # Create Ticket model object for refund calculation (models.py OOP)
+        ticket_obj = Ticket(
+            ticket_data['username'],
+            ticket_data['source'],
+            ticket_data['destination'],
+            ticket_data['passengers'],
+            float(ticket_data['fare']),
+            ticket_data['travelDate']
+        )
+        ticket_obj.ticket_id = ticket_data['ticketId']
+        
+        # Use Ticket.cancel() — calculates refund with 80%/50% logic
+        refund = round(ticket_obj.cancel(), 2)
+        
+        # Derive the same fields the frontend expects
+        travel_datetime = datetime.combine(ticket_data['travelDate'], datetime.min.time())
         time_diff = travel_datetime - datetime.now()
         hours_before = max(time_diff.total_seconds() / 3600, 0)
         
-        if hours_before >= 24:
-            refund_rate = 0.8
-            charge_reason = 'Standard cancellation (24+ hours before travel)'
-        else:
-            refund_rate = 0.5
-            charge_reason = 'Late cancellation (less than 24 hours before travel)'
-        
-        original_fare = ticket['fare']
-        cancellation_charge = round(original_fare * (1 - refund_rate), 2)
-        refund = round(original_fare * refund_rate, 2)
+        original_fare = float(ticket_data['fare'])
+        refund_rate = 0.8 if hours_before >= 24 else 0.5
+        charge_reason = ('Standard cancellation (24+ hours before travel)' 
+                         if hours_before >= 24 
+                         else 'Late cancellation (less than 24 hours before travel)')
+        cancellation_charge = round(original_fare - refund, 2)
         
         # Cancel ticket in database
         if db.cancel_ticket(ticket_id):
@@ -940,6 +1095,98 @@ def api_cancel_ticket(ticket_id):
     except Exception as e:
         logger.error(f"Ticket cancellation error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ============================================================================
+# RECENT ROUTES & SMART COMMUTE (Phase 1 Improvement)
+# ============================================================================
+
+@app.route('/api/tickets/recent-routes', methods=['GET'])
+@require_login
+def api_recent_routes():
+    """Get user's top 5 most-used routes for quick re-booking"""
+    try:
+        user = get_current_user()
+        conn = db.get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT source, destination, 
+                   COUNT(*) as tripCount,
+                   MAX(travelDate) as lastUsed,
+                   ROUND(AVG(fare / passengers), 0) as avgFare
+            FROM tickets 
+            WHERE username = %s AND cancelled = 0
+            GROUP BY source, destination
+            ORDER BY tripCount DESC, lastUsed DESC
+            LIMIT 5
+        """, (user['username'],))
+        routes = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        formatted = []
+        for r in routes:
+            formatted.append({
+                'source': r['source'],
+                'destination': r['destination'],
+                'tripCount': r['tripCount'],
+                'lastUsed': format_date(r['lastUsed']) if r['lastUsed'] else '',
+                'avgFare': float(r['avgFare']) if r['avgFare'] else 0
+            })
+        
+        return jsonify({'success': True, 'routes': formatted}), 200
+    except Exception as e:
+        logger.error(f"Recent routes error: {e}")
+        return jsonify({'success': True, 'routes': []}), 200
+
+
+@app.route('/api/commute/next-departure', methods=['GET'])
+@require_login
+def api_next_departure():
+    """Get user's most frequent route with current fare & peak status for smart commute widget"""
+    try:
+        user = get_current_user()
+        conn = db.get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        # Find the user's #1 most-used route
+        cursor.execute("""
+            SELECT source, destination, COUNT(*) as tripCount
+            FROM tickets 
+            WHERE username = %s AND cancelled = 0
+            GROUP BY source, destination
+            ORDER BY tripCount DESC
+            LIMIT 1
+        """, (user['username'],))
+        top_route = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        
+        if not top_route:
+            return jsonify({'success': True, 'hasRoute': False}), 200
+        
+        # Calculate current fare for this route
+        current_hour = datetime.now().hour
+        is_peak = (8 <= current_hour < 11) or (17 <= current_hour < 19)
+        fare, distance, time_mins, _ = calculate_dynamic_fare(
+            top_route['source'], top_route['destination'], 1
+        )
+        
+        return jsonify({
+            'success': True,
+            'hasRoute': True,
+            'source': top_route['source'],
+            'destination': top_route['destination'],
+            'tripCount': top_route['tripCount'],
+            'fare': fare,
+            'distance': distance,
+            'time': time_mins,
+            'isPeak': is_peak,
+            'currentHour': current_hour
+        }), 200
+    except Exception as e:
+        logger.error(f"Next departure error: {e}")
+        return jsonify({'success': True, 'hasRoute': False}), 200
 
 
 # ============================================================================
@@ -973,9 +1220,17 @@ def api_submit_feedback():
         feedback_id = db.insert_feedback(user['username'], text, feedback_type)
         
         if feedback_id > 0:
-            # If it's a complaint, create a support ticket
+            # Create Feedback model object and add to datastore (OOP integration)
+            feedback_obj = Feedback(user['username'], text, feedback_type)
+            feedback_obj.feedback_id = feedback_id
+            feedback_obj.timestamp = datetime.now()
+            datastore.add_feedback(feedback_obj)
+            
+            # If it's a complaint, create a support ticket using model
             if feedback_type == 'complaint':
                 db.insert_support_ticket(feedback_id, SupportTicketStatus.OPEN)
+                support_ticket_obj = SupportTicket(feedback_obj)
+                datastore.add_support_ticket(support_ticket_obj)
             
             return jsonify({
                 'success': True,
@@ -1025,7 +1280,7 @@ def api_get_my_feedbacks():
 @app.route('/api/metrocard/details', methods=['GET'])
 @require_login
 def api_get_metrocard():
-    """Get metro card details (Creates one if missing)"""
+    """Get metro card details (Creates one if missing) — uses MetroCard model"""
     try:
         user = get_current_user()
         card = db.get_metro_card_by_username(user['username'])
@@ -1040,16 +1295,22 @@ def api_get_metrocard():
             card = db.get_metro_card_by_username(user['username'])
         
         if card:
-            auto_recharge_value = card.get('autoRechargeEnabled', 0)
-            is_auto = auto_recharge_value == 1 or auto_recharge_value is True
+            # Create MetroCard model object (OOP integration)
+            card_obj = MetroCard(
+                card_number=card.get('cardNumber'),
+                initial_balance=float(card.get('balance', 0))
+            )
+            card_obj.auto_recharge_enabled = (card.get('autoRechargeEnabled', 0) == 1 
+                                              or card.get('autoRechargeEnabled', 0) is True)
+            card_obj.min_balance_threshold = float(card.get('minBalanceThreshold', 50))
             
             return jsonify({
                 'success': True,
                 'card': {
-                    'cardNumber': card.get('cardNumber'),
-                    'balance': float(card.get('balance', 0)),
-                    'autoRechargeEnabled': is_auto, 
-                    'minBalanceThreshold': float(card.get('minBalanceThreshold', 50))
+                    'cardNumber': card_obj.card_number,
+                    'balance': card_obj.balance,
+                    'autoRechargeEnabled': card_obj.auto_recharge_enabled, 
+                    'minBalanceThreshold': card_obj.min_balance_threshold
                 }
             }), 200
         else:
@@ -1346,6 +1607,10 @@ def api_purchase_monthly_pass():
             pid = db.insert_monthly_pass(username, src, dst, purchase_date, expiry_date, price / len(routes), plan_key)
             if pid > 0:
                 pass_ids.append(pid)
+                # Create MonthlyPass model object (OOP integration)
+                pass_obj = MonthlyPass(username, src, dst, purchase_date, expiry_date, price / len(routes))
+                pass_obj.pass_id = pid
+                logger.info(f"📅 Pass #{pid}: valid={pass_obj.is_valid()}, days_remaining={pass_obj.days_remaining()}")
 
         logger.info(f"Monthly pass purchased: {plan['name']} by {username} — pass IDs {pass_ids}")
 
@@ -1518,9 +1783,11 @@ def api_get_all_stations():
 @app.route('/api/admin/users', methods=['GET'])
 @require_role(Role.ADMIN)
 def api_admin_get_all_users():
-    """Get all users (Admin only)"""
+    """Get all users (Admin only) — uses Admin model"""
     try:
-        users = db.get_all_users()
+        # Use Admin model object for OOP integration
+        admin_obj = get_current_user_object()
+        users = admin_obj.get_all_users() if isinstance(admin_obj, Admin) else db.get_all_users()
         
         formatted_users = []
         for user in users:
@@ -1543,14 +1810,20 @@ def api_admin_get_all_users():
 @app.route('/api/admin/users/<username>', methods=['DELETE'])
 @require_role(Role.ADMIN)
 def api_admin_remove_user(username):
-    """Remove a user (Admin only)"""
+    """Remove a user (Admin only) — uses Admin model"""
     try:
         current_user = get_current_user()
         
         if username == current_user['username']:
             return jsonify({'success': False, 'error': 'Cannot delete yourself'}), 400
         
-        if db.remove_user(username):
+        # Use Admin model for removal + update datastore
+        admin_obj = get_current_user_object()
+        if isinstance(admin_obj, Admin) and admin_obj.remove_user(username):
+            # Also remove from in-memory datastore
+            ds_user = datastore.find_user_by_username(username)
+            if ds_user:
+                datastore.remove_user(ds_user)
             return jsonify({
                 'success': True,
                 'message': f'User {username} removed successfully'
@@ -1567,7 +1840,7 @@ def api_admin_remove_user(username):
 @require_role(Role.ADMIN)
 def api_admin_add_station():
     """
-    Add a new station (Admin only)
+    Add a new station (Admin only) — uses Admin model + StationInfo
     
     Request JSON:
         {
@@ -1585,7 +1858,20 @@ def api_admin_add_station():
         if not name:
             return jsonify({'success': False, 'error': 'Station name required'}), 400
         
-        if db.insert_or_update_station_location(name, x, y):
+        # Use Admin model for DB persistence
+        admin_obj = get_current_user_object()
+        success = False
+        if isinstance(admin_obj, Admin):
+            success = admin_obj.add_station(name, x, y)
+        else:
+            success = db.insert_or_update_station_location(name, x, y)
+        
+        if success:
+            # Add to in-memory datastore with StationInfo
+            station_info = StationInfo(name)
+            station_info.set_location(x, y)
+            datastore.add_station_info(name, station_info)
+            
             return jsonify({
                 'success': True,
                 'message': f'Station {name} added successfully'
@@ -1602,7 +1888,7 @@ def api_admin_add_station():
 @require_role(Role.ADMIN)
 def api_admin_add_announcement():
     """
-    Add system announcement (Admin only)
+    Add system announcement (Admin only) — uses Admin model + datastore
     
     Request JSON:
         {"message": "string"}
@@ -1614,7 +1900,18 @@ def api_admin_add_announcement():
         if not message:
             return jsonify({'success': False, 'error': 'Message required'}), 400
         
-        if db.insert_announcement(message):
+        # Use Admin model for DB persistence
+        admin_obj = get_current_user_object()
+        success = False
+        if isinstance(admin_obj, Admin):
+            success = admin_obj.add_announcement(message)
+        else:
+            success = db.insert_announcement(message)
+        
+        if success:
+            # Track in datastore in-memory
+            datastore.add_announcement(message)
+            
             return jsonify({
                 'success': True,
                 'message': 'Announcement added successfully'
@@ -1658,58 +1955,11 @@ def api_admin_get_all_feedbacks():
 # ANNOUNCEMENTS (Public)
 # ============================================================================
 
-@app.route('/api/announcements', methods=['GET'])
-def api_get_announcements():
-    """Get all announcements"""
-    try:
-        announcements = db.get_all_announcements()
-        
-        formatted = []
-        for ann in announcements:
-            formatted.append({
-                'id': ann['id'],
-                'message': ann['message'],
-                'createdDate': format_datetime(ann['createdDate'])
-            })
-        
-        return jsonify({
-            'success': True,
-            'announcements': formatted
-        }), 200
-        
-    except Exception as e:
-        logger.error(f"Get announcements error: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
+# /api/announcements is defined later in the file (see get_public_announcements)
 
 
-# ============================================================================
-# HEALTH CHECK
-# ============================================================================
-
-@app.route('/api/health', methods=['GET'])
-def api_health_check():
-    """Health check endpoint"""
-    return jsonify({
-        'success': True,
-        'message': 'Metro Backend API is running',
-        'version': '1.0.0'
-    }), 200
 
 
-@app.route('/', methods=['GET'])
-def api_root():
-    """Root endpoint"""
-    return jsonify({
-        'message': 'Metro Ticket Booking System API',
-        'version': '1.0.0',
-        'endpoints': {
-            'auth': '/api/register, /api/login, /api/logout',
-            'tickets': '/api/tickets/*',
-            'feedback': '/api/feedback/*',
-            'admin': '/api/admin/*',
-            'health': '/api/health'
-        }
-    }), 200
 
 
 # ============================================================================
@@ -2087,6 +2337,8 @@ def get_transactions():
         return jsonify({'success': False, 'message': str(e)}), 500
 # Get Spending Analytics
 @app.route('/api/user/analytics', methods=['GET'])
+@app.route('/api/analytics', methods=['GET'])
+@require_login
 def get_analytics():
     """Get user spending analytics with REAL DB DISTANCE"""
     username = session.get('username')
@@ -2132,17 +2384,33 @@ def get_analytics():
         """, (username,))
         routes = cursor.fetchall()
         
+        # 4. Daily trip counts for heatmap (last 12 weeks)
+        cursor.execute("""
+            SELECT DATE(bookingDate) as date, COUNT(*) as count
+            FROM tickets
+            WHERE username = %s AND cancelled = FALSE
+              AND bookingDate >= DATE_SUB(CURDATE(), INTERVAL 84 DAY)
+            GROUP BY DATE(bookingDate)
+            ORDER BY date
+        """, (username,))
+        daily = cursor.fetchall()
+        daily_trips = [
+            {'date': str(row['date']), 'count': int(row['count'])}
+            for row in daily
+        ]
+
         cursor.close()
         conn.close()
-        
+
         return jsonify({
             'success': True,
             'analytics': {
                 'total_spent': float(totals['total_spent'] or 0),
                 'total_bookings': totals['total_bookings'] or 0,
-                'total_distance': float(totals['total_distance'] or 0), # Real Distance
+                'total_distance': float(totals['total_distance'] or 0),
                 'monthly_spending': monthly,
-                'favorite_routes': routes
+                'favorite_routes': routes,
+                'daily_trips': daily_trips,
             }
         })
     except Exception as e:
@@ -2261,6 +2529,44 @@ def redeem_loyalty_points():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
+@app.route('/api/loyalty/redeem-all', methods=['POST'])
+@require_login
+def redeem_all_loyalty_points():
+    """Redeem ALL points to wallet. 50 points = Rs. 20"""
+    try:
+        user = get_current_user()
+        points = user.get('loyaltyPoints', 0)
+        
+        if points < 50:
+            return jsonify({'success': False, 'error': f'Need at least 50 points. You have {points}.'}), 400
+        
+        # Calculate how many sets of 50 we can redeem
+        redeemable_sets = points // 50
+        points_to_deduct = redeemable_sets * 50
+        money_to_add = redeemable_sets * 20
+        remaining_points = points - points_to_deduct
+        
+        conn = db.get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute("UPDATE users SET loyaltyPoints = %s WHERE username = %s", (remaining_points, user['username']))
+        cursor.execute("UPDATE users SET walletBalance = walletBalance + %s WHERE username = %s", (money_to_add, user['username']))
+        msg = f"Converted {points_to_deduct} Green Points to ₹{money_to_add} wallet credit"
+        cursor.execute("INSERT INTO notifications (username, message) VALUES (%s, %s)", (user['username'], msg))
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'message': f'₹{money_to_add} added to wallet!',
+            'points_redeemed': points_to_deduct,
+            'money_added': money_to_add,
+            'remaining_points': remaining_points
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/lostfound/my', methods=['GET'])
 @require_login
@@ -4333,6 +4639,1266 @@ def api_issue_metro_card():
 
 
 # ============================================================================
+# PHASE 1-11: PLATFORM-INSPIRED IMPROVEMENT ENDPOINTS
+# ============================================================================
+
+# ── Phase 1: Notification Center ──────────────────────────────────────────────
+@app.route('/api/notifications/center', methods=['GET'])
+@require_login
+def api_notifications_center():
+    """Get grouped & categorized notifications for the notification drawer"""
+    try:
+        user = get_current_user()
+        username = user['username']
+        notifications = []
+
+        # 1. Recent bookings → booking notifications
+        conn = db.get_db_connection()
+        cursor = conn.cursor(dictionary=True, buffered=True)
+        cursor.execute("""
+            SELECT ticketId, source, destination, fare, bookingDate, cancelled
+            FROM tickets WHERE username=%s ORDER BY bookingDate DESC LIMIT 5
+        """, (username,))
+        for t in cursor.fetchall():
+            bd = t['bookingDate']
+            if isinstance(bd, datetime):
+                bd = bd.strftime('%Y-%m-%d %H:%M')
+            if t['cancelled']:
+                notifications.append({
+                    'id': f"tkt-{t['ticketId']}", 'category': 'booking',
+                    'icon': '🚫', 'title': 'Ticket Cancelled',
+                    'message': f"{t['source']} → {t['destination']} — ₹{t['fare']} refunded",
+                    'time': str(bd), 'read': True
+                })
+            else:
+                notifications.append({
+                    'id': f"tkt-{t['ticketId']}", 'category': 'booking',
+                    'icon': '🎫', 'title': 'Booking Confirmed',
+                    'message': f"{t['source']} → {t['destination']} — ₹{t['fare']}",
+                    'time': str(bd), 'read': True
+                })
+
+        # 2. Wallet activity
+        cursor.execute("""
+            SELECT walletBalance FROM users WHERE username=%s
+        """, (username,))
+        ub = cursor.fetchone()
+        balance = float(ub['walletBalance']) if ub else 0
+        if balance < 50:
+            notifications.append({
+                'id': 'wallet-low', 'category': 'wallet',
+                'icon': '⚠️', 'title': 'Low Balance Alert',
+                'message': f'Your wallet balance is ₹{balance:.0f}. Top up to continue booking.',
+                'time': 'Now', 'read': False
+            })
+
+        # 3. System announcements
+        try:
+            announcements = db.get_all_announcements()
+            for a in announcements[:3]:
+                created = a.get('createdDate', '')
+                if isinstance(created, datetime):
+                    created = created.strftime('%Y-%m-%d %H:%M')
+                notifications.append({
+                    'id': f"ann-{a['id']}", 'category': 'system',
+                    'icon': '📢', 'title': 'System Announcement',
+                    'message': a['message'],
+                    'time': str(created), 'read': True
+                })
+        except Exception:
+            pass
+
+        # 4. Monthly pass expiry warnings
+        cursor.execute("""
+            SELECT source, destination, expiryDate, DATEDIFF(expiryDate, CURDATE()) as days_left
+            FROM monthly_passes WHERE username=%s AND expiryDate >= CURDATE()
+            ORDER BY expiryDate ASC
+        """, (username,))
+        for mp in cursor.fetchall():
+            days = mp['days_left']
+            if days <= 7:
+                notifications.append({
+                    'id': f"pass-exp-{mp['source']}", 'category': 'alert',
+                    'icon': '⏰', 'title': f'Pass Expiring in {days} day{"s" if days != 1 else ""}',
+                    'message': f"{mp['source']} → {mp['destination']}",
+                    'time': str(mp['expiryDate']), 'read': False
+                })
+
+        conn.close()
+
+        unread = sum(1 for n in notifications if not n['read'])
+        return jsonify({'success': True, 'notifications': notifications, 'unread_count': unread})
+    except Exception as e:
+        logger.error(f"Notification center error: {e}")
+        return jsonify({'success': True, 'notifications': [], 'unread_count': 0})
+
+
+# ── Phase 2: User Profile & Settings ─────────────────────────────────────────
+@app.route('/api/user/profile', methods=['GET'])
+@require_login
+def api_user_profile():
+    """Get comprehensive user profile with tier, stats, favorites"""
+    try:
+        user = get_current_user()
+        username = user['username']
+        conn = db.get_db_connection()
+        cursor = conn.cursor(dictionary=True, buffered=True)
+
+        # Total trips & spending
+        cursor.execute("""
+            SELECT COUNT(*) as total_trips, COALESCE(SUM(fare),0) as total_spent,
+                   COALESCE(SUM(distance),0) as total_km,
+                   MIN(bookingDate) as first_trip
+            FROM tickets WHERE username=%s AND cancelled=FALSE
+        """, (username,))
+        stats = cursor.fetchone()
+        total_trips = int(stats['total_trips'] or 0)
+        total_spent = float(stats['total_spent'] or 0)
+        total_km = float(stats['total_km'] or 0)
+
+        # Member tier
+        if total_trips >= 50:
+            tier = {'name': 'Gold', 'icon': '🥇', 'color': '#f59e0b'}
+        elif total_trips >= 20:
+            tier = {'name': 'Silver', 'icon': '🥈', 'color': '#94a3b8'}
+        else:
+            tier = {'name': 'Bronze', 'icon': '🥉', 'color': '#d97706'}
+
+        # Top 3 stations
+        cursor.execute("""
+            SELECT station, COUNT(*) as trips FROM (
+                SELECT source as station FROM tickets WHERE username=%s AND cancelled=FALSE
+                UNION ALL
+                SELECT destination FROM tickets WHERE username=%s AND cancelled=FALSE
+            ) s GROUP BY station ORDER BY trips DESC LIMIT 3
+        """, (username, username))
+        fav_stations = [{'name': r['station'], 'trips': int(r['trips'])} for r in cursor.fetchall()]
+
+        # Loyalty points & join date (handle missing columns gracefully)
+        loyalty = 0
+        join_date = ''
+        balance = 0
+        try:
+            cursor.execute("SELECT walletBalance, createdAt FROM users WHERE username=%s", (username,))
+            u = cursor.fetchone()
+            if u:
+                balance = float(u.get('walletBalance', 0) or 0)
+                join_date = str(u.get('createdAt', '') or '')
+            # Try to get loyaltyPoints if column exists
+            try:
+                cursor.execute("SELECT loyaltyPoints FROM users WHERE username=%s", (username,))
+                lp = cursor.fetchone()
+                if lp:
+                    loyalty = int(lp.get('loyaltyPoints', 0) or 0)
+            except Exception:
+                loyalty = total_trips * 10  # Estimate from trips
+        except Exception:
+            pass
+
+        # Preferences (handle missing column gracefully)
+        prefs = {'theme': 'auto', 'notif_booking': True, 'notif_wallet': True, 'notif_system': True}
+        try:
+            cursor.execute("SELECT user_preferences FROM users WHERE username=%s", (username,))
+            pref_row = cursor.fetchone()
+            if pref_row and pref_row.get('user_preferences'):
+                import json as _json
+                prefs.update(_json.loads(pref_row['user_preferences']))
+        except Exception:
+            pass
+
+
+        conn.close()
+
+        co2_saved = round(total_km * 0.12, 1)
+
+        return jsonify({
+            'success': True,
+            'profile': {
+                'username': username,
+                'join_date': join_date,
+                'balance': balance,
+                'loyalty_points': loyalty,
+                'tier': tier,
+                'total_trips': total_trips,
+                'total_spent': round(total_spent, 2),
+                'total_km': round(total_km, 1),
+                'co2_saved': co2_saved,
+                'favorite_stations': fav_stations,
+                'preferences': prefs
+            }
+        })
+    except Exception as e:
+        logger.error(f"Profile error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/user/profile/preferences', methods=['PUT'])
+@require_login
+def api_user_preferences():
+    """Save user preferences (theme, notification settings)"""
+    try:
+        user = get_current_user()
+        data = request.json
+        import json as _json
+        prefs_json = _json.dumps(data)
+        conn = db.get_db_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("UPDATE users SET user_preferences=%s WHERE username=%s",
+                           (prefs_json, user['username']))
+            conn.commit()
+        except Exception:
+            # Column might not exist, add it
+            cursor.execute("ALTER TABLE users ADD COLUMN user_preferences TEXT DEFAULT NULL")
+            conn.commit()
+            cursor.execute("UPDATE users SET user_preferences=%s WHERE username=%s",
+                           (prefs_json, user['username']))
+            conn.commit()
+        conn.close()
+        return jsonify({'success': True, 'message': 'Preferences saved'})
+    except Exception as e:
+        logger.error(f"Preferences error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ── Phase 3: Achievements ────────────────────────────────────────────────────
+@app.route('/api/user/achievements', methods=['GET'])
+@require_login
+def api_user_achievements():
+    """Compute and return 8 achievement badges from real user data"""
+    try:
+        user = get_current_user()
+        username = user['username']
+        conn = db.get_db_connection()
+        cursor = conn.cursor(dictionary=True, buffered=True)
+
+        # Core stats
+        cursor.execute("""
+            SELECT COUNT(*) as trips, COALESCE(SUM(fare),0) as spent,
+                   COALESCE(SUM(distance),0) as km,
+                   COUNT(DISTINCT source) + COUNT(DISTINCT destination) as unique_stations
+            FROM tickets WHERE username=%s AND cancelled=FALSE
+        """, (username,))
+        s = cursor.fetchone()
+        trips = int(s['trips'] or 0)
+        spent = float(s['spent'] or 0)
+        km = float(s['km'] or 0)
+        stations = int(s['unique_stations'] or 0)
+        co2 = km * 0.12
+
+        # Streak: consecutive days with bookings
+        cursor.execute("""
+            SELECT DISTINCT DATE(bookingDate) as d FROM tickets
+            WHERE username=%s AND cancelled=FALSE ORDER BY d DESC
+        """, (username,))
+        dates = [r['d'] for r in cursor.fetchall()]
+        streak = 0
+        if dates:
+            from datetime import timedelta
+            streak = 1
+            for i in range(1, len(dates)):
+                if dates[i-1] - dates[i] == timedelta(days=1):
+                    streak += 1
+                else:
+                    break
+
+        # Has monthly pass?
+        cursor.execute("SELECT COUNT(*) as c FROM monthly_passes WHERE username=%s", (username,))
+        has_pass = int(cursor.fetchone()['c'] or 0) > 0
+
+        # Off-peak trips count (for Night Owl badge)
+        cursor.execute("""
+            SELECT COUNT(*) as c FROM tickets
+            WHERE username=%s AND cancelled=FALSE
+            AND (HOUR(bookingDate) < 8 OR HOUR(bookingDate) > 20)
+        """, (username,))
+        offpeak_trips = int(cursor.fetchone()['c'] or 0)
+
+        # Early bird trips (before 9 AM)
+        cursor.execute("""
+            SELECT COUNT(*) as c FROM tickets
+            WHERE username=%s AND cancelled=FALSE
+            AND HOUR(bookingDate) < 9
+        """, (username,))
+        early_trips = int(cursor.fetchone()['c'] or 0)
+
+        # Wallet recharges count
+        cursor.execute("""
+            SELECT COUNT(*) as c FROM wallet_history
+            WHERE username=%s AND type='CREDIT'
+        """, (username,))
+        recharges = int(cursor.fetchone()['c'] or 0)
+
+        # Weekend trips
+        cursor.execute("""
+            SELECT COUNT(*) as c FROM tickets
+            WHERE username=%s AND cancelled=FALSE
+            AND DAYOFWEEK(bookingDate) IN (1, 7)
+        """, (username,))
+        weekend_trips = int(cursor.fetchone()['c'] or 0)
+
+        conn.close()
+
+        badges = [
+            {'id': 'first_trip', 'name': 'First Trip', 'icon': '🚀',
+             'desc': 'Book your first ticket', 'unlocked': trips >= 1,
+             'progress': min(trips, 1), 'target': 1},
+            {'id': 'streak', 'name': 'Streak Runner', 'icon': '🔥',
+             'desc': '3+ consecutive travel days', 'unlocked': streak >= 3,
+             'progress': min(streak, 3), 'target': 3},
+            {'id': 'big_spender', 'name': 'Big Spender', 'icon': '💰',
+             'desc': 'Spend ₹5,000+ total', 'unlocked': spent >= 5000,
+             'progress': min(int(spent), 5000), 'target': 5000},
+            {'id': 'explorer', 'name': 'Explorer', 'icon': '🌍',
+             'desc': 'Visit 10+ unique stations', 'unlocked': stations >= 10,
+             'progress': min(stations, 10), 'target': 10},
+            {'id': 'eco_warrior', 'name': 'Eco Warrior', 'icon': '🌿',
+             'desc': 'Save 50+ kg CO₂', 'unlocked': co2 >= 50,
+             'progress': min(round(co2), 50), 'target': 50},
+            {'id': 'pass_holder', 'name': 'Pass Holder', 'icon': '🎫',
+             'desc': 'Purchase a monthly pass', 'unlocked': has_pass,
+             'progress': 1 if has_pass else 0, 'target': 1},
+            {'id': 'loyal_rider', 'name': 'Loyal Rider', 'icon': '⭐',
+             'desc': 'Complete 50+ trips', 'unlocked': trips >= 50,
+             'progress': min(trips, 50), 'target': 50},
+            {'id': 'champion', 'name': 'Metro Champion', 'icon': '🏆',
+             'desc': 'Complete 100+ trips', 'unlocked': trips >= 100,
+             'progress': min(trips, 100), 'target': 100},
+            {'id': 'night_owl', 'name': 'Night Owl', 'icon': '🦉',
+             'desc': '5+ off-peak night trips', 'unlocked': offpeak_trips >= 5,
+             'progress': min(offpeak_trips, 5), 'target': 5},
+            {'id': 'early_bird', 'name': 'Early Bird', 'icon': '🐦',
+             'desc': '10+ early morning trips', 'unlocked': early_trips >= 10,
+             'progress': min(early_trips, 10), 'target': 10},
+            {'id': 'wallet_warrior', 'name': 'Wallet Warrior', 'icon': '💳',
+             'desc': 'Recharge wallet 5+ times', 'unlocked': recharges >= 5,
+             'progress': min(recharges, 5), 'target': 5},
+            {'id': 'weekend_explorer', 'name': 'Weekend Explorer', 'icon': '🎉',
+             'desc': '10+ weekend trips', 'unlocked': weekend_trips >= 10,
+             'progress': min(weekend_trips, 10), 'target': 10},
+        ]
+        unlocked = sum(1 for b in badges if b['unlocked'])
+        return jsonify({'success': True, 'badges': badges, 'unlocked': unlocked, 'total': len(badges)})
+    except Exception as e:
+        logger.error(f"Achievements error: {e}")
+        return jsonify({'success': True, 'badges': [], 'unlocked': 0, 'total': 12})
+
+
+# ── Phase 5: Trip Comparison & Fare Calculator ───────────────────────────────
+@app.route('/api/fare/compare', methods=['GET'])
+@require_login
+def api_fare_compare():
+    """Compare metro vs cab vs auto fare for any route"""
+    try:
+        source = request.args.get('source', '')
+        destination = request.args.get('destination', '')
+        if not source or not destination or source == destination:
+            return jsonify({'success': False, 'error': 'Select different source and destination'}), 400
+
+        fare_data = calculate_dynamic_fare(source, destination, 1)
+        metro_fare = fare_data.get('fare', 0)
+        distance = fare_data.get('distance', 0)
+        travel_time = fare_data.get('travelTime', '')
+        is_peak = fare_data.get('isPeak', False)
+
+        # Estimate cab/auto fares
+        cab_fare = round(max(80, distance * 15 + 50), 0)  # base 50 + 15/km, min 80
+        auto_fare = round(max(40, distance * 10 + 25), 0)  # base 25 + 10/km, min 40
+        cab_time = round(distance * 4 + 10)  # ~4 min/km + 10 min traffic
+        auto_time = round(distance * 4.5 + 12)
+
+        metro_co2 = round(distance * 0.03, 2)   # 30g/km for metro
+        cab_co2 = round(distance * 0.21, 2)      # 210g/km for car
+        auto_co2 = round(distance * 0.12, 2)     # 120g/km for auto
+
+        # Monthly pass savings
+        daily_savings = round(cab_fare - metro_fare, 0)
+        monthly_savings = round(daily_savings * 22, 0)  # 22 working days
+
+        return jsonify({
+            'success': True,
+            'route': {'source': source, 'destination': destination, 'distance': distance},
+            'metro': {'fare': metro_fare, 'time': travel_time, 'co2': metro_co2, 'is_peak': is_peak},
+            'cab': {'fare': cab_fare, 'time': f'{cab_time} min', 'co2': cab_co2},
+            'auto': {'fare': auto_fare, 'time': f'{auto_time} min', 'co2': auto_co2},
+            'savings': {
+                'vs_cab': round(cab_fare - metro_fare, 0),
+                'vs_auto': round(auto_fare - metro_fare, 0),
+                'monthly_vs_cab': monthly_savings,
+                'co2_saved_vs_cab': round(cab_co2 - metro_co2, 2)
+            }
+        })
+    except Exception as e:
+        logger.error(f"Fare compare error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ── Phase 6: Group Booking ───────────────────────────────────────────────────
+@app.route('/api/tickets/book-group', methods=['POST'])
+@require_login
+def api_book_group():
+    """Book tickets for multiple named passengers in one transaction"""
+    try:
+        user = get_current_user()
+        username = user['username']
+        data = request.json
+        source = data.get('source', '')
+        destination = data.get('destination', '')
+        travel_date = data.get('travelDate', '')
+        passengers = data.get('passengers', [])  # list of {name: "..."}
+
+        if not source or not destination or not travel_date:
+            return jsonify({'success': False, 'error': 'Missing required fields'}), 400
+        if not passengers or len(passengers) < 1 or len(passengers) > 5:
+            return jsonify({'success': False, 'error': 'Add 1-5 passengers'}), 400
+
+        # Calculate fare per person
+        from datetime import datetime as _dt
+        travel_dt = _dt.strptime(travel_date, '%Y-%m-%d').date()
+        fare_data = calculate_dynamic_fare(source, destination, 1)
+        fare_per_person = fare_data.get('fare', 0)
+        total_fare = fare_per_person * len(passengers)
+        distance = fare_data.get('distance', 0)
+
+        # Check wallet balance
+        user_obj = datastore.get_user(username)
+        if not user_obj or user_obj.wallet_balance < total_fare:
+            return jsonify({'success': False, 'error': f'Insufficient balance. Need ₹{total_fare}'}), 400
+
+        # Book tickets for each passenger
+        booking_ref = f"GRP-{random.randint(10000, 99999)}"
+        tickets = []
+        for p in passengers:
+            ticket = user_obj.book_ticket(source, destination, 1, fare_per_person, travel_dt)
+            if ticket:
+                tickets.append({
+                    'ticketId': ticket.ticket_id,
+                    'passenger': p.get('name', username),
+                    'source': source,
+                    'destination': destination,
+                    'fare': fare_per_person,
+                    'travelDate': travel_date
+                })
+
+        return jsonify({
+            'success': True,
+            'booking_ref': booking_ref,
+            'total_fare': total_fare,
+            'tickets': tickets,
+            'message': f'{len(tickets)} tickets booked successfully!'
+        }), 201
+    except Exception as e:
+        logger.error(f"Group booking error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ── Phase 7: Spending Insights & Budget ──────────────────────────────────────
+@app.route('/api/user/spending-insights', methods=['GET'])
+@require_login
+def api_spending_insights():
+    """Get spending breakdown, trends, and savings data"""
+    try:
+        user = get_current_user()
+        username = user['username']
+        conn = db.get_db_connection()
+        cursor = conn.cursor(dictionary=True, buffered=True)
+
+        # Monthly spending
+        cursor.execute("""
+            SELECT COALESCE(SUM(fare),0) as month_spent, COUNT(*) as month_trips,
+                   COALESCE(AVG(fare),0) as avg_trip
+            FROM tickets WHERE username=%s AND cancelled=FALSE
+            AND MONTH(bookingDate) = MONTH(CURDATE()) AND YEAR(bookingDate) = YEAR(CURDATE())
+        """, (username,))
+        monthly = cursor.fetchone()
+
+        # Daily spending last 30 days
+        cursor.execute("""
+            SELECT DATE(bookingDate) as day, SUM(fare) as spent
+            FROM tickets WHERE username=%s AND cancelled=FALSE
+            AND bookingDate >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+            GROUP BY DATE(bookingDate) ORDER BY day
+        """, (username,))
+        daily_trend = [{'day': str(r['day']), 'spent': float(r['spent'])} for r in cursor.fetchall()]
+
+        # Category breakdown
+        cursor.execute("SELECT COALESCE(SUM(fare),0) as t FROM tickets WHERE username=%s AND cancelled=FALSE", (username,))
+        ticket_total = float(cursor.fetchone()['t'] or 0)
+        cursor.execute("SELECT COALESCE(SUM(price),0) as p FROM monthly_passes WHERE username=%s", (username,))
+        pass_total = float(cursor.fetchone()['p'] or 0)
+
+        # Off-peak savings
+        cursor.execute("""
+            SELECT COUNT(*) as offpeak FROM tickets
+            WHERE username=%s AND cancelled=FALSE
+            AND HOUR(bookingDate) NOT BETWEEN 8 AND 10
+            AND HOUR(bookingDate) NOT BETWEEN 17 AND 20
+        """, (username,))
+        offpeak_trips = int(cursor.fetchone()['offpeak'] or 0)
+        offpeak_savings = round(offpeak_trips * 5, 0)  # ~₹5 saved per off-peak trip
+
+        # Budget
+        budget = 0
+        try:
+            cursor.execute("SELECT user_preferences FROM users WHERE username=%s", (username,))
+            pr = cursor.fetchone()
+            if pr and pr.get('user_preferences'):
+                import json as _json
+                prefs = _json.loads(pr['user_preferences'])
+                budget = prefs.get('monthly_budget', 0)
+        except Exception:
+            pass
+
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'month_spent': float(monthly['month_spent'] or 0),
+            'month_trips': int(monthly['month_trips'] or 0),
+            'avg_trip_cost': round(float(monthly['avg_trip'] or 0), 1),
+            'daily_trend': daily_trend,
+            'categories': {
+                'tickets': round(ticket_total, 2),
+                'passes': round(pass_total, 2),
+                'recharges': round(ticket_total + pass_total, 2)
+            },
+            'budget': budget,
+            'offpeak_savings': offpeak_savings
+        })
+    except Exception as e:
+        logger.error(f"Spending insights error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/user/budget', methods=['PUT'])
+@require_login
+def api_set_budget():
+    """Set monthly metro budget goal"""
+    try:
+        user = get_current_user()
+        data = request.json
+        budget = data.get('budget', 0)
+        import json as _json
+
+        conn = db.get_db_connection()
+        cursor = conn.cursor(dictionary=True, buffered=True)
+        try:
+            cursor.execute("SELECT user_preferences FROM users WHERE username=%s", (user['username'],))
+            row = cursor.fetchone()
+            prefs = {}
+            if row and row.get('user_preferences'):
+                prefs = _json.loads(row['user_preferences'])
+            prefs['monthly_budget'] = budget
+            cursor.execute("UPDATE users SET user_preferences=%s WHERE username=%s",
+                           (_json.dumps(prefs), user['username']))
+            conn.commit()
+        except Exception:
+            cursor.execute("ALTER TABLE users ADD COLUMN user_preferences TEXT DEFAULT NULL")
+            conn.commit()
+            cursor.execute("UPDATE users SET user_preferences=%s WHERE username=%s",
+                           (_json.dumps({'monthly_budget': budget}), user['username']))
+            conn.commit()
+        conn.close()
+        return jsonify({'success': True, 'message': f'Budget set to ₹{budget}'})
+    except Exception as e:
+        logger.error(f"Budget error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ── Phase 8: Metro Map Data ──────────────────────────────────────────────────
+@app.route('/api/metro/map-data', methods=['GET'])
+@require_login
+def api_metro_map_data():
+    """Return all stations with coordinates for SVG metro map rendering"""
+    try:
+        conn = db.get_db_connection()
+        cursor = conn.cursor(dictionary=True, buffered=True)
+        cursor.execute("SELECT name, x, y FROM station_locations ORDER BY name")
+        stations = cursor.fetchall()
+
+        # Group into lines based on coordinates
+        blue_line = []
+        red_line = []
+        phase2 = []
+        for s in stations:
+            s['x'] = float(s['x'])
+            s['y'] = float(s['y'])
+            # Blue line: east-west (y varies, x ~23.03-23.05)
+            if s['x'] >= 23.02 and s['x'] <= 23.06 and s['y'] >= 72.48 and s['y'] <= 72.66:
+                blue_line.append(s)
+            # Red line: north-south (y~72.56, x varies)
+            elif s['y'] >= 72.55 and s['y'] <= 72.57:
+                red_line.append(s)
+            else:
+                phase2.append(s)
+
+        conn.close()
+        return jsonify({
+            'success': True,
+            'lines': {
+                'blue': sorted(blue_line, key=lambda s: s['y']),
+                'red': sorted(red_line, key=lambda s: s['x']),
+                'phase2': sorted(phase2, key=lambda s: s['x'])
+            },
+            'total_stations': len(stations)
+        })
+    except Exception as e:
+        logger.error(f"Map data error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ── Phase 9: Crowd & Weather ─────────────────────────────────────────────────
+@app.route('/api/stations/crowd-status', methods=['GET'])
+@require_login
+def api_crowd_status():
+    """Simulated crowd levels based on time-of-day and booking volume"""
+    try:
+        now = datetime.now()
+        hour = now.hour
+        is_weekday = now.weekday() < 5
+
+        conn = db.get_db_connection()
+        cursor = conn.cursor(dictionary=True, buffered=True)
+        cursor.execute("SELECT DISTINCT name FROM station_locations")
+        stations = [r['name'] for r in cursor.fetchall()]
+
+        # Booking volume per station (last 24h)
+        cursor.execute("""
+            SELECT source as station, COUNT(*) as vol FROM tickets
+            WHERE bookingDate >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
+            AND cancelled=FALSE GROUP BY source
+        """)
+        volume = {r['station']: int(r['vol']) for r in cursor.fetchall()}
+        conn.close()
+
+        results = []
+        for st in stations:
+            vol = volume.get(st, 0)
+            # Peak hours: 8-10 AM, 5-8 PM on weekdays
+            if is_weekday and (8 <= hour <= 10 or 17 <= hour <= 20):
+                base = 'high' if vol > 5 else 'medium'
+            elif is_weekday and (7 <= hour <= 21):
+                base = 'medium' if vol > 3 else 'low'
+            else:
+                base = 'low'
+
+            level_map = {'low': ('🟢', '#22c55e', 'Quiet'), 'medium': ('🟡', '#f59e0b', 'Moderate'), 'high': ('🔴', '#ef4444', 'Crowded')}
+            icon, color, text = level_map[base]
+            results.append({'station': st, 'level': base, 'icon': icon, 'color': color, 'text': text})
+
+        return jsonify({'success': True, 'stations': results})
+    except Exception as e:
+        logger.error(f"Crowd status error: {e}")
+        return jsonify({'success': True, 'stations': []})
+
+
+@app.route('/api/travel/weather-advisory', methods=['GET'])
+@require_login
+def api_weather_advisory():
+    """Simulated weather-aware travel advisory"""
+    try:
+        now = datetime.now()
+        hour = now.hour
+        month = now.month
+
+        # Simulate weather by season (Ahmedabad climate)
+        if month in [6, 7, 8, 9]:  # Monsoon
+            conditions = [
+                ('🌧️', 'Rainy', 28, 'Heavy rain expected — metro is a great dry commute!', ''),
+                ('⛈️', 'Thunderstorm', 26, 'Stormy weather — skip the traffic, take metro!', ''),
+                ('🌦️', 'Light Rain', 30, 'Mild showers — metro keeps you dry and on time.', ''),
+            ]
+        elif month in [11, 12, 1, 2]:  # Winter
+            conditions = [
+                ('🌫️', 'Foggy', 18, 'Foggy morning — metro runs unaffected!', 'Expect minor road delays'),
+                ('☀️', 'Clear', 22, 'Perfect winter day for your commute.', ''),
+                ('🌤️', 'Pleasant', 20, 'Great weather! Enjoy your metro ride.', ''),
+            ]
+        else:  # Summer
+            conditions = [
+                ('☀️', 'Sunny & Hot', 42, 'Beat the heat — cool AC metro rides await!', 'Stay hydrated'),
+                ('🔥', 'Very Hot', 45, 'Extreme heat outside — metro is fully air-conditioned.', 'Avoid outdoor travel'),
+                ('🌤️', 'Warm', 38, 'Warm day — metro is the comfortable choice.', ''),
+            ]
+
+        weather = random.choice(conditions)
+        # Best travel time suggestion
+        if 8 <= hour <= 10 or 17 <= hour <= 20:
+            best_time = 'Off-peak: Before 8 AM or after 8 PM'
+        else:
+            best_time = 'You\'re traveling at a great time! ✅'
+
+        return jsonify({
+            'success': True,
+            'weather': {
+                'icon': weather[0], 'condition': weather[1],
+                'temp': weather[2], 'advisory': weather[3],
+                'warning': weather[4], 'best_time': best_time
+            }
+        })
+    except Exception as e:
+        logger.error(f"Weather error: {e}")
+        return jsonify({'success': True, 'weather': {'icon': '☀️', 'condition': 'Clear', 'temp': 30, 'advisory': 'Great day to travel!', 'warning': '', 'best_time': ''}})
+
+
+# ============================================================================
+# UNIQUE FEATURES — REAL APPLICATION ENHANCEMENTS
+# ============================================================================
+
+# ── 1. LIVE BOOKING FEED (Queue from ds.py) ──────────────────────────────────
+@app.route('/api/bookings/live-feed', methods=['GET'])
+def api_live_booking_feed():
+    """
+    Get recent bookings from the live queue (ds.py Queue).
+    Returns the last N bookings for an animated ticker feed.
+    """
+    try:
+        # Read from booking_queue without dequeuing (peek all items)
+        items = []
+        current = booking_queue.front
+        while current:
+            items.append(current.data)
+            current = current.next
+        
+        # Return most recent first (last N items reversed)
+        recent = list(reversed(items[-15:]))
+        
+        # Anonymize usernames for public feed
+        feed = []
+        for b in recent:
+            uname = b.get('username', 'User')
+            masked = uname[0] + '*' * (len(uname) - 2) + uname[-1] if len(uname) > 2 else uname
+            feed.append({
+                'id': b.get('ticketId', 0),
+                'user': masked,
+                'source': b.get('source', '').replace('_', ' ').title(),
+                'destination': b.get('destination', '').replace('_', ' ').title(),
+                'passengers': b.get('passengers', 1),
+                'fare': b.get('fare', 0),
+                'time': b.get('bookedAt', ''),
+            })
+        
+        return jsonify({
+            'success': True,
+            'feed': feed,
+            'queueSize': booking_queue.size(),
+            'maxQueueSize': MAX_QUEUE_SIZE
+        }), 200
+    except Exception as e:
+        logger.error(f"Live feed error: {e}")
+        return jsonify({'success': True, 'feed': [], 'queueSize': 0}), 200
+
+
+# ── 2. JOURNEY PLANNER (BFS Shortest Path using StationInfo from ds.py) ──────
+@app.route('/api/journey/plan', methods=['POST'])
+def api_plan_journey():
+    """
+    Plan a journey between two stations using station coordinates.
+    Calculates intermediate stations, total distance, estimated time, and fare.
+    Uses StationInfo objects from MetroDataStore.
+    """
+    try:
+        data = request.json
+        source = data.get('source', '').lower().strip()
+        destination = data.get('destination', '').lower().strip()
+        
+        if not source or not destination:
+            return jsonify({'success': False, 'error': 'Source and destination required'}), 400
+        if source == destination:
+            return jsonify({'success': False, 'error': 'Source and destination must be different'}), 400
+        
+        # Get all stations from DB with coordinates
+        conn = db.get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT name, x, y FROM station_locations ORDER BY name")
+        all_stations = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        station_map = {s['name']: (float(s['x']), float(s['y'])) for s in all_stations}
+        
+        if source not in station_map:
+            return jsonify({'success': False, 'error': f'Station "{source}" not found'}), 404
+        if destination not in station_map:
+            return jsonify({'success': False, 'error': f'Station "{destination}" not found'}), 404
+        
+        # Build adjacency by corridor (stations on same line = adjacent if within ~0.02 degrees)
+        # East-West: similar y (latitude ~23.02-23.05), sorted by x (longitude)
+        # North-South: similar x (longitude ~72.56), sorted by y (latitude)
+        station_names = sorted(station_map.keys(), key=lambda s: (station_map[s][1], station_map[s][0]))
+        
+        # Build graph: connect each station to its nearest neighbors on the same line
+        import math
+        def dist(a, b):
+            ax, ay = station_map[a]
+            bx, by = station_map[b]
+            return math.sqrt((ax - bx)**2 + (ay - by)**2)
+        
+        # Simple adjacency: connect each station to nearest 2-3 stations within threshold
+        adjacency = {s: [] for s in station_map}
+        threshold = 0.025  # ~2.5 km in coordinate difference
+        
+        for s1 in station_map:
+            distances = []
+            for s2 in station_map:
+                if s1 != s2:
+                    d = dist(s1, s2)
+                    if d < threshold:
+                        distances.append((d, s2))
+            distances.sort()
+            for d, s2 in distances[:3]:  # Max 3 nearest neighbors
+                if s2 not in adjacency[s1]:
+                    adjacency[s1].append(s2)
+                if s1 not in adjacency[s2]:
+                    adjacency[s2].append(s1)
+        
+        # BFS shortest path
+        from collections import deque
+        queue_bfs = deque()
+        queue_bfs.append([source])
+        visited = {source}
+        path = None
+        
+        while queue_bfs:
+            current_path = queue_bfs.popleft()
+            current_station = current_path[-1]
+            
+            if current_station == destination:
+                path = current_path
+                break
+            
+            for neighbor in adjacency.get(current_station, []):
+                if neighbor not in visited:
+                    visited.add(neighbor)
+                    queue_bfs.append(current_path + [neighbor])
+        
+        if not path:
+            return jsonify({'success': False, 'error': 'No route found between these stations'}), 404
+        
+        # Calculate total distance (Haversine approximation)
+        total_distance_km = 0
+        for i in range(len(path) - 1):
+            lat1, lon1 = station_map[path[i]]
+            lat2, lon2 = station_map[path[i+1]]
+            # Simple distance: 1 degree ≈ 111 km
+            d = math.sqrt(((lat1 - lat2) * 111)**2 + (((lon1 - lon2) * 111 * math.cos(math.radians(lat1))))**2)
+            total_distance_km += d
+        
+        # Estimate time (avg 35 km/h + 30 sec per station stop)
+        travel_time_min = (total_distance_km / 35) * 60 + len(path) * 0.5
+        
+        # Calculate fare (base 10 + 3 per km)
+        fare = round(10 + total_distance_km * 3, 2)
+        
+        # Format path with coordinates for visualization
+        route_stations = []
+        for s in path:
+            coords = station_map[s]
+            route_stations.append({
+                'name': s.replace('_', ' ').title(),
+                'id': s,
+                'lat': coords[0],
+                'lon': coords[1]
+            })
+        
+        return jsonify({
+            'success': True,
+            'route': route_stations,
+            'totalStops': len(path),
+            'interchanges': 1 if 'old_high_court' in path and source != 'old_high_court' and destination != 'old_high_court' else 0,
+            'distanceKm': round(total_distance_km, 2),
+            'estimatedTimeMin': round(travel_time_min, 1),
+            'fare': fare,
+            'algorithm': 'BFS Shortest Path',
+            'dataSource': 'MetroDataStore (ds.py)'
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Journey planner error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ── 3. CARBON FOOTPRINT TRACKER ─────────────────────────────────────────────
+@app.route('/api/eco/footprint', methods=['GET'])
+@require_login
+def api_eco_footprint():
+    """
+    Calculate user's environmental impact by choosing metro over cars/autos.
+    Uses Ticket model to compute CO₂ savings per trip.
+    """
+    try:
+        user = get_current_user()
+        username = user['username']
+        
+        conn = db.get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        # Get all non-cancelled tickets with distance
+        cursor.execute("""
+            SELECT ticketId, source, destination, passengers, fare, 
+                   COALESCE(distance, 0) as distance, travelDate
+            FROM tickets 
+            WHERE username = %s AND cancelled = FALSE
+            ORDER BY bookingDate DESC
+        """, (username,))
+        tickets = cursor.fetchall()
+        
+        # Get station distances for tickets without distance field
+        cursor.execute("SELECT name, x, y FROM station_locations")
+        stations = {s['name']: (float(s['x']), float(s['y'])) for s in cursor.fetchall()}
+        cursor.close()
+        conn.close()
+        
+        import math
+        
+        total_trips = len(tickets)
+        total_distance_km = 0
+        total_co2_saved_kg = 0
+        total_fuel_saved_liters = 0
+        monthly_breakdown = {}
+        
+        for t in tickets:
+            dist_km = float(t['distance']) if t['distance'] > 0 else 0
+            
+            # Calculate distance from coordinates if not stored
+            if dist_km == 0 and t['source'] in stations and t['destination'] in stations:
+                lat1, lon1 = stations[t['source']]
+                lat2, lon2 = stations[t['destination']]
+                dist_km = math.sqrt(((lat1 - lat2) * 111)**2 + (((lon1 - lon2) * 111 * math.cos(math.radians(lat1))))**2)
+            
+            passengers = max(t['passengers'], 1)
+            
+            # CO₂ emissions per km:
+            # Car: 0.21 kg/km per passenger, Metro: 0.04 kg/km per passenger
+            # Savings = (car_emission - metro_emission) * distance * passengers
+            car_co2 = 0.21 * dist_km * passengers
+            metro_co2 = 0.04 * dist_km * passengers
+            saved = car_co2 - metro_co2
+            
+            # Fuel savings: car averages 12 km/liter
+            fuel_saved = (dist_km * passengers) / 12
+            
+            total_distance_km += dist_km * passengers
+            total_co2_saved_kg += saved
+            total_fuel_saved_liters += fuel_saved
+            
+            # Monthly breakdown
+            travel_date = t['travelDate']
+            if hasattr(travel_date, 'strftime'):
+                month_key = travel_date.strftime('%Y-%m')
+            else:
+                month_key = str(travel_date)[:7]
+            
+            if month_key not in monthly_breakdown:
+                monthly_breakdown[month_key] = {'co2': 0, 'trips': 0}
+            monthly_breakdown[month_key]['co2'] += saved
+            monthly_breakdown[month_key]['trips'] += 1
+        
+        # Fun equivalents
+        trees_equivalent = total_co2_saved_kg / 22  # 1 tree absorbs ~22 kg CO₂/year
+        phone_charges = total_co2_saved_kg / 0.008  # 1 charge ≈ 8g CO₂
+        
+        # Eco rank based on CO₂ saved
+        if total_co2_saved_kg >= 100:
+            eco_rank = '🌍 Eco Champion'
+            eco_level = 5
+        elif total_co2_saved_kg >= 50:
+            eco_rank = '🌳 Green Warrior'
+            eco_level = 4
+        elif total_co2_saved_kg >= 20:
+            eco_rank = '🌿 Nature Friend'
+            eco_level = 3
+        elif total_co2_saved_kg >= 5:
+            eco_rank = '🌱 Eco Starter'
+            eco_level = 2
+        else:
+            eco_rank = '🌾 Green Sprout'
+            eco_level = 1
+        
+        # Monthly trend (last 6 months)
+        sorted_months = sorted(monthly_breakdown.items(), reverse=True)[:6]
+        trend = [{'month': m, 'co2Saved': round(d['co2'], 2), 'trips': d['trips']} 
+                 for m, d in reversed(sorted_months)]
+        
+        return jsonify({
+            'success': True,
+            'eco': {
+                'totalTrips': total_trips,
+                'totalDistanceKm': round(total_distance_km, 1),
+                'co2SavedKg': round(total_co2_saved_kg, 2),
+                'fuelSavedLiters': round(total_fuel_saved_liters, 1),
+                'treesEquivalent': round(trees_equivalent, 1),
+                'phoneCharges': int(phone_charges),
+                'ecoRank': eco_rank,
+                'ecoLevel': eco_level,
+                'monthlyTrend': trend
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Eco footprint error: {e}")
+        return jsonify({'success': True, 'eco': {
+            'totalTrips': 0, 'totalDistanceKm': 0, 'co2SavedKg': 0,
+            'fuelSavedLiters': 0, 'treesEquivalent': 0, 'phoneCharges': 0,
+            'ecoRank': '🌾 Green Sprout', 'ecoLevel': 1, 'monthlyTrend': []
+        }}), 200
+
+
+# ── 4. SMART TRAVEL RECOMMENDATIONS ────────────────────────────────────────
+@app.route('/api/recommendations', methods=['GET'])
+@require_login
+def api_smart_recommendations():
+    """
+    Analyze user's booking history and provide personalized travel recommendations.
+    Suggests: best times, pass savings, frequent routes, wallet tips.
+    """
+    try:
+        user = get_current_user()
+        username = user['username']
+        
+        conn = db.get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        # Get booking patterns
+        cursor.execute("""
+            SELECT source, destination, fare, passengers, travelDate, bookingDate,
+                   HOUR(bookingDate) as booking_hour,
+                   DAYNAME(travelDate) as travel_day
+            FROM tickets 
+            WHERE username = %s AND cancelled = FALSE
+            ORDER BY bookingDate DESC
+            LIMIT 100
+        """, (username,))
+        tickets = cursor.fetchall()
+        
+        # Get active monthly passes
+        cursor.execute("""
+            SELECT source, destination, planType, expiryDate 
+            FROM monthly_passes 
+            WHERE username = %s AND status = 'active' AND expiryDate >= CURRENT_DATE
+        """, (username,))
+        active_passes = cursor.fetchall()
+        
+        cursor.close()
+        conn.close()
+        
+        tips = []
+        
+        if not tickets:
+            tips.append({
+                'icon': '🎫', 'title': 'Book Your First Trip!',
+                'desc': 'Start your metro journey by booking a ticket from the dashboard.',
+                'type': 'action', 'priority': 'high'
+            })
+            return jsonify({'success': True, 'tips': tips}), 200
+        
+        # 1. Find most frequent route
+        route_counts = {}
+        total_spent = 0
+        for t in tickets:
+            route = f"{t['source']}→{t['destination']}"
+            route_counts[route] = route_counts.get(route, 0) + 1
+            total_spent += float(t['fare'])
+        
+        top_route = max(route_counts, key=route_counts.get)
+        top_count = route_counts[top_route]
+        src, dst = top_route.split('→')
+        
+        # 2. Check if frequent route has a monthly pass
+        has_pass_for_top = any(
+            (p['source'].lower() == src.lower() and p['destination'].lower() == dst.lower()) or
+            (p['source'] == 'ALL')
+            for p in active_passes
+        )
+        
+        if top_count >= 8 and not has_pass_for_top:
+            avg_fare = total_spent / len(tickets)
+            monthly_cost = avg_fare * top_count
+            tips.append({
+                'icon': '💳', 'title': 'Save with Monthly Pass!',
+                'desc': f'You travel {src.replace("_"," ").title()} → {dst.replace("_"," ").title()} {top_count} times. A Basic Pass (₹999) could save you ₹{max(0, monthly_cost - 999):.0f}/month!',
+                'type': 'savings', 'priority': 'high'
+            })
+        
+        # 3. Peak hour analysis
+        peak_bookings = sum(1 for t in tickets if t.get('booking_hour') and 8 <= t['booking_hour'] <= 10 or 17 <= t.get('booking_hour', 0) <= 19)
+        if peak_bookings > len(tickets) * 0.6:
+            tips.append({
+                'icon': '⏰', 'title': 'Beat the Rush!',
+                'desc': f'{int(peak_bookings/len(tickets)*100)}% of your trips are during peak hours (8-10 AM, 5-7 PM). Travel between 11 AM-4 PM for 15% lower fares and less crowding.',
+                'type': 'timing', 'priority': 'medium'
+            })
+        
+        # 4. Weekend travel pattern
+        weekend_trips = sum(1 for t in tickets if t.get('travel_day') in ['Saturday', 'Sunday'])
+        if weekend_trips < 2 and len(tickets) > 10:
+            tips.append({
+                'icon': '🌅', 'title': 'Weekend Explorer Discount',
+                'desc': 'You rarely travel on weekends. Weekend fares are typically 20% lower — great for exploring the city!',
+                'type': 'discovery', 'priority': 'low'
+            })
+        
+        # 5. Wallet management
+        wallet_balance = float(user.get('walletBalance', 0))
+        if wallet_balance < 50:
+            tips.append({
+                'icon': '💰', 'title': 'Low Wallet Balance',
+                'desc': f'Your balance is ₹{wallet_balance:.0f}. Recharge ₹500+ to avoid booking delays and enable auto-recharge for seamless trips.',
+                'type': 'wallet', 'priority': 'high'
+            })
+        elif wallet_balance > 5000:
+            tips.append({
+                'icon': '🎁', 'title': 'Earn Rewards on Balance!',
+                'desc': f'You have ₹{wallet_balance:.0f} in your wallet. Consider a Premium Pass to maximize value with unlimited trips!',
+                'type': 'upgrade', 'priority': 'medium'
+            })
+        
+        # 6. Green points reminder
+        cursor2 = None
+        try:
+            conn2 = db.get_db_connection()
+            cursor2 = conn2.cursor(dictionary=True)
+            cursor2.execute("SELECT loyaltyPoints FROM users WHERE username = %s", (username,))
+            row = cursor2.fetchone()
+            points = row.get('loyaltyPoints', 0) if row else 0
+            cursor2.close()
+            conn2.close()
+            
+            if points >= 50:
+                tips.append({
+                    'icon': '🏆', 'title': f'Redeem {points} Green Points!',
+                    'desc': f'You have {points} Green Points. Redeem 50 points for ₹20 wallet credit from your dashboard!',
+                    'type': 'rewards', 'priority': 'high'
+                })
+        except:
+            pass
+        
+        # 7. Favorite route suggestion
+        if top_count >= 3:
+            tips.append({
+                'icon': '⭐', 'title': 'Quick Rebook',
+                'desc': f'Your most traveled route is {src.replace("_"," ").title()} → {dst.replace("_"," ").title()} ({top_count} trips). Save it as a favorite for 1-tap booking!',
+                'type': 'convenience', 'priority': 'low'
+            })
+        
+        # Sort by priority
+        priority_order = {'high': 0, 'medium': 1, 'low': 2}
+        tips.sort(key=lambda t: priority_order.get(t['priority'], 9))
+        
+        return jsonify({'success': True, 'tips': tips[:6]}), 200
+        
+    except Exception as e:
+        logger.error(f"Recommendations error: {e}")
+        return jsonify({'success': True, 'tips': []}), 200
+
+
+# ── 5. TRAVEL STREAKS & GAMIFICATION ────────────────────────────────────────
+@app.route('/api/streaks', methods=['GET'])
+@require_login
+def api_travel_streaks():
+    """
+    Calculate user's travel streaks and gamification stats.
+    Consecutive days traveled, longest streak, current streak, milestones.
+    """
+    try:
+        user = get_current_user()
+        username = user['username']
+        
+        conn = db.get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        # Get all travel dates (unique days with bookings)
+        cursor.execute("""
+            SELECT DISTINCT DATE(bookingDate) as travel_day
+            FROM tickets 
+            WHERE username = %s AND cancelled = FALSE
+            ORDER BY travel_day DESC
+        """, (username,))
+        travel_days = [row['travel_day'] for row in cursor.fetchall()]
+        
+        # Get total stats
+        cursor.execute("""
+            SELECT COUNT(*) as total_tickets,
+                   SUM(fare) as total_spent,
+                   SUM(passengers) as total_passengers,
+                   COUNT(DISTINCT source) as unique_sources,
+                   COUNT(DISTINCT destination) as unique_destinations
+            FROM tickets WHERE username = %s AND cancelled = FALSE
+        """, (username,))
+        stats = cursor.fetchone()
+        
+        cursor.close()
+        conn.close()
+        
+        # Calculate streaks
+        current_streak = 0
+        longest_streak = 0
+        temp_streak = 1
+        
+        today = date.today()
+        
+        if travel_days:
+            # Check if user traveled today or yesterday (for current streak)
+            if travel_days[0] == today or travel_days[0] == today - timedelta(days=1):
+                current_streak = 1
+                for i in range(1, len(travel_days)):
+                    if (travel_days[i-1] - travel_days[i]).days == 1:
+                        current_streak += 1
+                    else:
+                        break
+            
+            # Calculate longest streak
+            temp_streak = 1
+            for i in range(1, len(travel_days)):
+                if (travel_days[i-1] - travel_days[i]).days == 1:
+                    temp_streak += 1
+                else:
+                    longest_streak = max(longest_streak, temp_streak)
+                    temp_streak = 1
+            longest_streak = max(longest_streak, temp_streak)
+        
+        total_tickets = int(stats['total_tickets'] or 0)
+        total_spent = float(stats['total_spent'] or 0)
+        unique_stations = int(stats.get('unique_sources', 0) or 0) + int(stats.get('unique_destinations', 0) or 0)
+        
+        # Milestones
+        milestones = [
+            {'name': 'First Ride', 'icon': '🎫', 'target': 1, 'current': total_tickets, 'unlocked': total_tickets >= 1},
+            {'name': '10 Trips Club', 'icon': '🔥', 'target': 10, 'current': min(total_tickets, 10), 'unlocked': total_tickets >= 10},
+            {'name': 'Century Rider', 'icon': '💯', 'target': 100, 'current': min(total_tickets, 100), 'unlocked': total_tickets >= 100},
+            {'name': '3-Day Streak', 'icon': '⚡', 'target': 3, 'current': min(longest_streak, 3), 'unlocked': longest_streak >= 3},
+            {'name': 'Week Warrior', 'icon': '🗓️', 'target': 7, 'current': min(longest_streak, 7), 'unlocked': longest_streak >= 7},
+            {'name': 'Station Explorer', 'icon': '🗺️', 'target': 10, 'current': min(unique_stations, 10), 'unlocked': unique_stations >= 10},
+            {'name': 'Big Spender', 'icon': '💎', 'target': 5000, 'current': min(int(total_spent), 5000), 'unlocked': total_spent >= 5000},
+            {'name': 'Metro Legend', 'icon': '👑', 'target': 500, 'current': min(total_tickets, 500), 'unlocked': total_tickets >= 500},
+        ]
+        
+        unlocked_count = sum(1 for m in milestones if m['unlocked'])
+        
+        return jsonify({
+            'success': True,
+            'streaks': {
+                'currentStreak': current_streak,
+                'longestStreak': longest_streak,
+                'totalTravelDays': len(travel_days),
+                'totalTickets': total_tickets,
+                'totalSpent': round(total_spent, 2),
+                'uniqueStations': unique_stations,
+                'milestones': milestones,
+                'unlockedCount': unlocked_count,
+                'totalMilestones': len(milestones)
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Streaks error: {e}")
+        return jsonify({'success': True, 'streaks': {
+            'currentStreak': 0, 'longestStreak': 0, 'totalTravelDays': 0,
+            'totalTickets': 0, 'totalSpent': 0, 'uniqueStations': 0,
+            'milestones': [], 'unlockedCount': 0, 'totalMilestones': 0
+        }}), 200
+
+# ============================================================================
 # MAIN - RUN SERVER
 # ============================================================================
 
@@ -4389,7 +5955,7 @@ if __name__ == '__main__':
         ('apmc', 22.9900, 72.5600),
         ('jivraj', 23.0000, 72.5600),
         ('rajiv_nagar', 23.0100, 72.5600),
-        ('shreyas', 23.0200, 72.5600),
+        ('shreyas', 23.0200, 72.5600),  
         ('paldi', 23.0300, 72.5600),
         ('gandhigram', 23.0350, 72.5600),
         # Old High Court is already added above
@@ -4441,6 +6007,16 @@ if __name__ == '__main__':
     conn.commit()
     conn.close()
     print(f"✅ Loaded {len(new_stations)} stations from the Map!")
+    
+    # --- Populate MetroDataStore with StationInfo objects (OOP integration) ---
+    print("\n📦 Initializing MetroDataStore with station data...")
+    for name, x, y in new_stations:
+        station_info = StationInfo(name)
+        station_info.set_location(x, y)
+        datastore.add_station_info(name, station_info)
+    
+    print(f"✅ DataStore populated: {datastore.get_total_stations()} stations in memory")
+    print(f"📊 DataStore stats: {datastore.get_statistics()}")
 
     print("\n" + "=" * 60)
     print("🚀 Starting Flask server...")

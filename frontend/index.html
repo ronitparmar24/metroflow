@@ -15,6 +15,70 @@
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 
     <style>
+        /* Feature V: Scroll Progress Bar */
+        #scrollProgressBar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            width: 0%;
+            z-index: 99999;
+            background: linear-gradient(90deg, #667eea, #764ba2, #f093fb);
+            border-radius: 0 3px 3px 0;
+            transition: width 0.08s linear;
+            pointer-events: none;
+        }
+
+        /* Feature AA: Page Transition Overlay */
+        #pageTransitionOverlay {
+            position: fixed;
+            inset: 0;
+            z-index: 999999;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        #pageTransitionOverlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        @keyframes ptpulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: .6
+            }
+
+            50% {
+                transform: scale(1.18);
+                opacity: 1
+            }
+        }
+
+        .pt-ring {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            animation: ptSpin 0.9s linear infinite;
+            margin-bottom: 16px;
+        }
+
+        @keyframes ptSpin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
         :root {
             --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
@@ -149,6 +213,86 @@
             position: relative;
             overflow: hidden;
         }
+
+        /* Constellation Canvas */
+        #constellationCanvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Quick Fare Check Widget */
+        .quick-fare-widget {
+            background: rgba(255,255,255,0.75);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.6);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(102,126,234,0.12);
+            margin-top: 32px;
+            max-width: 420px;
+            position: relative;
+            z-index: 2;
+            transition: all 0.3s ease;
+        }
+        .quick-fare-widget:hover {
+            box-shadow: 0 12px 40px rgba(102,126,234,0.22);
+            transform: translateY(-2px);
+        }
+        .qfw-header {
+            display: flex; align-items: center; gap: 10px; margin-bottom: 16px;
+        }
+        .qfw-header i {
+            width: 36px; height: 36px; border-radius: 10px;
+            background: var(--primary-gradient); color: white;
+            display: grid; place-items: center; font-size: 14px;
+        }
+        .qfw-header span {
+            font-size: 14px; font-weight: 800; color: #1e293b;
+        }
+        .qfw-row {
+            display: flex; gap: 10px; margin-bottom: 12px;
+        }
+        .qfw-select {
+            flex: 1; padding: 10px 14px; border: 2px solid #e2e8f0;
+            border-radius: 12px; font-size: 13px; font-weight: 600;
+            font-family: 'Poppins', sans-serif; background: white;
+            color: #334155; outline: none; transition: border-color 0.3s;
+            cursor: pointer; appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 32px;
+        }
+        .qfw-select:focus { border-color: #667eea; }
+        .qfw-swap {
+            width: 40px; height: 40px; border-radius: 12px; border: 2px solid #e2e8f0;
+            background: white; color: #667eea; cursor: pointer; font-size: 14px;
+            display: grid; place-items: center; transition: all 0.3s;
+            flex-shrink: 0;
+        }
+        .qfw-swap:hover {
+            background: var(--primary-gradient); color: white; border-color: transparent;
+            transform: rotate(180deg);
+        }
+        .qfw-result {
+            background: linear-gradient(135deg, rgba(102,126,234,0.06), rgba(118,75,162,0.04));
+            border-radius: 14px; padding: 14px 18px;
+            display: none; align-items: center; gap: 14px;
+            animation: fadeInUp 0.4s ease;
+        }
+        .qfw-result.show { display: flex; }
+        .qfw-fare-big {
+            font-size: 28px; font-weight: 900;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .qfw-meta { font-size: 11px; color: #94a3b8; }
+        .qfw-meta span { color: #667eea; font-weight: 700; }
 
         .hero-title {
             font-size: 3.8rem;
@@ -609,6 +753,63 @@
             margin-top: 2px;
         }
 
+        /* --- Testimonial Carousel --- */
+        .testimonial-carousel-wrap {
+            position: relative;
+            overflow: hidden;
+        }
+        .testimonial-track {
+            display: flex;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .testimonial-slide {
+            min-width: 100%;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            padding: 0 4px;
+        }
+        @media (max-width: 768px) {
+            .testimonial-slide {
+                grid-template-columns: 1fr;
+            }
+        }
+        .carousel-dots {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 32px;
+        }
+        .carousel-dot {
+            width: 12px; height: 12px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            border: none; cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 0;
+        }
+        .carousel-dot.active {
+            background: var(--primary-gradient);
+            transform: scale(1.3);
+            box-shadow: 0 0 12px rgba(102,126,234,0.4);
+        }
+        .carousel-nav-btn {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            width: 44px; height: 44px; border-radius: 50%;
+            background: rgba(255,255,255,0.9); backdrop-filter: blur(8px);
+            border: 1px solid rgba(0,0,0,0.08); cursor: pointer;
+            font-size: 16px; color: #667eea;
+            display: grid; place-items: center;
+            transition: all 0.3s; z-index: 5;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+        }
+        .carousel-nav-btn:hover {
+            background: var(--primary-gradient); color: white;
+            transform: translateY(-50%) scale(1.1);
+        }
+        .carousel-nav-btn.prev { left: -22px; }
+        .carousel-nav-btn.next { right: -22px; }
+
         /* FAQ Accordion */
         .accordion-button:not(.collapsed) {
             background: linear-gradient(135deg, rgba(102, 126, 234, 0.08), rgba(118, 75, 162, 0.08));
@@ -679,6 +880,17 @@
 </head>
 
 <body tabindex="0">
+    <!-- Feature V: Scroll Progress Bar -->
+    <div id="scrollProgressBar"></div>
+
+    <!-- Feature AA: Page Transition Overlay -->
+    <div id="pageTransitionOverlay">
+        <div class="pt-ring"></div>
+        <div
+            style="color:rgba(255,255,255,0.9);font-size:14px;font-weight:700;font-family:'Poppins',sans-serif;letter-spacing:1px;">
+            MetroFlow
+        </div>
+    </div>
 
     <nav class="navbar navbar-expand-lg fixed-top" id="navbarMain">
         <div class="container">
@@ -713,6 +925,7 @@
     </nav>
 
     <section id="home" class="hero-section">
+        <canvas id="constellationCanvas"></canvas>
         <div
             style="position: absolute; top: -50px; left: -50px; width: 300px; height: 300px; background: rgba(118, 75, 162, 0.05); border-radius: 50%; filter: blur(50px);">
         </div>
@@ -731,8 +944,8 @@
                             Urban Mobility <br> Reimagined
                         </h1>
                         <p class="lead text-muted mb-5 pe-lg-5">
-                            Seamless, paperless, and intelligent. Experience the future of metro commuting with dynamic
-                            QR ticketing and real-time station analytics.
+                            <span id="typewriterText" style="font-weight:600;color:#4a5568;"></span><span id="twCursor"
+                                style="font-weight:300;color:#667eea;animation:twBlink 0.8s step-end infinite;">|</span>
                         </p>
 
                         <div class="d-flex gap-3 mb-5">
@@ -743,17 +956,57 @@
                             </a>
                         </div>
 
+                        <!-- Quick Fare Check Widget -->
+                        <div class="quick-fare-widget" data-aos="fade-up" data-aos-delay="300">
+                            <div class="qfw-header">
+                                <i class="fas fa-calculator"></i>
+                                <span>Quick Fare Check</span>
+                            </div>
+                            <div class="qfw-row">
+                                <select class="qfw-select" id="qfwSource">
+                                    <option value="" disabled selected>From station...</option>
+                                </select>
+                                <button class="qfw-swap" onclick="swapQfw()" title="Swap stations">
+                                    <i class="fas fa-exchange-alt"></i>
+                                </button>
+                                <select class="qfw-select" id="qfwDest">
+                                    <option value="" disabled selected>To station...</option>
+                                </select>
+                            </div>
+                            <div class="qfw-result" id="qfwResult">
+                                <div>
+                                    <div class="qfw-fare-big" id="qfwFare">₹0</div>
+                                    <div class="qfw-meta"><span id="qfwTime">0 min</span> · <span id="qfwDist">0 km</span></div>
+                                </div>
+                                <div style="margin-left:auto;text-align:right;">
+                                    <a href="login.html" class="btn btn-sm text-white fw-bold" style="background:var(--primary-gradient);border:none;border-radius:50px;padding:8px 20px;font-size:12px;">Book Now →</a>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="d-flex gap-4 flex-wrap border-top pt-4" data-aos="fade-up" data-aos-delay="200">
                             <div>
-                                <h3 class="stat-number" id="stat-users" data-target="500" data-suffix="+">0</h3>
+                                <div style="display:flex;align-items:center;gap:6px;">
+                                    <h3 class="stat-number" id="stat-users" data-target="500" data-suffix="+">0</h3>
+                                    <span id="live-badge-users"
+                                        style="font-size:9px;font-weight:800;padding:2px 7px;border-radius:20px;background:rgba(34,197,94,0.12);color:#22c55e;display:none;">LIVE</span>
+                                </div>
                                 <small class="text-uppercase fw-bold text-muted ls-1">Commuters</small>
                             </div>
                             <div>
-                                <h3 class="stat-number" id="stat-bookings" data-target="2000" data-suffix="+">0</h3>
+                                <div style="display:flex;align-items:center;gap:6px;">
+                                    <h3 class="stat-number" id="stat-bookings" data-target="2000" data-suffix="+">0</h3>
+                                    <span id="live-badge-bookings"
+                                        style="font-size:9px;font-weight:800;padding:2px 7px;border-radius:20px;background:rgba(34,197,94,0.12);color:#22c55e;display:none;">LIVE</span>
+                                </div>
                                 <small class="text-uppercase fw-bold text-muted ls-1">Bookings</small>
                             </div>
                             <div>
-                                <h3 class="stat-number" id="stat-stations" data-target="50" data-suffix="+">0</h3>
+                                <div style="display:flex;align-items:center;gap:6px;">
+                                    <h3 class="stat-number" id="stat-stations" data-target="50" data-suffix="+">0</h3>
+                                    <span id="live-badge-stations"
+                                        style="font-size:9px;font-weight:800;padding:2px 7px;border-radius:20px;background:rgba(34,197,94,0.12);color:#22c55e;display:none;">LIVE</span>
+                                </div>
                                 <small class="text-uppercase fw-bold text-muted ls-1">Stations</small>
                             </div>
                             <div>
@@ -764,30 +1017,157 @@
                     </div>
                 </div>
 
-                <div class="col-lg-6 text-center">
-                    <div class="hero-img-wrapper" data-aos="zoom-in" data-aos-duration="1200">
-                        <img src="https://images.unsplash.com/photo-1554672408-730436b60dde?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
-                            alt="Metro" class="img-fluid rounded-5 shadow-lg border border-5 border-white">
+                <!-- Feature CC: Animated SVG Metro Map -->
+                <div class="col-lg-6" data-aos="fade-left" data-aos-duration="1200">
+                    <div style="
+                        background: linear-gradient(145deg, #0f172a 0%, #1e1b4b 50%, #0c1445 100%);
+                        border-radius: 28px;
+                        padding: 28px;
+                        position: relative;
+                        overflow: hidden;
+                        box-shadow: 0 30px 80px rgba(102,126,234,0.35), 0 0 0 1px rgba(255,255,255,0.06);
+                    ">
+                        <!-- Glow orbs -->
+                        <div
+                            style="position:absolute;top:-40px;right:-40px;width:200px;height:200px;background:radial-gradient(circle,rgba(102,126,234,0.25),transparent 70%);pointer-events:none;">
+                        </div>
+                        <div
+                            style="position:absolute;bottom:-30px;left:-30px;width:150px;height:150px;background:radial-gradient(circle,rgba(240,147,251,0.2),transparent 70%);pointer-events:none;">
+                        </div>
 
-                        <div class="hero-card-float" style="bottom: 30px; left: -20px;">
-                            <div class="bg-success text-white rounded-circle p-2 d-flex align-items-center justify-content-center"
-                                style="width: 45px; height: 45px;">
-                                <i class="fas fa-check"></i>
-                            </div>
-                            <div class="text-start">
-                                <h6 class="mb-0 fw-bold">Success</h6>
-                                <small class="text-muted">Ticket Booked</small>
+                        <!-- Header -->
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+                            <div
+                                style="font-size:13px;font-weight:800;color:rgba(255,255,255,0.9);letter-spacing:1.5px;text-transform:uppercase;">
+                                🗺️ Metro Network</div>
+                            <div
+                                style="display:flex;align-items:center;gap:6px;background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.3);border-radius:20px;padding:4px 10px;">
+                                <span
+                                    style="width:7px;height:7px;background:#22c55e;border-radius:50%;animation:statPulse2 2s infinite;"></span>
+                                <span
+                                    style="font-size:10px;font-weight:800;color:#22c55e;letter-spacing:1px;">LIVE</span>
                             </div>
                         </div>
 
-                        <div class="hero-card-float" style="top: 40px; right: -30px; animation-delay: 2s;">
-                            <div class="bg-warning text-white rounded-circle p-2 d-flex align-items-center justify-content-center"
-                                style="width: 45px; height: 45px;">
-                                <i class="fas fa-wallet"></i>
-                            </div>
-                            <div class="text-start">
-                                <h6 class="mb-0 fw-bold">₹ 450.00</h6>
-                                <small class="text-muted">Balance</small>
+                        <!-- SVG Metro Map — Ahmedabad Metro -->
+                        <svg id="metroMapSVG" viewBox="0 0 340 250" xmlns="http://www.w3.org/2000/svg"
+                            style="width:100%;max-width:340px;display:block;margin:0 auto;">
+                            <defs>
+                                <filter id="glowB">
+                                    <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+                                    <feMerge><feMergeNode in="coloredBlur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                                </filter>
+                                <filter id="glowG">
+                                    <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+                                    <feMerge><feMergeNode in="coloredBlur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                                </filter>
+                                <path id="trainPathBlue" d="M 20,125 L 60,125 L 100,125 L 140,125 L 180,125 L 220,125 L 260,125 L 310,125" fill="none" />
+                                <path id="trainPathGreen" d="M 180,25 L 180,55 L 180,85 L 180,125 L 180,155 L 180,185 L 180,215" fill="none" />
+                            </defs>
+
+                            <!-- Grid lines -->
+                            <line x1="20" y1="20" x2="20" y2="230" stroke="rgba(255,255,255,0.04)" stroke-width="1" />
+                            <line x1="60" y1="20" x2="60" y2="230" stroke="rgba(255,255,255,0.04)" stroke-width="1" />
+                            <line x1="100" y1="20" x2="100" y2="230" stroke="rgba(255,255,255,0.04)" stroke-width="1" />
+                            <line x1="140" y1="20" x2="140" y2="230" stroke="rgba(255,255,255,0.04)" stroke-width="1" />
+                            <line x1="180" y1="20" x2="180" y2="230" stroke="rgba(255,255,255,0.04)" stroke-width="1" />
+                            <line x1="220" y1="20" x2="220" y2="230" stroke="rgba(255,255,255,0.04)" stroke-width="1" />
+                            <line x1="260" y1="20" x2="260" y2="230" stroke="rgba(255,255,255,0.04)" stroke-width="1" />
+                            <line x1="310" y1="20" x2="310" y2="230" stroke="rgba(255,255,255,0.04)" stroke-width="1" />
+
+                            <!-- BLUE LINE (East-West Corridor) -->
+                            <path d="M 20,125 L 310,125" stroke="#3b82f6" stroke-width="5" stroke-linecap="round"
+                                fill="none" filter="url(#glowB)" opacity="0.9" />
+                            <circle r="5" fill="#60a5fa" filter="url(#glowB)">
+                                <animateMotion dur="10s" repeatCount="indefinite" rotate="auto">
+                                    <mpath href="#trainPathBlue" /></animateMotion>
+                            </circle>
+                            <circle r="9" fill="rgba(96,165,250,0.25)">
+                                <animateMotion dur="10s" repeatCount="indefinite" rotate="auto">
+                                    <mpath href="#trainPathBlue" /></animateMotion>
+                            </circle>
+
+                            <!-- GREEN LINE (North-South Corridor) -->
+                            <path d="M 180,25 L 180,215" stroke="#22c55e" stroke-width="5" stroke-linecap="round"
+                                fill="none" filter="url(#glowG)" opacity="0.9" />
+                            <circle r="5" fill="#4ade80" filter="url(#glowG)">
+                                <animateMotion dur="8s" repeatCount="indefinite" rotate="auto">
+                                    <mpath href="#trainPathGreen" /></animateMotion>
+                            </circle>
+                            <circle r="9" fill="rgba(74,222,128,0.25)">
+                                <animateMotion dur="8s" repeatCount="indefinite" rotate="auto">
+                                    <mpath href="#trainPathGreen" /></animateMotion>
+                            </circle>
+
+                            <!-- Blue Line Stations -->
+                            <circle cx="20" cy="125" r="6" fill="#1e3a5f" stroke="#3b82f6" stroke-width="2.5" />
+                            <circle cx="60" cy="125" r="6" fill="#1e3a5f" stroke="#3b82f6" stroke-width="2.5" />
+                            <circle cx="100" cy="125" r="6" fill="#1e3a5f" stroke="#3b82f6" stroke-width="2.5" />
+                            <circle cx="140" cy="125" r="6" fill="#1e3a5f" stroke="#3b82f6" stroke-width="2.5" />
+                            <!-- Interchange (Blue + Green) -->
+                            <circle cx="180" cy="125" r="10" fill="#1e293b" stroke="white" stroke-width="2.5" />
+                            <circle cx="180" cy="125" r="6" fill="#3b82f6" />
+                            <circle cx="220" cy="125" r="6" fill="#1e3a5f" stroke="#3b82f6" stroke-width="2.5" />
+                            <circle cx="260" cy="125" r="6" fill="#1e3a5f" stroke="#3b82f6" stroke-width="2.5" />
+                            <circle cx="310" cy="125" r="6" fill="#1e3a5f" stroke="#3b82f6" stroke-width="2.5" />
+
+                            <!-- Green Line Stations -->
+                            <circle cx="180" cy="25" r="6" fill="#0f3d1a" stroke="#22c55e" stroke-width="2.5" />
+                            <circle cx="180" cy="55" r="6" fill="#0f3d1a" stroke="#22c55e" stroke-width="2.5" />
+                            <circle cx="180" cy="85" r="6" fill="#0f3d1a" stroke="#22c55e" stroke-width="2.5" />
+                            <circle cx="180" cy="155" r="6" fill="#0f3d1a" stroke="#22c55e" stroke-width="2.5" />
+                            <circle cx="180" cy="185" r="6" fill="#0f3d1a" stroke="#22c55e" stroke-width="2.5" />
+                            <circle cx="180" cy="215" r="6" fill="#0f3d1a" stroke="#22c55e" stroke-width="2.5" />
+
+                            <!-- Station Labels — Blue Line -->
+                            <text x="20" y="145" font-size="6.5" fill="rgba(255,255,255,0.55)" text-anchor="middle"
+                                font-family="Poppins,sans-serif">Apparel Park</text>
+                            <text x="60" y="145" font-size="6.5" fill="rgba(255,255,255,0.55)" text-anchor="middle"
+                                font-family="Poppins,sans-serif">Vastral</text>
+                            <text x="100" y="145" font-size="6.5" fill="rgba(255,255,255,0.55)" text-anchor="middle"
+                                font-family="Poppins,sans-serif">Kankaria</text>
+                            <text x="140" y="145" font-size="6.5" fill="rgba(255,255,255,0.55)" text-anchor="middle"
+                                font-family="Poppins,sans-serif">Kalupur</text>
+                            <text x="180" y="148" font-size="7.5" fill="white" text-anchor="middle"
+                                font-family="Poppins,sans-serif" font-weight="700">Old High Court</text>
+                            <text x="220" y="145" font-size="6.5" fill="rgba(255,255,255,0.55)" text-anchor="middle"
+                                font-family="Poppins,sans-serif">Gheekanta</text>
+                            <text x="260" y="145" font-size="6.5" fill="rgba(255,255,255,0.55)" text-anchor="middle"
+                                font-family="Poppins,sans-serif">Doordarshan</text>
+                            <text x="310" y="145" font-size="6.5" fill="rgba(255,255,255,0.55)" text-anchor="middle"
+                                font-family="Poppins,sans-serif">Thaltej</text>
+
+                            <!-- Station Labels — Green Line -->
+                            <text x="197" y="28" font-size="6.5" fill="rgba(255,255,255,0.5)"
+                                font-family="Poppins,sans-serif">Motera</text>
+                            <text x="197" y="58" font-size="6.5" fill="rgba(255,255,255,0.5)"
+                                font-family="Poppins,sans-serif">Sabarmati</text>
+                            <text x="197" y="88" font-size="6.5" fill="rgba(255,255,255,0.5)"
+                                font-family="Poppins,sans-serif">Ranip</text>
+                            <text x="197" y="158" font-size="6.5" fill="rgba(255,255,255,0.5)"
+                                font-family="Poppins,sans-serif">AEC</text>
+                            <text x="197" y="188" font-size="6.5" fill="rgba(255,255,255,0.5)"
+                                font-family="Poppins,sans-serif">Shreyas</text>
+                            <text x="197" y="218" font-size="6.5" fill="rgba(255,255,255,0.5)"
+                                font-family="Poppins,sans-serif">GNLU</text>
+
+                            <!-- Line Legend -->
+                            <rect x="15" y="237" width="12" height="4" rx="2" fill="#3b82f6" />
+                            <text x="31" y="241" font-size="7" fill="rgba(255,255,255,0.65)"
+                                font-family="Poppins,sans-serif">Blue Line (E-W)</text>
+                            <rect x="120" y="237" width="12" height="4" rx="2" fill="#22c55e" />
+                            <text x="136" y="241" font-size="7" fill="rgba(255,255,255,0.65)"
+                                font-family="Poppins,sans-serif">Green Line (N-S)</text>
+                            <circle cx="245" cy="239" r="4" fill="none" stroke="white" stroke-width="1.5" />
+                            <text x="253" y="242" font-size="7" fill="rgba(255,255,255,0.65)"
+                                font-family="Poppins,sans-serif">Interchange</text>
+                        </svg>
+
+                        <!-- Bottom footer -->
+                        <div style="margin-top:16px;display:flex;justify-content:space-between;align-items:center;">
+                            <div style="font-size:11px;color:rgba(255,255,255,0.4);">Ahmedabad Metro Network · 2 Lines Active</div>
+                            <div style="font-size:11px;font-weight:700;color:#60a5fa;">
+                                <i class="fas fa-train" style="margin-right:4px;"></i>32 trains running
                             </div>
                         </div>
                     </div>
@@ -795,6 +1175,31 @@
             </div>
         </div>
     </section>
+
+    <!-- Feature HH: Social Proof Booking Ticker -->
+    <div style="
+        background: linear-gradient(135deg, rgba(102,126,234,0.06), rgba(118,75,162,0.04));
+        border-top: 1px solid rgba(102,126,234,0.12);
+        border-bottom: 1px solid rgba(102,126,234,0.12);
+        padding: 10px 0;
+        overflow: hidden;
+        position: relative;
+    ">
+        <div
+            style="position:absolute;left:0;top:0;bottom:0;width:60px;background:linear-gradient(90deg,#fff,transparent);z-index:2;">
+        </div>
+        <div
+            style="position:absolute;right:0;top:0;bottom:0;width:60px;background:linear-gradient(-90deg,#fff,transparent);z-index:2;">
+        </div>
+        <div id="bookingTicker" style="
+            display: flex;
+            gap: 0;
+            animation: tickerScroll 40s linear infinite;
+            white-space: nowrap;
+        ">
+            <!-- Items injected by JS -->
+        </div>
+    </div>
 
     <section id="process" class="py-5 bg-light position-relative" style="overflow:hidden;">
         <!-- Process Blobs -->
@@ -942,12 +1347,19 @@
                 <p class="text-muted mt-2">Real feedback from verified MetroFlow users</p>
             </div>
 
-            <div class="row g-4" id="testimonials-container">
-                <!-- JS injects testimonial cards -->
-                <div class="col-12 text-center py-4">
-                    <div class="spinner-border text-primary" role="status" style="width: 2rem; height: 2rem;"></div>
-                    <p class="mt-2 small text-muted">Loading testimonials...</p>
+            <div class="testimonial-carousel-wrap" id="testimonials-container">
+                <button class="carousel-nav-btn prev" onclick="moveTestimonialCarousel(-1)"><i class="fas fa-chevron-left"></i></button>
+                <button class="carousel-nav-btn next" onclick="moveTestimonialCarousel(1)"><i class="fas fa-chevron-right"></i></button>
+                <div class="testimonial-track" id="testimonialTrack">
+                    <!-- JS injects slides -->
+                    <div class="testimonial-slide">
+                        <div class="col-12 text-center py-4">
+                            <div class="spinner-border text-primary" role="status" style="width: 2rem; height: 2rem;"></div>
+                            <p class="mt-2 small text-muted">Loading testimonials...</p>
+                        </div>
+                    </div>
                 </div>
+                <div class="carousel-dots" id="carouselDots"></div>
             </div>
         </div>
     </section>
@@ -1330,66 +1742,96 @@
             });
         }
 
-        // 4. Load Testimonials from API
+        // 4. Load Testimonials — Carousel Version
+        let testimonialSlideIdx = 0;
+        let testimonialAutoplay = null;
+
         async function loadTestimonials() {
-            const container = document.getElementById('testimonials-container');
+            const track = document.getElementById('testimonialTrack');
+            const dotsContainer = document.getElementById('carouselDots');
+            if (!track) return;
+
+            let allCards = [];
+            const stars = '<i class="fas fa-star"></i>'.repeat(5);
             try {
                 const res = await fetch('/api/public/testimonials');
                 const data = await res.json();
-
                 if (data.success && data.testimonials.length > 0) {
-                    const stars = '<i class="fas fa-star"></i>'.repeat(5);
-                    container.innerHTML = data.testimonials.map((t, i) => `
-                        <div class="col-md-4" data-aos="fade-up" data-aos-delay="${i * 100}">
-                            <div class="testimonial-card">
-                                <p class="testimonial-text">${t.text}</p>
-                                <div class="testimonial-user">
-                                    <div class="testimonial-avatar">${t.user.charAt(0).toUpperCase()}</div>
-                                    <div>
-                                        <div class="fw-bold" style="font-size: 0.9rem;">${t.user}</div>
-                                        <div class="testimonial-stars">${stars}</div>
-                                    </div>
+                    allCards = data.testimonials.map(t => `
+                        <div class="testimonial-card">
+                            <p class="testimonial-text">${t.text}</p>
+                            <div class="testimonial-user">
+                                <div class="testimonial-avatar">${t.user.charAt(0).toUpperCase()}</div>
+                                <div>
+                                    <div class="fw-bold" style="font-size:0.9rem;">${t.user}</div>
+                                    <div class="testimonial-stars">${stars}</div>
                                 </div>
                             </div>
-                        </div>
-                    `).join('');
-                } else {
-                    container.innerHTML = `
-                        <div class="col-md-4" data-aos="fade-up">
-                            <div class="testimonial-card">
-                                <p class="testimonial-text">The QR ticketing makes my daily commute so much faster! No more queues.</p>
-                                <div class="testimonial-user">
-                                    <div class="testimonial-avatar">R</div>
-                                    <div><div class="fw-bold" style="font-size: 0.9rem;">Ro***</div>
-                                    <div class="testimonial-stars">${'<i class="fas fa-star"></i>'.repeat(5)}</div></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
-                            <div class="testimonial-card">
-                                <p class="testimonial-text">Dynamic pricing is fair and transparent. Best metro app I've used.</p>
-                                <div class="testimonial-user">
-                                    <div class="testimonial-avatar">A</div>
-                                    <div><div class="fw-bold" style="font-size: 0.9rem;">Am***</div>
-                                    <div class="testimonial-stars">${'<i class="fas fa-star"></i>'.repeat(5)}</div></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
-                            <div class="testimonial-card">
-                                <p class="testimonial-text">Love the real-time station status. I can plan my journey perfectly now.</p>
-                                <div class="testimonial-user">
-                                    <div class="testimonial-avatar">P</div>
-                                    <div><div class="fw-bold" style="font-size: 0.9rem;">Pr***</div>
-                                    <div class="testimonial-stars">${'<i class="fas fa-star"></i>'.repeat(5)}</div></div>
-                                </div>
-                            </div>
-                        </div>`;
+                        </div>`);
                 }
-            } catch (e) {
-                container.innerHTML = '<div class="col-12 text-center text-muted py-3"><i class="fas fa-comments fa-2x mb-2"></i><p class="small">Testimonials unavailable</p></div>';
+            } catch(_) {}
+
+            if (!allCards.length) {
+                allCards = [
+                    { text: 'The QR ticketing makes my daily commute so much faster! No more queues.', user: 'Rohit S.' },
+                    { text: "Dynamic pricing is fair and transparent. Best metro app I've used.", user: 'Amara P.' },
+                    { text: 'Love the real-time station status. I can plan my journey perfectly now.', user: 'Priya K.' },
+                    { text: 'Wallet recharges are instant. I never worry about cash for tickets anymore.', user: 'Vikram R.' },
+                    { text: 'The monthly pass saves me nearly ₹800 every month. Highly recommend!', user: 'Sneha M.' },
+                    { text: 'Beautiful dashboard, super smooth experience. MetroFlow is the future!', user: 'Karan T.' },
+                ].map(t => `
+                    <div class="testimonial-card">
+                        <p class="testimonial-text">${t.text}</p>
+                        <div class="testimonial-user">
+                            <div class="testimonial-avatar">${t.user.charAt(0)}</div>
+                            <div>
+                                <div class="fw-bold" style="font-size:0.9rem;">${t.user}</div>
+                                <div class="testimonial-stars">${stars}</div>
+                            </div>
+                        </div>
+                    </div>`);
+            }
+
+            const perSlide = window.innerWidth < 769 ? 1 : 3;
+            const slides = [];
+            for (let i = 0; i < allCards.length; i += perSlide) slides.push(allCards.slice(i, i + perSlide));
+
+            track.innerHTML = slides.map(s => `<div class="testimonial-slide">${s.join('')}</div>`).join('');
+
+            if (dotsContainer && slides.length > 1) {
+                dotsContainer.innerHTML = slides.map((_, i) =>
+                    `<button class="carousel-dot ${i===0?'active':''}" onclick="goToTestimonialSlide(${i})"></button>`
+                ).join('');
+            }
+            if (slides.length > 1) {
+                testimonialAutoplay = setInterval(() => moveTestimonialCarousel(1), 5000);
+                const wrap = document.querySelector('.testimonial-carousel-wrap');
+                if (wrap) {
+                    wrap.addEventListener('mouseenter', () => clearInterval(testimonialAutoplay));
+                    wrap.addEventListener('mouseleave', () => {
+                        testimonialAutoplay = setInterval(() => moveTestimonialCarousel(1), 5000);
+                    });
+                }
             }
         }
+
+        window.goToTestimonialSlide = function(idx) {
+            const track = document.getElementById('testimonialTrack');
+            const dots = document.querySelectorAll('.carousel-dot');
+            const total = track ? track.children.length : 1;
+            testimonialSlideIdx = Math.max(0, Math.min(idx, total - 1));
+            track.style.transform = `translateX(-${testimonialSlideIdx * 100}%)`;
+            dots.forEach((d, i) => d.classList.toggle('active', i === testimonialSlideIdx));
+        };
+
+        window.moveTestimonialCarousel = function(dir) {
+            const track = document.getElementById('testimonialTrack');
+            const total = track ? track.children.length : 1;
+            let next = testimonialSlideIdx + dir;
+            if (next >= total) next = 0;
+            if (next < 0) next = total - 1;
+            goToTestimonialSlide(next);
+        };
 
         // 5. Load Stations
         async function loadStations() {
@@ -1450,6 +1892,411 @@
             banner.style.transform = 'translateY(100%)';
             setTimeout(() => banner.remove(), 400);
         }
+        // ═══════════════════════════════════════════════════
+        // Feature O: Typewriter Hero Subtitle (Vercel/Linear)
+        // ═══════════════════════════════════════════════════
+        (() => {
+            const style = document.createElement('style');
+            style.textContent = '@keyframes twBlink { 0%,100%{opacity:1} 50%{opacity:0} }';
+            document.head.appendChild(style);
+
+            const el = document.getElementById('typewriterText');
+            const cursor = document.getElementById('twCursor');
+            if (!el) return;
+
+            const phrases = [
+                'Book tickets in 10 seconds.',
+                'Real-time crowding. Zero queues.',
+                'Commuting, reimagined.',
+            ];
+            let pi = 0, ci = 0, deleting = false;
+
+            function tick() {
+                const phrase = phrases[pi];
+                if (!deleting) {
+                    el.textContent = phrase.slice(0, ci + 1);
+                    ci++;
+                    if (ci === phrase.length) {
+                        deleting = true;
+                        setTimeout(tick, 2200); // pause at end
+                        return;
+                    }
+                    setTimeout(tick, 52);
+                } else {
+                    el.textContent = phrase.slice(0, ci - 1);
+                    ci--;
+                    if (ci === 0) {
+                        deleting = false;
+                        pi = (pi + 1) % phrases.length;
+                        setTimeout(tick, 380);
+                        return;
+                    }
+                    setTimeout(tick, 28);
+                }
+            }
+            setTimeout(tick, 800);
+        })();
+
+        // ═══════════════════════════════════════════════════
+        // Feature N: Enhanced Live Stats — real API values
+        // ═══════════════════════════════════════════════════
+        async function loadLiveStats() {
+            // Animate number count-up
+            function countUp(el, target, suffix, duration = 1400) {
+                const start = Date.now();
+                function step() {
+                    const pct = Math.min((Date.now() - start) / duration, 1);
+                    const ease = pct < 0.5 ? 2 * pct * pct : -1 + (4 - 2 * pct) * pct;
+                    el.textContent = Math.round(ease * target) + suffix;
+                    if (pct < 1) requestAnimationFrame(step);
+                    else el.textContent = target + suffix;
+                }
+                requestAnimationFrame(step);
+            }
+
+            // Observe the stat section to trigger count-up on scroll
+            const statEl = document.getElementById('stat-users');
+            if (!statEl) return;
+
+            const observer = new IntersectionObserver(async ([entry]) => {
+                if (!entry.isIntersecting) return;
+                observer.disconnect();
+
+                let userData = 0, bookingData = 0, stationData = 0;
+                let isLive = false;
+
+                try {
+                    const res = await fetch('/api/public/stats');
+                    if (res.ok) {
+                        const d = await res.json();
+                        const s = d.stats || d;
+                        if (s.total_users) userData = s.total_users;
+                        if (s.total_bookings) bookingData = s.total_bookings;
+                        if (s.stations_count) stationData = s.stations_count;
+                        isLive = true;
+                    }
+                } catch (_) { }
+
+                // Fallback to data-target if API offline
+                if (!userData) userData = parseInt(statEl.dataset.target || '500');
+                if (!bookingData) bookingData = parseInt(document.getElementById('stat-bookings')?.dataset.target || '2000');
+                if (!stationData) stationData = parseInt(document.getElementById('stat-stations')?.dataset.target || '50');
+
+                countUp(document.getElementById('stat-users'), userData, '+');
+                countUp(document.getElementById('stat-bookings'), bookingData, '+');
+                countUp(document.getElementById('stat-stations'), stationData, '+');
+                countUp(document.getElementById('stat-uptime'), 99, '%');
+
+                if (isLive) {
+                    ['users', 'bookings', 'stations'].forEach(k => {
+                        const b = document.getElementById('live-badge-' + k);
+                        if (b) { b.style.display = 'inline-block'; }
+                    });
+                }
+            }, { threshold: 0.3 });
+
+            observer.observe(statEl);
+        }
+
+        // ═══════════════════════════════════════════════════
+        // Feature T: PWA Install Prompt (Twitter PWA style)
+        // ═══════════════════════════════════════════════════
+        (() => {
+            if (localStorage.getItem('mf_pwa_dismissed')) return;
+            let deferredPrompt = null;
+            window.addEventListener('beforeinstallprompt', e => {
+                e.preventDefault();
+                deferredPrompt = e;
+
+                const banner = document.createElement('div');
+                banner.id = 'pwaBanner';
+                banner.style.cssText = `
+                    position:fixed;bottom:0;left:0;right:0;z-index:10000;
+                    background:white;border-top:1px solid #e5e7eb;
+                    box-shadow:0 -4px 20px rgba(0,0,0,0.08);
+                    padding:14px 20px;display:flex;align-items:center;gap:14px;
+                    animation:slideUpBanner 0.4s ease;font-family:'Poppins',sans-serif;
+                `;
+                const style2 = document.createElement('style');
+                style2.textContent = '@keyframes slideUpBanner{from{transform:translateY(100%)}to{transform:translateY(0)}}';
+                document.head.appendChild(style2);
+
+                banner.innerHTML = `
+                    <div style="width:40px;height:40px;background:linear-gradient(135deg,#667eea,#764ba2);
+                        border-radius:12px;display:flex;align-items:center;justify-content:center;
+                        color:white;font-size:18px;flex-shrink:0">🚆</div>
+                    <div style="flex:1">
+                        <div style="font-weight:700;font-size:14px;color:#1e293b">
+                            Install MetroFlow App
+                        </div>
+                        <div style="font-size:12px;color:#94a3b8;">Add to home screen for the best experience</div>
+                    </div>
+                    <button onclick="installPWA()" style="background:linear-gradient(135deg,#667eea,#764ba2);
+                        color:white;border:none;border-radius:50px;padding:8px 18px;
+                        font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0">
+                        Install
+                    </button>
+                    <button onclick="dismissPWA()" style="background:none;border:none;font-size:20px;
+                        color:#94a3b8;cursor:pointer;flex-shrink:0;padding:4px">×</button>
+                `;
+                document.body.appendChild(banner);
+            });
+
+            window.installPWA = async () => {
+                if (!deferredPrompt) return;
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                deferredPrompt = null;
+                if (outcome === 'accepted') dismissPWA();
+            };
+            window.dismissPWA = () => {
+                localStorage.setItem('mf_pwa_dismissed', '1');
+                const b = document.getElementById('pwaBanner');
+                if (b) { b.style.transform = 'translateY(100%)'; setTimeout(() => b.remove(), 400); }
+            };
+        })();
+
+        // ═══════════════════════════════════════════════════
+        // Feature V: Scroll Progress Bar
+        // ═══════════════════════════════════════════════════
+        (() => {
+            const bar = document.getElementById('scrollProgressBar');
+            if (!bar) return;
+            let rafPending = false;
+            window.addEventListener('scroll', () => {
+                if (rafPending) return;
+                rafPending = true;
+                requestAnimationFrame(() => {
+                    rafPending = false;
+                    const scrollTop = window.scrollY || document.documentElement.scrollTop;
+                    const docH = document.documentElement.scrollHeight - window.innerHeight;
+                    bar.style.width = docH > 0 ? ((scrollTop / docH) * 100) + '%' : '0%';
+                });
+            }, { passive: true });
+        })();
+
+        // ═══════════════════════════════════════════════════
+        // Feature AA: Smooth Page Transition Loader
+        // ═══════════════════════════════════════════════════
+        (() => {
+            const overlay = document.getElementById('pageTransitionOverlay');
+            if (!overlay) return;
+
+            // Show overlay when navigating away
+            document.addEventListener('click', e => {
+                const a = e.target.closest('a[href]');
+                if (!a) return;
+                const href = a.getAttribute('href');
+                // Only intercept local page navigations (not anchors, not external)
+                if (!href || href.startsWith('#') || href.startsWith('http') ||
+                    href.startsWith('javascript') || href.startsWith('mailto')) return;
+                e.preventDefault();
+                overlay.classList.add('active');
+                setTimeout(() => { window.location.href = href; }, 350);
+            });
+
+            // Hide overlay on page show (handles back/forward cache)
+            window.addEventListener('pageshow', () => {
+                overlay.classList.remove('active');
+            });
+        })();
+
+        // ═══════════════════════════════════════════════════
+        // Feature HH: Social Proof Booking Ticker
+        // ═══════════════════════════════════════════════════
+        (() => {
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes tickerScroll {
+                    0%   { transform: translateX(0); }
+                    100% { transform: translateX(-50%); }
+                }
+                #bookingTicker:hover { animation-play-state: paused; }
+                .ticker-item {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 8px;
+                    padding: 5px 22px;
+                    font-size: 12.5px;
+                    font-weight: 600;
+                    color: #4b5563;
+                    border-right: 1px solid rgba(102,126,234,0.15);
+                    white-space: nowrap;
+                    cursor: default;
+                    transition: color 0.2s;
+                }
+                .ticker-item:hover { color: #667eea; }
+                .ticker-item .ticker-icon { font-size: 14px; }
+                .ticker-dot { width: 5px; height: 5px; background: #667eea; border-radius: 50%; opacity: 0.4; flex-shrink: 0; }
+                @keyframes statPulse2 {
+                    0%,100% { opacity:1; box-shadow: 0 0 0 0 rgba(34,197,94,0.5); }
+                    50% { opacity:0.7; box-shadow: 0 0 0 5px rgba(34,197,94,0); }
+                }
+            `;
+            document.head.appendChild(style);
+
+            const events = [
+                { name: 'Arjun K.', from: 'Vastral', to: 'Gheekanta', min: 2 },
+                { name: 'Priya S.', from: 'Apparel Park', to: 'Old High Court', min: 4 },
+                { name: 'Rahul T.', from: 'Motera', to: 'AEC', min: 6 },
+                { name: 'Ananya M.', from: 'Thaltej', to: 'Kalupur', min: 8 },
+                { name: 'Vikram R.', from: 'Sabarmati', to: 'Shreyas', min: 11 },
+                { name: 'Sowmya K.', from: 'Kankaria', to: 'Doordarshan', min: 14 },
+                { name: 'Dev P.', from: 'Ranip', to: 'GNLU', min: 16 },
+                { name: 'Nisha R.', from: 'Gheekanta', to: 'Vastral', min: 18 },
+                { name: 'Aakash G.', from: 'Old High Court', to: 'Motera', min: 21 },
+                { name: 'Meera P.', from: 'AEC', to: 'Apparel Park', min: 25 },
+            ];
+
+            const ticker = document.getElementById('bookingTicker');
+            if (!ticker) return;
+
+            // Build HTML — doubled for seamless loop
+            let html = '';
+            [events, events].forEach(arr => {
+                arr.forEach(ev => {
+                    html += `<span class="ticker-item">
+                        <span class="ticker-icon">🎟️</span>
+                        <strong>${ev.name}</strong> booked
+                        <span style="color:#667eea;font-weight:700;">${ev.from}</span>
+                        <i class="fas fa-arrow-right" style="font-size:9px;opacity:0.5;"></i>
+                        <span style="color:#667eea;font-weight:700;">${ev.to}</span>
+                        &nbsp;·&nbsp;
+                        <span style="color:#94a3b8;">${ev.min} min ago</span>
+                        <span class="ticker-dot"></span>
+                    </span>`;
+                });
+            });
+            ticker.innerHTML = html;
+        })();
+
+        // ═══════════════════════════════════════════════════
+        // Constellation Particle Canvas (Stripe-inspired)
+        // ═══════════════════════════════════════════════════
+        (() => {
+            const canvas = document.getElementById('constellationCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            let particles = [];
+            const COUNT = 55;
+            const CONN = 130;
+            let aid = null;
+
+            function resize() {
+                const h = canvas.parentElement;
+                canvas.width = h.offsetWidth;
+                canvas.height = h.offsetHeight;
+            }
+            function init() {
+                particles = [];
+                for (let i = 0; i < COUNT; i++) {
+                    particles.push({
+                        x: Math.random() * canvas.width,
+                        y: Math.random() * canvas.height,
+                        vx: (Math.random() - 0.5) * 0.35,
+                        vy: (Math.random() - 0.5) * 0.35,
+                        r: Math.random() * 2 + 0.8,
+                        o: Math.random() * 0.4 + 0.15
+                    });
+                }
+            }
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => {
+                    p.x += p.vx; p.y += p.vy;
+                    if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                    if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+                });
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const dx = particles[i].x - particles[j].x;
+                        const dy = particles[i].y - particles[j].y;
+                        const d = Math.sqrt(dx * dx + dy * dy);
+                        if (d < CONN) {
+                            ctx.beginPath();
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.strokeStyle = `rgba(102,126,234,${(1 - d / CONN) * 0.12})`;
+                            ctx.lineWidth = 1;
+                            ctx.stroke();
+                        }
+                    }
+                }
+                particles.forEach(p => {
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(118,75,162,${p.o})`;
+                    ctx.fill();
+                });
+                aid = requestAnimationFrame(draw);
+            }
+            resize(); init(); draw();
+            window.addEventListener('resize', () => { resize(); init(); });
+            new IntersectionObserver(([e]) => {
+                if (e.isIntersecting) { if (!aid) draw(); }
+                else { cancelAnimationFrame(aid); aid = null; }
+            }).observe(canvas);
+        })();
+
+        // ═══════════════════════════════════════════════════
+        // Quick Fare Check Widget
+        // ═══════════════════════════════════════════════════
+        (() => {
+            const src = document.getElementById('qfwSource');
+            const dst = document.getElementById('qfwDest');
+            if (!src || !dst) return;
+
+            fetch('/api/stations').then(r => r.json()).then(data => {
+                if (!data.success) return;
+                (data.stations || []).forEach(st => {
+                    const nm = st.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                    src.innerHTML += `<option value="${st}">${nm}</option>`;
+                    dst.innerHTML += `<option value="${st}">${nm}</option>`;
+                });
+            }).catch(() => {});
+
+            function check() {
+                if (!src.value || !dst.value || src.value === dst.value) return;
+                fetch(`/api/fare-details?source=${encodeURIComponent(src.value)}&destination=${encodeURIComponent(dst.value)}&passengers=1`)
+                    .then(r => r.json()).then(d => {
+                        if (!d.success) return;
+                        document.getElementById('qfwFare').textContent = '₹' + Math.round(d.fare);
+                        document.getElementById('qfwTime').textContent = d.travel_time || 'N/A';
+                        document.getElementById('qfwDist').textContent = (d.distance || 0).toFixed(1) + ' km';
+                        document.getElementById('qfwResult').classList.add('show');
+                    }).catch(() => {});
+            }
+            src.addEventListener('change', check);
+            dst.addEventListener('change', check);
+            window.swapQfw = () => { const t = src.value; src.value = dst.value; dst.value = t; check(); };
+        })();
+
+        // ═══════════════════════════════════════════════════
+        // Global: Enhanced Button Micro-Interactions
+        // ═══════════════════════════════════════════════════
+        (() => {
+            document.addEventListener('click', e => {
+                const btn = e.target.closest('button, .btn, .btn-animated, a.btn');
+                if (!btn) return;
+                // Bounce
+                btn.style.transition = 'transform 0.15s cubic-bezier(0.34,1.56,0.64,1)';
+                btn.style.transform = 'scale(0.95)';
+                setTimeout(() => { btn.style.transform = 'scale(1)'; }, 150);
+                // Ripple
+                const ripple = document.createElement('span');
+                const rect = btn.getBoundingClientRect();
+                const sz = Math.max(rect.width, rect.height);
+                ripple.style.cssText = `position:absolute;border-radius:50%;background:rgba(255,255,255,0.3);width:${sz}px;height:${sz}px;left:${e.clientX-rect.left-sz/2}px;top:${e.clientY-rect.top-sz/2}px;transform:scale(0);animation:btnRipple 0.5s ease-out;pointer-events:none;`;
+                btn.style.position = btn.style.position || 'relative';
+                btn.style.overflow = 'hidden';
+                btn.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 500);
+            });
+            const rs = document.createElement('style');
+            rs.textContent = '@keyframes btnRipple{to{transform:scale(2.5);opacity:0}}';
+            document.head.appendChild(rs);
+        })();
+
     </script>
 </body>
 

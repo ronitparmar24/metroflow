@@ -36,38 +36,16 @@
             overflow-x: hidden;
         }
 
-        .particles {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            z-index: 0;
-            pointer-events: none;
+        /* Metro Line SVG Background */
+        .metro-bg {
+            position: fixed; inset: 0; z-index: 0;
+            pointer-events: none; overflow: hidden;
         }
-
-        .particle {
-            position: absolute;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            animation: float 20s infinite ease-in-out;
-        }
-
-        @keyframes float {
-
-            0%,
-            100% {
-                transform: translate(0, 0) rotate(0deg);
-            }
-
-            33% {
-                transform: translate(30px, -30px) rotate(120deg);
-            }
-
-            66% {
-                transform: translate(-30px, 30px) rotate(240deg);
-            }
-        }
+        .metro-bg svg { position: absolute; width: 100%; height: 100%; }
+        .metro-line-path { fill: none; stroke-width: 3; stroke-linecap: round; opacity: 0.12; }
+        .metro-train-dot { fill: rgba(255,255,255,0.6); }
+        .metro-station-dot { fill: rgba(255,255,255,0.2); stroke: rgba(255,255,255,0.3); stroke-width: 2; }
+        .auth-card { transition: transform 0.15s ease-out, box-shadow 0.15s ease-out; }
 
         /* --- Card Entrance Animation --- */
         @keyframes cardEntrance {
@@ -639,7 +617,25 @@
 
 <body>
 
-    <div class="particles" id="particles"></div>
+    <!-- Animated Metro Line SVG Background -->
+    <div class="metro-bg">
+        <svg viewBox="0 0 1200 800" preserveAspectRatio="none">
+            <path class="metro-line-path" stroke="rgba(255,255,255,0.8)" d="M -50,200 C 200,200 300,350 500,350 S 800,200 1050,200 L 1300,200" />
+            <circle class="metro-train-dot" r="5"><animateMotion dur="8s" repeatCount="indefinite"><mpath href="#regLine1" /></animateMotion></circle>
+            <path id="regLine1" d="M -50,200 C 200,200 300,350 500,350 S 800,200 1050,200 L 1300,200" fill="none" />
+            <path class="metro-line-path" stroke="rgba(255,255,255,0.6)" d="M -50,600 C 150,500 400,400 600,450 S 900,550 1100,400 L 1300,350" />
+            <circle class="metro-train-dot" r="4"><animateMotion dur="12s" repeatCount="indefinite"><mpath href="#regLine2" /></animateMotion></circle>
+            <path id="regLine2" d="M -50,600 C 150,500 400,400 600,450 S 900,550 1100,400 L 1300,350" fill="none" />
+            <path class="metro-line-path" stroke="rgba(255,255,255,0.5)" d="M -50,80 Q 300,160 600,80 T 1300,120" />
+            <circle class="metro-train-dot" r="3.5"><animateMotion dur="10s" repeatCount="indefinite"><mpath href="#regLine3" /></animateMotion></circle>
+            <path id="regLine3" d="M -50,80 Q 300,160 600,80 T 1300,120" fill="none" />
+            <circle class="metro-station-dot" cx="200" cy="200" r="6" />
+            <circle class="metro-station-dot" cx="500" cy="350" r="6" />
+            <circle class="metro-station-dot" cx="800" cy="200" r="6" />
+            <circle class="metro-station-dot" cx="400" cy="420" r="5" />
+            <circle class="metro-station-dot" cx="900" cy="450" r="5" />
+        </svg>
+    </div>
 
     <div class="auth-card">
 
@@ -696,6 +692,16 @@
             <form id="registerForm">
                 <!-- Step 1: Account -->
                 <div class="step-section active" id="step1">
+                    <!-- Feature Q: Social proof + time indicator -->
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                        <span style="font-size:11px;color:#22c55e;font-weight:700;">
+                            <i class="fas fa-users me-1"></i>Join 500+ commuters
+                        </span>
+                        <span style="font-size:11px;color:#94a3b8;">
+                            <i class="fas fa-clock me-1"></i>~30 seconds
+                        </span>
+                    </div>
+
                     <div class="form-floating">
                         <input type="text" class="form-control" id="username" placeholder="Username" required
                             autocomplete="username" maxlength="12" oninput="validateUsername()">
@@ -717,7 +723,22 @@
                     </div>
                     <div class="validation-feedback" id="emailFeedback"></div>
 
-                    <button type="button" class="btn-register mb-3 mt-2" onclick="goToStep(2)">
+                    <!-- Feature Q: Phone number field -->
+                    <div class="form-floating mt-2 position-relative">
+                        <div style="display:flex;gap:8px;align-items:stretch;">
+                            <div style="background:#f8fafc;border:2px solid #e2e8f0;border-radius:10px;
+                                padding:0 12px;display:flex;align-items:center;gap:4px;
+                                font-size:13px;font-weight:700;color:#475569;white-space:nowrap;flex-shrink:0;">
+                                🇮🇳 +91
+                            </div>
+                            <input type="tel" class="form-control" id="phoneNumber" placeholder="Phone (optional)"
+                                autocomplete="tel" maxlength="10"
+                                style="border:2px solid #e2e8f0;border-radius:10px;height:52px;padding-left:14px;"
+                                oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn-register mb-3 mt-3" onclick="goToStep(2)">
                         Continue <i class="fas fa-arrow-right ms-2"></i>
                     </button>
 
@@ -739,6 +760,25 @@
                         </label>
                         <i class="fas fa-eye password-toggle" onclick="togglePassword('password')" id="toggleIcon1"></i>
                     </div>
+
+                    <!-- Feature OO: 4-Segment Password Strength Bar -->
+                    <div id="strengthBarWrap" style="margin:10px 0 4px;display:none;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+                            <span style="font-size:11px;color:#94a3b8;font-weight:600;">Strength</span>
+                            <span id="strengthLabel" style="font-size:11px;font-weight:800;"></span>
+                        </div>
+                        <div style="display:flex;gap:4px;height:5px;">
+                            <div id="seg1"
+                                style="flex:1;border-radius:3px;background:#e2e8f0;transition:background 0.3s;"></div>
+                            <div id="seg2"
+                                style="flex:1;border-radius:3px;background:#e2e8f0;transition:background 0.3s;"></div>
+                            <div id="seg3"
+                                style="flex:1;border-radius:3px;background:#e2e8f0;transition:background 0.3s;"></div>
+                            <div id="seg4"
+                                style="flex:1;border-radius:3px;background:#e2e8f0;transition:background 0.3s;"></div>
+                        </div>
+                    </div>
+
                     <ul class="pw-requirements" id="pwRequirements">
                         <li id="req-length"><i class="fas fa-circle"></i> 6+ characters</li>
                         <li id="req-upper"><i class="fas fa-circle"></i> Uppercase</li>
@@ -1293,31 +1333,22 @@
     <script src="js/app.js" onerror="console.warn('app.js not found - using mock API')"></script>
 
     <script>
-        // ===========================
-        // PARTICLES
-        // ===========================
-        function createParticles() {
-            const container = document.getElementById('particles');
-            const particleCount = window.innerWidth < 768 ? 8 : 15;
-            container.innerHTML = '';
-
-            for (let i = 0; i < particleCount; i++) {
-                const p = document.createElement('div');
-                p.className = 'particle';
-                const size = Math.random() * 40 + 10;
-                p.style.width = `${size}px`;
-                p.style.height = `${size}px`;
-                p.style.left = `${Math.random() * 100}%`;
-                p.style.top = `${Math.random() * 100}%`;
-                p.style.opacity = Math.random() * 0.2;
-                p.style.animationDelay = `${Math.random() * 5}s`;
-                p.style.animationDuration = `${Math.random() * 10 + 10}s`;
-                container.appendChild(p);
-            }
-        }
-
-        createParticles();
-        window.addEventListener('resize', createParticles);
+        // 3D Card Tilt Effect
+        (() => {
+            const card = document.querySelector('.auth-card');
+            if (!card || window.innerWidth < 900) return;
+            card.addEventListener('mousemove', e => {
+                const rect = card.getBoundingClientRect();
+                const x = (e.clientX - rect.left) / rect.width - 0.5;
+                const y = (e.clientY - rect.top) / rect.height - 0.5;
+                card.style.transform = `perspective(1000px) rotateY(${x * 6}deg) rotateX(${-y * 6}deg) scale(1.01)`;
+                card.style.boxShadow = `${-x*20}px ${y*20}px 60px rgba(0,0,0,0.2)`;
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'perspective(1000px) rotateY(0) rotateX(0) scale(1)';
+                card.style.boxShadow = '';
+            });
+        })();
 
         // Fade out loading shimmer
         window.addEventListener('load', () => {
@@ -1677,6 +1708,47 @@
             }
             lastTouchEnd = now;
         }, false);
+
+        // ═══════════════════════════════════════════════════
+        // Feature OO: Enhanced Password Strength Bar (Stripe/GitHub style)
+        // ═══════════════════════════════════════════════════
+        (function () {
+            // Patch the existing checkPasswordStrength referenced by oninput
+            const _origCheck = window.checkPasswordStrength;
+            window.checkPasswordStrength = function () {
+                if (typeof _origCheck === 'function') _origCheck();
+
+                const pw = document.getElementById('password')?.value || '';
+                const bar = document.getElementById('strengthBarWrap');
+                if (!bar) return;
+
+                if (!pw) { bar.style.display = 'none'; return; }
+                bar.style.display = 'block';
+
+                // Score checks
+                const has8 = pw.length >= 8;
+                const hasUpper = /[A-Z]/.test(pw);
+                const hasLower = /[a-z]/.test(pw);
+                const hasDigit = /\d/.test(pw);
+                const hasSpec = /[^A-Za-z0-9]/.test(pw);
+                let score = [has8, hasUpper || hasLower, hasDigit, hasSpec].filter(Boolean).length;
+
+                const colors = ['', '#ef4444', '#f97316', '#eab308', '#22c55e'];
+                const labels = ['', 'Weak', 'Fair', 'Good', 'Strong'];
+                const color = colors[score];
+
+                for (let i = 1; i <= 4; i++) {
+                    const seg = document.getElementById('seg' + i);
+                    if (seg) seg.style.background = i <= score ? color : '#e2e8f0';
+                }
+
+                const lbl = document.getElementById('strengthLabel');
+                if (lbl) {
+                    lbl.textContent = labels[score] || '';
+                    lbl.style.color = colors[score] || '#94a3b8';
+                }
+            };
+        })();
     </script>
 </body>
 
