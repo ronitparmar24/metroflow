@@ -4499,6 +4499,43 @@
             }
         });
     });
+
+    /* ═══════════════════════════════════════════
+       NAVBAR LIVE CLOCK (IST)
+       ═══════════════════════════════════════════ */
+    (function initNavClock() {
+        const clockEl = document.getElementById('navClockTime');
+        if (!clockEl) return;
+
+        function updateClock() {
+            const now = new Date();
+            const ist = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+            const hours = ist.getHours().toString().padStart(2, '0');
+            const mins = ist.getMinutes().toString().padStart(2, '0');
+            const secs = ist.getSeconds().toString().padStart(2, '0');
+            clockEl.textContent = `${hours}:${mins}:${secs}`;
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+    })();
+
+    /* ═══════════════════════════════════════════
+       SIMULATED LIVE PASSENGER COUNTER
+       ═══════════════════════════════════════════ */
+    (function initLivePassengers() {
+        const passEl = document.getElementById('livePassengers');
+        const trainEl = document.getElementById('liveTrains');
+        if (!passEl) return;
+
+        function randomize() {
+            const base = 1800 + Math.floor(Math.random() * 1200);
+            const trains = 28 + Math.floor(Math.random() * 8);
+            passEl.textContent = base.toLocaleString('en-IN');
+            if (trainEl) trainEl.textContent = trains;
+        }
+        randomize();
+        setInterval(randomize, 5000);
+    })();
     </script>
 </body>
 
