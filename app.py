@@ -76,8 +76,11 @@ def api_health():
     # DB ping
     db_ok = False
     try:
-        conn = db.get_connection()
-        conn.execute('SELECT 1').fetchone()
+        conn = db.get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT 1')
+        cursor.fetchone()
+        cursor.close()
         conn.close()
         db_ok = True
     except Exception:
@@ -294,15 +297,31 @@ def api_login():
         if not username or not password:
             return jsonify({'success': False, 'error': 'Username and password required'}), 400
         
+        # Rate limit check
+        ip = request.remote_addr or 'unknown'
+        is_blocked, remaining = _check_rate_limit(ip)
+        if is_blocked:
+            return jsonify({
+                'success': False, 
+                'error': f'Too many login attempts. Try again in {remaining} seconds.',
+                'rate_limited': True,
+                'retry_after': remaining
+            }), 429
+        
         # Get user from database
         user = db.get_user_by_username(username)
         
         if not user:
+            _record_failed_attempt(ip)
             return jsonify({'success': False, 'error': 'Invalid credentials'}), 401
         
         # Verify password (frontend sends SHA-256 hash directly)
         if password != user['password']:
+            _record_failed_attempt(ip)
             return jsonify({'success': False, 'error': 'Invalid credentials'}), 401
+        
+        # Success — clear rate limit tracking
+        _clear_attempts(ip)
         
         # Set session
         session['username'] = username
@@ -2490,7 +2509,8 @@ def get_favorites():
         
         return jsonify({'success': True, 'favorites': favorites})
     except Exception as e:
-        return jsonify({'success': True, 'favorites': []})
+        logger.error(f"Favorites Error: {e}")
+        return jsonify({'success': False, 'favorites': [], 'error': str(e)})
 
         # ============================================================================
 # NEW FEATURES: LOYALTY, LOST & FOUND, NOTIFICATIONS
@@ -2577,6 +2597,7 @@ def get_my_lost_reports():
         cursor = conn.cursor(dictionary=True, buffered=True)
         cursor.execute("SELECT * FROM lost_found WHERE username = %s ORDER BY reportDate DESC", (user['username'],))
         reports = cursor.fetchall()
+        cursor.close()
         conn.close()
         return jsonify({'success': True, 'reports': reports})
     except Exception as e:
@@ -3046,14 +3067,17 @@ def api_admin_system_reset():
 
 
 @app.route('/api/admin/analytics/peak-hours', methods=['GET'])
+@require_role(Role.ADMIN)
 def api_admin_peak_hours():
     return jsonify({'success': True, 'data': db.get_peak_hour_stats()})
 
 @app.route('/api/admin/analytics/sentiment', methods=['GET'])
+@require_role(Role.ADMIN)
 def api_admin_sentiment():
     return jsonify({'success': True, 'data': db.get_feedback_sentiment()})
 
 @app.route('/api/admin/staff/add', methods=['POST'])
+@require_role(Role.ADMIN)
 def api_admin_add_staff():
     data = request.json
     hashed = hash_password(data['password'])
@@ -3062,6 +3086,7 @@ def api_admin_add_staff():
     return jsonify({'success': False, 'message': 'User exists'})
 
 @app.route('/api/admin/pricing/surge', methods=['POST'])
+@require_role(Role.ADMIN)
 def api_admin_surge():
     # In a real app, save this to a 'config' table. 
     # Here we just acknowledge it for the UI demo.
@@ -3069,10 +3094,12 @@ def api_admin_surge():
     return jsonify({'success': True, 'multiplier': data['multiplier']})
 
 @app.route('/api/admin/tickets/all', methods=['GET'])
+@require_role(Role.ADMIN)
 def api_admin_all_tickets():
     return jsonify({'success': True, 'tickets': db.get_all_tickets_full()})
 
 @app.route('/api/admin/station/status', methods=['POST'])
+@require_role(Role.ADMIN)
 def api_admin_station_status():
     data = request.json
     db.toggle_station_status(data['name'], data['status'])
@@ -3080,6 +3107,7 @@ def api_admin_station_status():
     
 # 1. CCTV & INFRASTRUCTURE
 @app.route('/api/admin/infra/cctv', methods=['GET'])
+@require_role(Role.ADMIN)
 def api_admin_cctv():
     # Simulating camera status based on real stations
     stations = db.get_all_station_names() # Uses your existing DB function
@@ -3095,6 +3123,7 @@ def api_admin_cctv():
 
 # 2. POWER GRID ANALYTICS (Real DB Math)
 @app.route('/api/admin/infra/power', methods=['GET'])
+@require_role(Role.ADMIN)
 def api_admin_power():
     # Calculate energy usage based on real ticket volume (More passengers = More trains)
     tickets = db.get_all_tickets_full()
@@ -3110,6 +3139,7 @@ def api_admin_power():
 
 # 3. DATABASE BACKUP (Real Feature)
 @app.route('/api/admin/system/backup', methods=['GET'])
+@require_role(Role.ADMIN)
 def api_admin_backup():
     # Exports User DB to JSON
     users = db.get_all_users() # Assuming you have a get_all_users fn
@@ -3198,6 +3228,7 @@ def download_ticket_pdf(ticket_id):
 
 # 1. GLOBAL SEARCH ("God Mode")
 @app.route('/api/admin/global_search')
+@require_role(Role.ADMIN)
 def admin_global_search():
     query = request.args.get('q', '').lower()
     conn = db.get_db_connection()
@@ -3218,6 +3249,7 @@ def admin_global_search():
 system_config = {'peak_pricing': False, 'maintenance_mode': False}
 
 @app.route('/api/admin/config/update', methods=['POST'])
+@require_role(Role.ADMIN)
 def update_system_config():
     data = request.json
     if 'peak_pricing' in data: system_config['peak_pricing'] = data['peak_pricing']
@@ -3225,11 +3257,13 @@ def update_system_config():
     return jsonify({'success': True, 'config': system_config})
 
 @app.route('/api/admin/config/get')
+@require_role(Role.ADMIN)
 def get_system_config():
     return jsonify({'success': True, 'config': system_config})
 
 # 3. BULK REFUND ACTION
 @app.route('/api/admin/refunds/approve_all', methods=['POST'])
+@require_role(Role.ADMIN)
 def approve_all_refunds():
     conn = db.get_db_connection()
     cursor = conn.cursor()
@@ -3242,6 +3276,7 @@ def approve_all_refunds():
 
 # 4. USER BAN ACTION
 @app.route('/api/admin/users/ban', methods=['POST'])
+@require_role(Role.ADMIN)
 def ban_user():
     user_id = request.json.get('user_id')
     conn = db.get_db_connection()
@@ -3253,6 +3288,7 @@ def ban_user():
 
 # 5. SERVER LOGS VIEWER
 @app.route('/api/admin/logs')
+@require_role(Role.ADMIN)
 def get_server_logs():
     # Simulated logs for demo
     logs = [
@@ -3919,34 +3955,32 @@ def api_admin_seed_traffic():
             ('old_high_court', 'vijay_nagar', 4, 45.0),
         ]
         
-        # Get a valid user_id from the database
-        cursor.execute("SELECT userId FROM users LIMIT 1")
+        # Get a valid username from the database
+        cursor.execute("SELECT username FROM users WHERE role = 'USER' LIMIT 1")
         user_row = cursor.fetchone()
         if not user_row:
             return jsonify({'success': False, 'error': 'No users in database'}), 400
-        user_id = user_row[0]
+        seed_username = user_row[0]
         
-        import uuid
-        from datetime import datetime, timedelta
+        from datetime import datetime as _dt_seed, timedelta as _td_seed
         
         tickets_added = 0
         for pair in high_traffic_pairs:
             # Add multiple bookings per pair (3-5 bookings each) spread over recent dates
             for day_offset in range(5):
-                booking_date = datetime.now() - timedelta(days=day_offset, hours=random.randint(0, 12))
-                travel_date = booking_date + timedelta(hours=random.randint(1, 8))
-                ticket_id = str(uuid.uuid4())[:8].upper()
+                booking_date = _dt_seed.now() - _td_seed(days=day_offset, hours=random.randint(0, 12))
+                travel_date = booking_date + _td_seed(hours=random.randint(1, 8))
                 passengers = pair[2] + random.randint(-1, 2)
                 if passengers < 1:
                     passengers = 1
                 fare = pair[3] * passengers
                 
                 cursor.execute("""
-                    INSERT INTO tickets (ticketId, userId, source, destination, passengers, fare, 
+                    INSERT INTO tickets (username, source, destination, passengers, fare, 
                                         travelDate, bookingDate, cancelled, distance)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, FALSE, %s)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, FALSE, %s)
                 """, (
-                    ticket_id, user_id, pair[0], pair[1], passengers, fare,
+                    seed_username, pair[0], pair[1], passengers, fare,
                     travel_date.strftime('%Y-%m-%d'), booking_date.strftime('%Y-%m-%d %H:%M:%S'),
                     round(random.uniform(5, 25), 2)
                 ))
@@ -4995,11 +5029,8 @@ def api_fare_compare():
         if not source or not destination or source == destination:
             return jsonify({'success': False, 'error': 'Select different source and destination'}), 400
 
-        fare_data = calculate_dynamic_fare(source, destination, 1)
-        metro_fare = fare_data.get('fare', 0)
-        distance = fare_data.get('distance', 0)
-        travel_time = fare_data.get('travelTime', '')
-        is_peak = fare_data.get('isPeak', False)
+        metro_fare, distance, travel_time_min, is_peak = calculate_dynamic_fare(source, destination, 1)
+        travel_time = f'{travel_time_min} min'
 
         # Estimate cab/auto fares
         cab_fare = round(max(80, distance * 15 + 50), 0)  # base 50 + 15/km, min 80
@@ -5055,10 +5086,8 @@ def api_book_group():
         # Calculate fare per person
         from datetime import datetime as _dt
         travel_dt = _dt.strptime(travel_date, '%Y-%m-%d').date()
-        fare_data = calculate_dynamic_fare(source, destination, 1)
-        fare_per_person = fare_data.get('fare', 0)
+        fare_per_person, distance, _time_est, _is_peak = calculate_dynamic_fare(source, destination, 1)
         total_fare = fare_per_person * len(passengers)
-        distance = fare_data.get('distance', 0)
 
         # Check wallet balance
         user_obj = datastore.get_user(username)
@@ -5898,9 +5927,379 @@ def api_travel_streaks():
             'milestones': [], 'unlockedCount': 0, 'totalMilestones': 0
         }}), 200
 
+
+# ============================================================================
+# PHASE 3: NEW FEATURE IMPROVEMENTS
+# ============================================================================
+
+# ── 3.1: RATE LIMITING ON AUTH ENDPOINTS ─────────────────────────────────────
+_login_attempts = {}  # {ip: {'count': int, 'locked_until': datetime}}
+_RATE_LIMIT_MAX = 5
+_RATE_LIMIT_WINDOW = 300  # 5 minutes in seconds
+
+def _check_rate_limit(ip_address):
+    """Check if IP is rate-limited. Returns (is_blocked, remaining_seconds)."""
+    now = datetime.now()
+    entry = _login_attempts.get(ip_address)
+    if not entry:
+        return False, 0
+    
+    locked_until = entry.get('locked_until')
+    if locked_until and now < locked_until:
+        remaining = int((locked_until - now).total_seconds())
+        return True, remaining
+    
+    # Reset if window expired
+    if locked_until and now >= locked_until:
+        _login_attempts.pop(ip_address, None)
+        return False, 0
+    
+    return False, 0
+
+def _record_failed_attempt(ip_address):
+    """Record a failed login attempt for an IP."""
+    now = datetime.now()
+    entry = _login_attempts.get(ip_address, {'count': 0, 'locked_until': None})
+    entry['count'] = entry.get('count', 0) + 1
+    
+    if entry['count'] >= _RATE_LIMIT_MAX:
+        entry['locked_until'] = now + timedelta(seconds=_RATE_LIMIT_WINDOW)
+        logger.warning(f"🔒 IP {ip_address} rate-limited after {entry['count']} failed attempts")
+    
+    _login_attempts[ip_address] = entry
+
+def _clear_attempts(ip_address):
+    """Clear attempts on successful login."""
+    _login_attempts.pop(ip_address, None)
+
+@app.route('/api/auth/rate-limit-status', methods=['GET'])
+def api_rate_limit_status():
+    """Check current rate limit status for the requesting IP."""
+    ip = request.remote_addr or 'unknown'
+    is_blocked, remaining = _check_rate_limit(ip)
+    return jsonify({
+        'success': True,
+        'blocked': is_blocked,
+        'remaining_seconds': remaining,
+        'message': f'Try again in {remaining}s' if is_blocked else 'OK'
+    }), 200
+
+
+# ── 3.2: WALLET TRANSACTION HISTORY ENDPOINT ────────────────────────────────
+@app.route('/api/user/wallet/history', methods=['GET'])
+@require_login
+def api_wallet_history():
+    """Get user's full wallet transaction history with pagination."""
+    try:
+        user = get_current_user()
+        username = user['username']
+        page = int(request.args.get('page', 1))
+        per_page = int(request.args.get('per_page', 20))
+        offset = (page - 1) * per_page
+        
+        conn = db.get_db_connection()
+        cursor = conn.cursor(dictionary=True, buffered=True)
+        
+        # Total count
+        cursor.execute(
+            "SELECT COUNT(*) as total FROM wallet_history WHERE username = %s",
+            (username,)
+        )
+        total = int(cursor.fetchone()['total'] or 0)
+        
+        # Paginated transactions
+        cursor.execute("""
+            SELECT id, amount, type, description, createdAt
+            FROM wallet_history 
+            WHERE username = %s 
+            ORDER BY createdAt DESC 
+            LIMIT %s OFFSET %s
+        """, (username, per_page, offset))
+        
+        transactions = []
+        for row in cursor.fetchall():
+            created = row.get('createdAt', '')
+            if hasattr(created, 'strftime'):
+                created = created.strftime('%Y-%m-%d %H:%M:%S')
+            transactions.append({
+                'id': row['id'],
+                'amount': float(row['amount']),
+                'type': row['type'],
+                'description': row['description'],
+                'date': str(created)
+            })
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'transactions': transactions,
+            'total': total,
+            'page': page,
+            'per_page': per_page,
+            'total_pages': max(1, (total + per_page - 1) // per_page)
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Wallet history error: {e}")
+        return jsonify({'success': True, 'transactions': [], 'total': 0}), 200
+
+
+# ── 3.4: TICKET QR CODE & GATE VALIDATION ───────────────────────────────────
+@app.route('/api/tickets/<int:ticket_id>/qr', methods=['GET'])
+@require_login
+def api_ticket_qr(ticket_id):
+    """Generate a scannable QR code for a ticket with validation metadata."""
+    try:
+        user = get_current_user()
+        ticket = db.get_ticket_by_id(ticket_id)
+        
+        if not ticket:
+            return jsonify({'success': False, 'error': 'Ticket not found'}), 404
+        if ticket['username'] != user['username']:
+            return jsonify({'success': False, 'error': 'Not your ticket'}), 403
+        
+        # Build validation payload
+        import hashlib
+        validation_code = hashlib.sha256(
+            f"{ticket_id}:{ticket['username']}:{ticket['source']}:{ticket['destination']}:metroflow_secret".encode()
+        ).hexdigest()[:16].upper()
+        
+        qr_payload = json.dumps({
+            'ticketId': ticket_id,
+            'code': validation_code,
+            'source': ticket['source'],
+            'destination': ticket['destination'],
+            'passengers': ticket['passengers'],
+            'travelDate': str(ticket['travelDate']),
+            'status': 'CANCELLED' if ticket['cancelled'] else 'ACTIVE',
+            'validate': f'/api/tickets/validate/{validation_code}'
+        })
+        
+        # Generate QR image
+        qr = qrcode.QRCode(version=1, box_size=8, border=2)
+        qr.add_data(qr_payload)
+        qr.make(fit=True)
+        img = qr.make_image(fill_color="black", back_color="white")
+        
+        buffer = io.BytesIO()
+        img.save(buffer, format='PNG')
+        buffer.seek(0)
+        qr_base64 = base64.b64encode(buffer.getvalue()).decode()
+        
+        return jsonify({
+            'success': True,
+            'qr_image': f'data:image/png;base64,{qr_base64}',
+            'validation_code': validation_code,
+            'ticket_info': {
+                'ticketId': ticket_id,
+                'source': ticket['source'],
+                'destination': ticket['destination'],
+                'passengers': ticket['passengers'],
+                'fare': float(ticket['fare']),
+                'travelDate': str(ticket['travelDate']),
+                'status': 'CANCELLED' if ticket['cancelled'] else 'ACTIVE'
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"QR generation error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/tickets/validate/<string:code>', methods=['GET'])
+def api_validate_ticket(code):
+    """Gate validation endpoint — validates a ticket QR code."""
+    try:
+        import hashlib
+        
+        conn = db.get_db_connection()
+        cursor = conn.cursor(dictionary=True, buffered=True)
+        
+        # Find the ticket by regenerating validation codes
+        cursor.execute("""
+            SELECT ticketId, username, source, destination, passengers, 
+                   fare, travelDate, cancelled, status
+            FROM tickets
+            WHERE cancelled = FALSE AND travelDate >= CURDATE()
+            ORDER BY ticketId DESC
+            LIMIT 500
+        """)
+        
+        for ticket in cursor.fetchall():
+            expected_code = hashlib.sha256(
+                f"{ticket['ticketId']}:{ticket['username']}:{ticket['source']}:{ticket['destination']}:metroflow_secret".encode()
+            ).hexdigest()[:16].upper()
+            
+            if expected_code == code.upper():
+                cursor.close()
+                conn.close()
+                
+                travel_date = ticket['travelDate']
+                is_valid_today = (travel_date == date.today()) if hasattr(travel_date, '__eq__') else False
+                
+                return jsonify({
+                    'success': True,
+                    'valid': True,
+                    'ticket': {
+                        'ticketId': ticket['ticketId'],
+                        'source': ticket['source'].replace('_', ' ').title(),
+                        'destination': ticket['destination'].replace('_', ' ').title(),
+                        'passengers': ticket['passengers'],
+                        'fare': float(ticket['fare']),
+                        'travelDate': str(travel_date),
+                        'status': ticket.get('status', 'ACTIVE')
+                    },
+                    'validToday': is_valid_today,
+                    'message': '✅ Valid ticket' if is_valid_today else '⚠️ Not valid today'
+                }), 200
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'valid': False,
+            'message': '❌ Invalid or expired ticket code'
+        }), 404
+        
+    except Exception as e:
+        logger.error(f"Ticket validation error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ── 3.5: ENHANCED DASHBOARD QUICK STATS ─────────────────────────────────────
+@app.route('/api/user/dashboard-stats', methods=['GET'])
+@require_login
+def api_dashboard_stats():
+    """Comprehensive dashboard stats for the greeting card — saves multiple API calls."""
+    try:
+        user = get_current_user()
+        username = user['username']
+        
+        conn = db.get_db_connection()
+        cursor = conn.cursor(dictionary=True, buffered=True)
+        
+        # Weekly trips (last 7 days)
+        cursor.execute("""
+            SELECT COUNT(*) as weekly_trips, COALESCE(SUM(fare), 0) as weekly_spend
+            FROM tickets 
+            WHERE username = %s AND cancelled = FALSE 
+            AND bookingDate >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+        """, (username,))
+        weekly = cursor.fetchone()
+        
+        # Monthly spend
+        cursor.execute("""
+            SELECT COALESCE(SUM(fare), 0) as monthly_spend, COUNT(*) as monthly_trips
+            FROM tickets 
+            WHERE username = %s AND cancelled = FALSE 
+            AND MONTH(bookingDate) = MONTH(CURDATE()) 
+            AND YEAR(bookingDate) = YEAR(CURDATE())
+        """, (username,))
+        monthly = cursor.fetchone()
+        
+        # Next upcoming trip
+        cursor.execute("""
+            SELECT ticketId, source, destination, travelDate, passengers, fare
+            FROM tickets 
+            WHERE username = %s AND cancelled = FALSE 
+            AND travelDate >= CURDATE()
+            ORDER BY travelDate ASC
+            LIMIT 1
+        """, (username,))
+        next_trip = cursor.fetchone()
+        
+        # Total eco stats
+        cursor.execute("""
+            SELECT COALESCE(SUM(distance), 0) as total_km
+            FROM tickets 
+            WHERE username = %s AND cancelled = FALSE
+        """, (username,))
+        eco = cursor.fetchone()
+        total_km = float(eco['total_km'] or 0)
+        co2_saved = round(total_km * 0.17, 1)  # 170g CO2/km saved vs car
+        
+        # Active monthly passes count
+        cursor.execute("""
+            SELECT COUNT(*) as active_passes
+            FROM monthly_passes 
+            WHERE username = %s AND status = 'active' AND expiryDate >= CURDATE()
+        """, (username,))
+        passes = cursor.fetchone()
+        
+        # Loyalty points
+        loyalty = 0
+        try:
+            cursor.execute("SELECT loyaltyPoints FROM users WHERE username = %s", (username,))
+            lp = cursor.fetchone()
+            loyalty = int(lp.get('loyaltyPoints', 0) or 0) if lp else 0
+        except Exception:
+            pass
+        
+        cursor.close()
+        conn.close()
+        
+        # Format next trip
+        next_trip_data = None
+        if next_trip:
+            td = next_trip['travelDate']
+            days_until = (td - date.today()).days if hasattr(td, '__sub__') else 0
+            next_trip_data = {
+                'ticketId': next_trip['ticketId'],
+                'source': next_trip['source'].replace('_', ' ').title(),
+                'destination': next_trip['destination'].replace('_', ' ').title(),
+                'travelDate': str(td),
+                'daysUntil': days_until,
+                'passengers': next_trip['passengers'],
+                'fare': float(next_trip['fare'])
+            }
+        
+        # Time-aware greeting
+        hour = datetime.now().hour
+        if hour < 5:
+            greeting = ("🌙 Late Night Owl!", "Metro runs all night for you.")
+        elif hour < 12:
+            greeting = ("☀️ Good Morning!", "Start your day with a smooth metro ride.")
+        elif hour < 17:
+            greeting = ("🌤️ Good Afternoon!", "Beat the afternoon heat — ride AC metro.")
+        elif hour < 21:
+            greeting = ("🌆 Good Evening!", "Heading home? Skip the traffic.")
+        else:
+            greeting = ("🌃 Good Night!", "Safe travels on the late metro.")
+        
+        is_peak = (8 <= hour < 11) or (17 <= hour < 19)
+        
+        return jsonify({
+            'success': True,
+            'stats': {
+                'weeklyTrips': int(weekly['weekly_trips'] or 0),
+                'weeklySpend': round(float(weekly['weekly_spend'] or 0), 2),
+                'monthlyTrips': int(monthly['monthly_trips'] or 0),
+                'monthlySpend': round(float(monthly['monthly_spend'] or 0), 2),
+                'nextTrip': next_trip_data,
+                'co2Saved': co2_saved,
+                'totalKm': round(total_km, 1),
+                'activePasses': int(passes['active_passes'] or 0),
+                'loyaltyPoints': loyalty,
+                'walletBalance': float(user.get('walletBalance', 0)),
+                'greeting': greeting[0],
+                'greetingSubtext': greeting[1],
+                'isPeak': is_peak,
+                'currentHour': hour
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Dashboard stats error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 # ============================================================================
 # MAIN - RUN SERVER
 # ============================================================================
+
 
 if __name__ == '__main__':
     print("=" * 60)

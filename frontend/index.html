@@ -142,76 +142,111 @@
             }
         }
 
-        /* --- Navbar --- */
+        /* --- Navbar (Premium Glassmorphism) --- */
         .navbar {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(15px);
-            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.05);
-            padding: 15px 0;
+            background: rgba(255, 255, 255, 0.82);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            box-shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 32px rgba(102,126,234,0.06);
+            padding: 12px 0;
             transition: all 0.4s ease;
+            border-bottom: 1px solid rgba(102,126,234,0.08);
+        }
+        .navbar.scrolled {
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 4px 30px rgba(102,126,234,0.1);
+            padding: 8px 0;
         }
 
+        .navbar-brand {
+            font-size: 1.35rem;
+        }
         .navbar-brand i {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
             animation: float 3s ease-in-out infinite;
             display: inline-block;
+            font-size: 1.4rem;
         }
 
         .nav-link {
             position: relative;
-            font-weight: 500;
-            margin: 0 10px;
-            transition: 0.3s;
-            color: var(--text-dark) !important;
+            font-weight: 600;
+            margin: 0 6px;
+            padding: 8px 14px !important;
+            transition: all 0.3s;
+            color: #4a5568 !important;
+            font-size: 0.92rem;
+            border-radius: 10px;
         }
 
-        /* Underline effect */
         .nav-link::after {
             content: '';
             position: absolute;
             width: 0;
             height: 3px;
-            bottom: -5px;
-            left: 0;
-            background: #764ba2;
-            transition: width 0.3s;
-            border-radius: 2px;
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary-gradient);
+            transition: width 0.3s cubic-bezier(0.34,1.56,0.64,1);
+            border-radius: 3px;
         }
 
-        /* Highlighting Logic: Hover OR Active Class */
         .nav-link:hover,
         .nav-link.active {
-            color: #764ba2 !important;
+            color: #667eea !important;
+            background: rgba(102,126,234,0.06);
         }
 
         .nav-link:hover::after,
         .nav-link.active::after {
-            width: 100%;
+            width: 60%;
         }
 
         .btn-animated {
-            background: linear-gradient(270deg, #667eea, #764ba2, #667eea);
-            background-size: 200% 200%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-size: 100% 100%;
             border: none;
             color: white;
-            padding: 12px 30px;
-            border-radius: 50px;
-            font-weight: 600;
-            animation: gradient-flow 6s ease infinite;
-            transition: transform 0.3s, box-shadow 0.3s;
+            padding: 11px 28px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.92rem;
+            transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+            box-shadow: 0 4px 16px rgba(102,126,234,0.3);
+            letter-spacing: 0.3px;
         }
 
         .btn-animated:hover {
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 15px 30px rgba(118, 75, 162, 0.4);
+            transform: translateY(-2px) scale(1.03);
+            box-shadow: 0 12px 28px rgba(102,126,234,0.45);
             color: white;
         }
 
-        /* --- Hero --- */
+        /* --- Hero (Premium) --- */
         .hero-section {
-            padding: 180px 0 120px;
-            background: radial-gradient(circle at 80% 20%, #f3f4f6 0%, #fff 60%);
+            padding: 160px 0 100px;
+            background: linear-gradient(165deg, #f8faff 0%, #f0f0ff 30%, #fff 60%, #fdf4ff 100%);
             position: relative;
             overflow: hidden;
+        }
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: -200px; right: -200px;
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(102,126,234,0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .hero-section::after {
+            content: '';
+            position: absolute;
+            bottom: -150px; left: -100px;
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(240,147,251,0.06) 0%, transparent 70%);
+            pointer-events: none;
         }
 
         /* Constellation Canvas */
@@ -224,85 +259,106 @@
             pointer-events: none;
         }
 
-        /* Quick Fare Check Widget */
+        /* Quick Fare Check Widget — Premium Redesign */
         .quick-fare-widget {
-            background: rgba(255,255,255,0.75);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.6);
-            border-radius: 20px;
-            padding: 24px;
-            box-shadow: 0 8px 32px rgba(102,126,234,0.12);
-            margin-top: 32px;
-            max-width: 420px;
+            background: white;
+            border: 1px solid rgba(102,126,234,0.12);
+            border-radius: 22px;
+            padding: 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02), 0 12px 40px rgba(102,126,234,0.1);
+            margin-top: 28px;
+            max-width: 460px;
             position: relative;
             z-index: 2;
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1);
+            overflow: hidden;
         }
         .quick-fare-widget:hover {
-            box-shadow: 0 12px 40px rgba(102,126,234,0.22);
-            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.04), 0 20px 50px rgba(102,126,234,0.18);
+            transform: translateY(-4px);
         }
         .qfw-header {
-            display: flex; align-items: center; gap: 10px; margin-bottom: 16px;
+            display: flex; align-items: center; gap: 12px;
+            padding: 18px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin-bottom: 0;
         }
         .qfw-header i {
-            width: 36px; height: 36px; border-radius: 10px;
-            background: var(--primary-gradient); color: white;
-            display: grid; place-items: center; font-size: 14px;
+            width: 38px; height: 38px; border-radius: 11px;
+            background: rgba(255,255,255,0.2); color: white;
+            display: grid; place-items: center; font-size: 15px;
+            backdrop-filter: blur(8px);
         }
         .qfw-header span {
-            font-size: 14px; font-weight: 800; color: #1e293b;
+            font-size: 15px; font-weight: 800; color: white;
+            letter-spacing: 0.3px;
+        }
+        .qfw-body {
+            padding: 20px 24px 22px;
         }
         .qfw-row {
-            display: flex; gap: 10px; margin-bottom: 12px;
+            display: flex; gap: 10px; margin-bottom: 14px;
+            align-items: stretch;
         }
         .qfw-select {
-            flex: 1; padding: 10px 14px; border: 2px solid #e2e8f0;
-            border-radius: 12px; font-size: 13px; font-weight: 600;
-            font-family: 'Poppins', sans-serif; background: white;
-            color: #334155; outline: none; transition: border-color 0.3s;
+            flex: 1; padding: 12px 16px; border: 2px solid #e8ecf4;
+            border-radius: 14px; font-size: 13px; font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            background: #f8fafc;
+            color: #334155; outline: none;
+            transition: all 0.3s;
             cursor: pointer; appearance: none;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
             background-repeat: no-repeat;
-            background-position: right 12px center;
-            padding-right: 32px;
+            background-position: right 14px center;
+            padding-right: 34px;
         }
-        .qfw-select:focus { border-color: #667eea; }
+        .qfw-select:focus {
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+        }
         .qfw-swap {
-            width: 40px; height: 40px; border-radius: 12px; border: 2px solid #e2e8f0;
-            background: white; color: #667eea; cursor: pointer; font-size: 14px;
-            display: grid; place-items: center; transition: all 0.3s;
+            width: 44px; height: 44px; border-radius: 14px;
+            border: 2px solid #e8ecf4;
+            background: white; color: #667eea; cursor: pointer; font-size: 15px;
+            display: grid; place-items: center;
+            transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1);
             flex-shrink: 0;
+            align-self: center;
         }
         .qfw-swap:hover {
             background: var(--primary-gradient); color: white; border-color: transparent;
-            transform: rotate(180deg);
+            transform: rotate(180deg) scale(1.08);
+            box-shadow: 0 4px 16px rgba(102,126,234,0.35);
         }
         .qfw-result {
             background: linear-gradient(135deg, rgba(102,126,234,0.06), rgba(118,75,162,0.04));
-            border-radius: 14px; padding: 14px 18px;
+            border: 1px solid rgba(102,126,234,0.08);
+            border-radius: 16px; padding: 16px 20px;
             display: none; align-items: center; gap: 14px;
             animation: fadeInUp 0.4s ease;
         }
         .qfw-result.show { display: flex; }
         .qfw-fare-big {
-            font-size: 28px; font-weight: 900;
+            font-size: 30px; font-weight: 900;
             background: var(--primary-gradient);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
             background-clip: text;
         }
-        .qfw-meta { font-size: 11px; color: #94a3b8; }
+        .qfw-meta { font-size: 12px; color: #94a3b8; font-weight: 500; }
         .qfw-meta span { color: #667eea; font-weight: 700; }
 
         .hero-title {
             font-size: 3.8rem;
-            font-weight: 800;
-            line-height: 1.1;
-            margin-bottom: 25px;
-            background: var(--primary-gradient);
+            font-weight: 900;
+            line-height: 1.08;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #2d1b69 0%, #667eea 50%, #764ba2 100%);
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
         }
 
         .hero-img-wrapper {
@@ -313,26 +369,26 @@
 
         .hero-card-float {
             position: absolute;
-            background: white;
+            background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(16px);
             padding: 15px 25px;
-            border-radius: 15px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            border-radius: 18px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
             display: flex;
             align-items: center;
             gap: 15px;
             z-index: 3;
             animation: float 5s ease-in-out infinite;
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
         }
 
-        /* --- Feature Cards --- */
+        /* --- Feature Cards (Premium) --- */
         .feature-card {
             background: white;
-            padding: 40px 30px;
-            border-radius: 20px;
-            border: 1px solid rgba(0, 0, 0, 0.03);
-            box-shadow: var(--card-shadow);
+            padding: 36px 28px;
+            border-radius: 22px;
+            border: 1px solid rgba(0, 0, 0, 0.04);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03), 0 8px 24px rgba(102,126,234,0.06);
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             height: 100%;
             position: relative;
@@ -345,7 +401,7 @@
             top: 0;
             left: 0;
             width: 100%;
-            height: 5px;
+            height: 4px;
             background: var(--primary-gradient);
             transform: scaleX(0);
             transform-origin: left;
@@ -353,8 +409,9 @@
         }
 
         .feature-card:hover {
-            transform: translateY(-10px);
-            box-shadow: var(--hover-shadow);
+            transform: translateY(-8px);
+            box-shadow: 0 12px 40px rgba(102,126,234,0.15);
+            border-color: rgba(102,126,234,0.1);
         }
 
         .feature-card:hover::before {
@@ -362,22 +419,23 @@
         }
 
         .icon-circle {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            background: #f7fafc;
+            width: 64px;
+            height: 64px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, rgba(102,126,234,0.08), rgba(118,75,162,0.06));
             display: grid;
             place-items: center;
-            font-size: 1.5rem;
-            color: #764ba2;
-            margin-bottom: 25px;
-            transition: 0.4s;
+            font-size: 1.4rem;
+            color: #667eea;
+            margin-bottom: 22px;
+            transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1);
         }
 
         .feature-card:hover .icon-circle {
             background: var(--primary-gradient);
             color: white;
-            transform: rotateY(180deg);
+            transform: scale(1.1) rotate(-5deg);
+            box-shadow: 0 6px 20px rgba(102,126,234,0.3);
         }
 
         /* --- Live Network --- */
@@ -408,13 +466,14 @@
 
         /* --- Stats Counter --- */
         .stat-number {
-            font-size: 2.5rem;
-            font-weight: 800;
+            font-size: 2.4rem;
+            font-weight: 900;
             color: #2d3748;
-            background: var(--primary-gradient);
+            background: linear-gradient(135deg, #2d1b69 0%, #667eea 100%);
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
         }
 
         /* ========================================
@@ -909,13 +968,15 @@
                     <li class="nav-item"><a class="nav-link" href="#network">Network</a></li>
                     <li class="nav-item"><a class="nav-link" href="#faq">FAQ</a></li>
                     <li class="nav-item ms-lg-2">
-                        <a href="register.html" class="btn btn-outline-dark rounded-pill px-3 py-2 fw-bold"
-                            style="font-size: 0.9rem;">
+                        <a href="register.html" class="btn fw-bold"
+                            style="font-size: 0.88rem; padding: 9px 22px; border-radius: 12px; border: 2px solid #e2e8f0; color: #4a5568; transition: all 0.3s;"
+                            onmouseover="this.style.borderColor='#667eea';this.style.color='#667eea';this.style.background='rgba(102,126,234,0.04)'"
+                            onmouseout="this.style.borderColor='#e2e8f0';this.style.color='#4a5568';this.style.background='transparent'">
                             Register
                         </a>
                     </li>
                     <li class="nav-item ms-lg-2">
-                        <a href="login.html" class="btn-animated shadow-lg">
+                        <a href="login.html" class="btn-animated">
                             Login <i class="fas fa-arrow-right ms-2"></i>
                         </a>
                     </li>
@@ -962,24 +1023,26 @@
                                 <i class="fas fa-calculator"></i>
                                 <span>Quick Fare Check</span>
                             </div>
-                            <div class="qfw-row">
-                                <select class="qfw-select" id="qfwSource">
-                                    <option value="" disabled selected>From station...</option>
-                                </select>
-                                <button class="qfw-swap" onclick="swapQfw()" title="Swap stations">
-                                    <i class="fas fa-exchange-alt"></i>
-                                </button>
-                                <select class="qfw-select" id="qfwDest">
-                                    <option value="" disabled selected>To station...</option>
-                                </select>
-                            </div>
-                            <div class="qfw-result" id="qfwResult">
-                                <div>
-                                    <div class="qfw-fare-big" id="qfwFare">₹0</div>
-                                    <div class="qfw-meta"><span id="qfwTime">0 min</span> · <span id="qfwDist">0 km</span></div>
+                            <div class="qfw-body">
+                                <div class="qfw-row">
+                                    <select class="qfw-select" id="qfwSource">
+                                        <option value="" disabled selected>From station...</option>
+                                    </select>
+                                    <button class="qfw-swap" onclick="swapQfw()" title="Swap stations">
+                                        <i class="fas fa-exchange-alt"></i>
+                                    </button>
+                                    <select class="qfw-select" id="qfwDest">
+                                        <option value="" disabled selected>To station...</option>
+                                    </select>
                                 </div>
-                                <div style="margin-left:auto;text-align:right;">
-                                    <a href="login.html" class="btn btn-sm text-white fw-bold" style="background:var(--primary-gradient);border:none;border-radius:50px;padding:8px 20px;font-size:12px;">Book Now →</a>
+                                <div class="qfw-result" id="qfwResult">
+                                    <div>
+                                        <div class="qfw-fare-big" id="qfwFare">₹0</div>
+                                        <div class="qfw-meta"><span id="qfwTime">0 min</span> · <span id="qfwDist">0 km</span></div>
+                                    </div>
+                                    <div style="margin-left:auto;text-align:right;">
+                                        <a href="login.html" class="btn btn-sm text-white fw-bold" style="background:var(--primary-gradient);border:none;border-radius:12px;padding:10px 22px;font-size:12px;box-shadow:0 4px 12px rgba(102,126,234,0.3);transition:all 0.3s;" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 20px rgba(102,126,234,0.4)'" onmouseout="this.style.transform='';this.style.boxShadow='0 4px 12px rgba(102,126,234,0.3)'">Book Now →</a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -2295,6 +2358,43 @@
             const rs = document.createElement('style');
             rs.textContent = '@keyframes btnRipple{to{transform:scale(2.5);opacity:0}}';
             document.head.appendChild(rs);
+        })();
+
+        // ═══════════════════════════════════════════════════
+        // Round 3: Animated Cursor Trail (Stripe-inspired)
+        // ═══════════════════════════════════════════════════
+        (() => {
+            if (window.innerWidth < 768) return; // no trail on mobile
+            const TRAIL_LENGTH = 12;
+            const dots = [];
+
+            for (let i = 0; i < TRAIL_LENGTH; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'cursor-trail-dot';
+                const scale = 1 - (i / TRAIL_LENGTH) * 0.7;
+                const opacity = 1 - (i / TRAIL_LENGTH);
+                dot.style.cssText += `transform:scale(${scale});opacity:${opacity};`;
+                document.body.appendChild(dot);
+                dots.push({ el: dot, x: 0, y: 0 });
+            }
+
+            let mouseX = 0, mouseY = 0;
+            document.addEventListener('mousemove', e => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+            });
+
+            function animate() {
+                dots.forEach((dot, i) => {
+                    const prev = i === 0 ? { x: mouseX, y: mouseY } : dots[i - 1];
+                    dot.x += (prev.x - dot.x) * 0.35;
+                    dot.y += (prev.y - dot.y) * 0.35;
+                    dot.el.style.left = dot.x - 6 + 'px';
+                    dot.el.style.top = dot.y - 6 + 'px';
+                });
+                requestAnimationFrame(animate);
+            }
+            animate();
         })();
 
     </script>

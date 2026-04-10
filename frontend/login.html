@@ -453,6 +453,9 @@
 
 <body>
 
+    <!-- Particle Container -->
+    <div id="particles" style="position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;"></div>
+
     <!-- Animated Metro Line SVG Background -->
     <div class="metro-bg">
         <svg viewBox="0 0 1200 800" preserveAspectRatio="none">
@@ -686,6 +689,7 @@
     <script>
         function createParticles() {
             const container = document.getElementById('particles');
+            if (!container) return; // Guard: skip if no container
             const particleCount = window.innerWidth < 768 ? 10 : 20;
             container.innerHTML = ''; // Clear existing
 

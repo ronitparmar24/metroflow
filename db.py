@@ -52,6 +52,33 @@ def get_db_connection():
         raise
 
 
+from contextlib import contextmanager
+
+@contextmanager
+def get_db_cursor(dictionary=True, buffered=True):
+    """Context manager for safe DB access. Auto-closes cursor and connection.
+    
+    Usage:
+        with get_db_cursor() as (conn, cursor):
+            cursor.execute("SELECT ...")
+            results = cursor.fetchall()
+            conn.commit()  # if writing
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=dictionary, buffered=buffered)
+    try:
+        yield conn, cursor
+    finally:
+        try:
+            cursor.close()
+        except Exception:
+            pass
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+
 # ============================================================================
 # DATABASE SETUP
 # ============================================================================

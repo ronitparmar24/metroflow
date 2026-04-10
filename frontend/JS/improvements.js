@@ -1363,4 +1363,387 @@
         tipEl.innerHTML = `<i class="fas fa-lightbulb" style="font-size:14px;"></i> <span>${tip}</span>`;
     })();
 
+    // ═══════════════════════════════════════════════════════════════
+    //  ROUND 3 — FEATURE 1: SMOOTH PAGE TRANSITION LOADER
+    // ═══════════════════════════════════════════════════════════════
+    (() => {
+        // Create overlay element
+        const overlay = document.createElement('div');
+        overlay.className = 'section-transition-overlay';
+        overlay.innerHTML = `
+            <div class="transition-train-icon">🚇</div>
+            <div class="transition-skeleton">
+                <div class="skel-line"></div>
+                <div class="skel-line"></div>
+                <div class="skel-line"></div>
+                <div class="skel-line"></div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+
+        // Wrap showSection to add transition
+        const origShow = window.showSection;
+        if (typeof origShow === 'function') {
+            window.showSection = function(section) {
+                overlay.classList.add('active');
+                setTimeout(() => {
+                    origShow(section);
+                    setTimeout(() => {
+                        overlay.classList.remove('active');
+                    }, 300);
+                }, 350);
+            };
+        }
+    })();
+
+    // ═══════════════════════════════════════════════════════════════
+    //  ROUND 3 — FEATURE 3: FLOATING QUICK ACTIONS FAB
+    // ═══════════════════════════════════════════════════════════════
+    (() => {
+        if (!document.querySelector('.main-content')) return;
+
+        const fabActions = [
+            { icon: 'fa-ticket-alt', label: 'Book Ticket', color: '#667eea', section: 'book-ticket' },
+            { icon: 'fa-wallet', label: 'Top Up Wallet', color: '#22c55e', section: 'wallet' },
+            { icon: 'fa-qrcode', label: 'My Tickets', color: '#f59e0b', section: 'my-tickets' },
+            { icon: 'fa-headset', label: 'Get Support', color: '#ef4444', section: 'feedback' },
+        ];
+
+        const container = document.createElement('div');
+        container.className = 'mf-fab-container';
+        container.innerHTML = `
+            <button class="mf-fab-main" id="fabMainBtn" title="Quick Actions">
+                <i class="fas fa-plus"></i>
+            </button>
+            <div class="mf-fab-menu" id="fabMenu">
+                ${fabActions.map(a => `
+                    <div class="mf-fab-item" data-section="${a.section}">
+                        <span class="mf-fab-label">${a.label}</span>
+                        <button class="mf-fab-btn" style="background:${a.color}">
+                            <i class="fas ${a.icon}"></i>
+                        </button>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        document.body.appendChild(container);
+
+        const mainBtn = document.getElementById('fabMainBtn');
+        const menu = document.getElementById('fabMenu');
+        let isOpen = false;
+
+        mainBtn.addEventListener('click', () => {
+            isOpen = !isOpen;
+            mainBtn.classList.toggle('open', isOpen);
+            menu.classList.toggle('open', isOpen);
+        });
+
+        menu.querySelectorAll('.mf-fab-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const section = item.dataset.section;
+                if (typeof window.showSection === 'function') {
+                    window.showSection(section);
+                }
+                isOpen = false;
+                mainBtn.classList.remove('open');
+                menu.classList.remove('open');
+            });
+        });
+
+        // Close on outside click
+        document.addEventListener('click', e => {
+            if (isOpen && !container.contains(e.target)) {
+                isOpen = false;
+                mainBtn.classList.remove('open');
+                menu.classList.remove('open');
+            }
+        });
+    })();
+
+    // ═══════════════════════════════════════════════════════════════
+    //  ROUND 3 — FEATURE 4: ANIMATED NUMBER COUNTERS
+    // ═══════════════════════════════════════════════════════════════
+    (() => {
+        function animateCounter(el, target, duration = 1200, prefix = '', suffix = '') {
+            const start = 0;
+            const startTime = performance.now();
+
+            function easeOutExpo(t) {
+                return t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
+            }
+
+            function update(now) {
+                const elapsed = now - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const easedProgress = easeOutExpo(progress);
+                const current = Math.round(start + (target - start) * easedProgress);
+                el.textContent = prefix + current.toLocaleString() + suffix;
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                } else {
+                    el.classList.add('counter-flash');
+                    setTimeout(() => el.classList.remove('counter-flash'), 600);
+                }
+            }
+            requestAnimationFrame(update);
+        }
+
+        // Observe dashboard stat elements for visibility
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && !entry.target._counted) {
+                    entry.target._counted = true;
+                    const text = entry.target.textContent.trim();
+                    const prefix = text.match(/^[₹$€£]/)?.[0] || '';
+                    const suffix = text.match(/[%+kK]$/)?.[0] || '';
+                    const num = parseFloat(text.replace(/[^0-9.]/g, ''));
+                    if (!isNaN(num) && num > 0) {
+                        animateCounter(entry.target, num, 1500, prefix, suffix);
+                    }
+                }
+            });
+        }, { threshold: 0.3 });
+
+        // Watch for stat cards appearing
+        setTimeout(() => {
+            document.querySelectorAll('.stat-value, .stat-card-modern h3, [id^="dashboard"]').forEach(el => {
+                const text = el.textContent.trim();
+                const num = parseFloat(text.replace(/[^0-9.]/g, ''));
+                if (!isNaN(num) && num > 0 && text.length < 15) {
+                    observer.observe(el);
+                }
+            });
+        }, 2000);
+    })();
+
+    // ═══════════════════════════════════════════════════════════════
+    //  ROUND 3 — FEATURE 5: TOAST NOTIFICATION SYSTEM
+    // ═══════════════════════════════════════════════════════════════
+    (() => {
+        // Create container
+        let toastContainer = document.querySelector('.mf-toast-container');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.className = 'mf-toast-container';
+            document.body.appendChild(toastContainer);
+        }
+
+        const ICONS = {
+            success: 'fa-check-circle',
+            error: 'fa-times-circle',
+            warning: 'fa-exclamation-triangle',
+            info: 'fa-info-circle'
+        };
+
+        window.mfToast = function(message, type = 'info', duration = 4000) {
+            const toast = document.createElement('div');
+            toast.className = 'mf-toast';
+            toast.innerHTML = `
+                <div class="mf-toast-icon ${type}"><i class="fas ${ICONS[type] || ICONS.info}"></i></div>
+                <span class="mf-toast-text">${message}</span>
+                <button class="mf-toast-close" onclick="this.parentElement.classList.add('removing');setTimeout(()=>this.parentElement.remove(),300)">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div class="mf-toast-progress ${type}" style="width:100%;transition:width ${duration}ms linear"></div>
+            `;
+            toastContainer.appendChild(toast);
+
+            // Animate progress bar
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    toast.querySelector('.mf-toast-progress').style.width = '0%';
+                });
+            });
+
+            // Auto-remove
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.classList.add('removing');
+                    setTimeout(() => toast.remove(), 300);
+                }
+            }, duration);
+
+            // Max 5 toasts
+            while (toastContainer.children.length > 5) {
+                toastContainer.firstElementChild.remove();
+            }
+        };
+
+        // Show welcome toast after a delay
+        setTimeout(() => {
+            if (document.querySelector('.main-content')) {
+                window.mfToast('Welcome back! 🚇 Your dashboard is ready.', 'success', 3000);
+            }
+        }, 3000);
+    })();
+
+    // ═══════════════════════════════════════════════════════════════
+    //  ROUND 3 — FEATURE 6: ENHANCED DARK MODE TOGGLE
+    // ═══════════════════════════════════════════════════════════════
+    (() => {
+        const sidebar = document.querySelector('.sidebar');
+        if (!sidebar) return;
+
+        // Find logout link to insert before it
+        const logoutLink = sidebar.querySelector('.sidebar-link.text-danger') || sidebar.lastElementChild;
+
+        const toggle = document.createElement('div');
+        toggle.className = 'mf-theme-toggle';
+        toggle.id = 'mfThemeToggle';
+
+        const isDark = document.body.classList.contains('dark-mode') || localStorage.getItem('mf-dark-mode') === 'true';
+        toggle.innerHTML = `
+            <div class="mf-theme-icon ${isDark ? 'moon' : 'sun'}" id="themeIconEl">${isDark ? '🌙' : '☀️'}</div>
+            <span class="mf-theme-label" id="themeLabelEl">${isDark ? 'Dark Mode' : 'Light Mode'}</span>
+        `;
+
+        if (logoutLink) sidebar.insertBefore(toggle, logoutLink);
+        else sidebar.appendChild(toggle);
+
+        // Apply saved preference
+        if (isDark) document.body.classList.add('dark-mode');
+
+        toggle.addEventListener('click', () => {
+            const nowDark = !document.body.classList.contains('dark-mode');
+            document.body.classList.toggle('dark-mode', nowDark);
+            localStorage.setItem('mf-dark-mode', nowDark);
+
+            const iconEl = document.getElementById('themeIconEl');
+            const labelEl = document.getElementById('themeLabelEl');
+            if (iconEl) {
+                iconEl.className = `mf-theme-icon ${nowDark ? 'moon' : 'sun'}`;
+                iconEl.textContent = nowDark ? '🌙' : '☀️';
+            }
+            if (labelEl) labelEl.textContent = nowDark ? 'Dark Mode' : 'Light Mode';
+
+            // Smooth transition effect
+            document.body.style.transition = 'background 0.5s ease, color 0.5s ease';
+            setTimeout(() => { document.body.style.transition = ''; }, 600);
+
+            window.mfToast?.(`Switched to ${nowDark ? 'Dark' : 'Light'} Mode ${nowDark ? '🌙' : '☀️'}`, 'info', 2000);
+        });
+    })();
+
+    // ═══════════════════════════════════════════════════════════════
+    //  ROUND 3 — FEATURE 7: AMBIENT TYPING SOUNDS
+    // ═══════════════════════════════════════════════════════════════
+    (() => {
+        // Only on desktop
+        if (window.innerWidth < 768) return;
+
+        // Create audio context lazily
+        let audioCtx = null;
+        function playKeyClick() {
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.frequency.value = 800 + Math.random() * 400;
+                osc.type = 'sine';
+                gain.gain.value = 0.015;
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.06);
+                osc.start(audioCtx.currentTime);
+                osc.stop(audioCtx.currentTime + 0.06);
+            } catch(e) { /* audio not available */ }
+        }
+
+        let soundEnabled = localStorage.getItem('mf-typing-sounds') !== 'false';
+        document.addEventListener('keydown', e => {
+            if (!soundEnabled) return;
+            const tag = e.target.tagName;
+            if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') {
+                if (e.key.length === 1 || e.key === 'Backspace' || e.key === 'Enter') {
+                    playKeyClick();
+                }
+            }
+        });
+    })();
+
+    // ═══════════════════════════════════════════════════════════════
+    //  ROUND 3 — FEATURE 8: CONFETTI CELEBRATION
+    // ═══════════════════════════════════════════════════════════════
+    (() => {
+        window.mfConfetti = function(duration = 2500) {
+            const canvas = document.createElement('canvas');
+            canvas.className = 'confetti-canvas';
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            document.body.appendChild(canvas);
+            const ctx = canvas.getContext('2d');
+
+            const COLORS = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#22c55e', '#f59e0b', '#00f2fe', '#fbbf24'];
+            const particles = [];
+
+            for (let i = 0; i < 120; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height * -0.5,
+                    w: Math.random() * 10 + 4,
+                    h: Math.random() * 6 + 2,
+                    color: COLORS[Math.floor(Math.random() * COLORS.length)],
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: Math.random() * 3 + 2,
+                    rot: Math.random() * 360,
+                    rotV: (Math.random() - 0.5) * 12,
+                    gravity: 0.08 + Math.random() * 0.04,
+                    opacity: 1,
+                    decay: 0.003 + Math.random() * 0.005
+                });
+            }
+
+            const startTime = Date.now();
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                const elapsed = Date.now() - startTime;
+                let alive = false;
+
+                particles.forEach(p => {
+                    if (p.opacity <= 0) return;
+                    alive = true;
+                    p.x += p.vx;
+                    p.vy += p.gravity;
+                    p.y += p.vy;
+                    p.rot += p.rotV;
+                    p.vx *= 0.99;
+                    if (elapsed > duration * 0.6) p.opacity -= p.decay * 2;
+
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.rot * Math.PI / 180);
+                    ctx.globalAlpha = Math.max(0, p.opacity);
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+                    ctx.restore();
+                });
+
+                if (alive && elapsed < duration) {
+                    requestAnimationFrame(draw);
+                } else {
+                    canvas.remove();
+                }
+            }
+            requestAnimationFrame(draw);
+        };
+
+        // Hook into booking confirmation
+        const origClose = window.closeBookingConfirm;
+        if (typeof origClose !== 'function') {
+            // Watch for the booking confirm overlay appearing
+            const mo = new MutationObserver(() => {
+                const overlay = document.getElementById('bookingConfirmOverlay');
+                if (overlay && overlay.style.display !== 'none' && !overlay._confettiFired) {
+                    overlay._confettiFired = true;
+                    window.mfConfetti(3000);
+                    window.mfToast?.('🎉 Ticket booked successfully!', 'success', 3500);
+                    setTimeout(() => { overlay._confettiFired = false; }, 5000);
+                }
+            });
+            const overlay = document.getElementById('bookingConfirmOverlay');
+            if (overlay) mo.observe(overlay, { attributes: true, attributeFilter: ['style'] });
+        }
+    })();
+
 })();
+
