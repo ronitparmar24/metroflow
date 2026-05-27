@@ -5020,7 +5020,6 @@ def api_user_achievements():
 
 # ── Phase 5: Trip Comparison & Fare Calculator ───────────────────────────────
 @app.route('/api/fare/compare', methods=['GET'])
-@require_login
 def api_fare_compare():
     """Compare metro vs cab vs auto fare for any route"""
     try:
@@ -5382,12 +5381,8 @@ def api_live_booking_feed():
     Returns the last N bookings for an animated ticker feed.
     """
     try:
-        # Read from booking_queue without dequeuing (peek all items)
-        items = []
-        current = booking_queue.front
-        while current:
-            items.append(current.data)
-            current = current.next
+        # Read from booking_queue without dequeuing (use __iter__)
+        items = list(booking_queue)
         
         # Return most recent first (last N items reversed)
         recent = list(reversed(items[-15:]))
@@ -6293,6 +6288,733 @@ def api_dashboard_stats():
         
     except Exception as e:
         logger.error(f"Dashboard stats error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ============================================================================
+# CARBON FOOTPRINT / ECO IMPACT API
+# ============================================================================
+
+@app.route('/api/user/carbon-footprint', methods=['GET'])
+@require_login
+def api_carbon_footprint():
+    """Calculate user's carbon footprint savings based on trip history"""
+    try:
+        user = get_current_user()
+        conn = db.get_db_connection()
+        cursor = conn.cursor(dictionary=True, buffered=True)
+        
+        # Total trips and distance
+        cursor.execute("""
+            SELECT COUNT(*) as total_trips, 
+                   COALESCE(SUM(distance), 0) as total_distance,
+                   COALESCE(SUM(fare), 0) as total_fare
+            FROM tickets 
+            WHERE username = %s AND cancelled = 0
+        """, (user['username'],))
+        stats = cursor.fetchone()
+        
+        total_trips = stats['total_trips'] or 0
+        total_distance = float(stats['total_distance'] or 0)
+        
+        # CO2 saved: avg car emits 120g/km, metro emits ~30g/km => save 90g/km
+        co2_saved_kg = round(total_distance * 0.09, 1)  # 90g per km saved
+        
+        # Equivalent trees: 1 tree absorbs ~22kg CO2 per year
+        trees_equivalent = round(co2_saved_kg / 22, 1)
+        
+        # Fuel saved: avg car uses 8L per 100km
+        fuel_saved = round(total_distance * 0.08, 1)
+        
+        # Green streak: consecutive days with metro trips
+        cursor.execute("""
+            SELECT DISTINCT DATE(travelDate) as trip_day
+            FROM tickets 
+            WHERE username = %s AND cancelled = 0
+            ORDER BY trip_day DESC
+            LIMIT 30
+        """, (user['username'],))
+        trip_days = [row['trip_day'] for row in cursor.fetchall()]
+        
+        streak = 0
+        if trip_days:
+            today = date.today()
+            current = today
+            for d in trip_days:
+                if d == current or d == current - timedelta(days=1):
+                    streak += 1
+                    current = d
+                else:
+                    break
+        
+        # Weekly activity (last 7 days)
+        weekly = []
+        for i in range(6, -1, -1):
+            d = date.today() - timedelta(days=i)
+            day_name = d.strftime('%a')
+            active = d in trip_days
+            weekly.append({'day': day_name, 'active': active})
+        
+        # Eco rank (community comparison) — simulated
+        eco_rank_pct = min(95, max(10, int(co2_saved_kg * 2 + total_trips * 5)))
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'co2_saved': co2_saved_kg,
+            'trees_equivalent': trees_equivalent,
+            'fuel_saved': fuel_saved,
+            'total_trips': total_trips,
+            'total_distance': total_distance,
+            'green_streak': streak,
+            'weekly_activity': weekly,
+            'eco_rank_pct': eco_rank_pct,
+            'monthly_co2': round(co2_saved_kg / max(1, total_trips) * min(total_trips, 30), 1)
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Carbon footprint error: {e}")
+        return jsonify({
+            'success': True,
+            'co2_saved': 0, 'trees_equivalent': 0, 'fuel_saved': 0,
+            'total_trips': 0, 'total_distance': 0, 'green_streak': 0,
+            'weekly_activity': [], 'eco_rank_pct': 0, 'monthly_co2': 0
+        }), 200
+
+
+# ============================================================================
+# FEATURE: LIVE TRAIN TRACKER (Simulated)
+# ============================================================================
+
+# Station sequences for each metro line
+BLUE_LINE_STATIONS = [
+    'thaltej_gam','thaltej','doordarshan_kendra','gurukul_road','gujarat_university',
+    'commerce_six_road','stadium','old_high_court','shahpur','gheekanta',
+    'kalupur_railway_station','kankaria_east','apparel_park','amraiwadi',
+    'rabari_colony','vastral','nirant_cross_road','vastral_gam'
+]
+RED_LINE_STATIONS = [
+    'apmc','jivraj','rajiv_nagar','shreyas','paldi','gandhigram','old_high_court',
+    'usmanpura','vijay_nagar','vadaj','ranip','sabarmati_railway_station','aec',
+    'sabarmati','motera_stadium'
+]
+
+@app.route('/api/live-trains', methods=['GET'])
+def api_live_trains():
+    """Simulated live train positions along Blue and Red lines."""
+    try:
+        import time as _t
+        now_sec = int(_t.time())
+        trains = []
+        # Generate trains for each line
+        for line_name, stations in [('Blue', BLUE_LINE_STATIONS), ('Red', RED_LINE_STATIONS)]:
+            n = len(stations)
+            # 3 trains per line going forward, 2 going back
+            for i in range(5):
+                direction = 'forward' if i < 3 else 'reverse'
+                speed_factor = 40 + (i * 7)  # Different speeds
+                pos = ((now_sec // speed_factor) + i * (n // 5)) % n
+                if direction == 'reverse':
+                    pos = n - 1 - pos
+                pos = max(0, min(pos, n - 1))
+                next_pos = min(pos + 1, n - 1) if direction == 'forward' else max(pos - 1, 0)
+                # Crowd based on time of day
+                hour = datetime.now().hour
+                if 8 <= hour < 11 or 17 <= hour < 19:
+                    crowd_choices = ['Moderate', 'High', 'High', 'Very High']
+                elif 11 <= hour < 17:
+                    crowd_choices = ['Low', 'Moderate', 'Moderate']
+                else:
+                    crowd_choices = ['Low', 'Low', 'Moderate']
+                trains.append({
+                    'trainId': f'{line_name[0]}T-{100 + i}',
+                    'line': line_name,
+                    'lineColor': '#4facfe' if line_name == 'Blue' else '#ef4444',
+                    'currentStation': stations[pos],
+                    'nextStation': stations[next_pos],
+                    'direction': direction,
+                    'stationIndex': pos,
+                    'totalStations': n,
+                    'occupancy': random.choice(crowd_choices),
+                    'eta': random.randint(1, 4),
+                    'speed': random.randint(28, 45)
+                })
+        return jsonify({'success': True, 'trains': trains, 'timestamp': datetime.now().strftime('%H:%M:%S')})
+    except Exception as e:
+        logger.error(f"Live trains error: {e}")
+        return jsonify({'success': True, 'trains': [], 'timestamp': ''}), 200
+
+
+# ============================================================================
+# FEATURE: JOURNEY PLANNER
+# ============================================================================
+
+@app.route('/api/journey/plan-route', methods=['POST'])
+def api_journey_plan_route():
+    """Plan a journey with interchange detection at Old High Court."""
+    try:
+        data = request.json
+        source = data.get('source', '').lower().strip()
+        destination = data.get('destination', '').lower().strip()
+        if not source or not destination:
+            return jsonify({'success': False, 'error': 'Source and destination required'}), 400
+        if source == destination:
+            return jsonify({'success': False, 'error': 'Source and destination must differ'}), 400
+
+        blue_set = set(BLUE_LINE_STATIONS)
+        red_set = set(RED_LINE_STATIONS)
+        src_blue = source in blue_set
+        src_red = source in red_set
+        dst_blue = destination in blue_set
+        dst_red = destination in red_set
+
+        if not (src_blue or src_red):
+            return jsonify({'success': False, 'error': f'Station "{source}" not found'}), 400
+        if not (dst_blue or dst_red):
+            return jsonify({'success': False, 'error': f'Station "{destination}" not found'}), 400
+
+        segments = []
+        interchange = False
+
+        def station_count(line, s, d):
+            idx_s = line.index(s)
+            idx_d = line.index(d)
+            return abs(idx_d - idx_s)
+
+        # Same line - direct journey
+        if (src_blue and dst_blue):
+            cnt = station_count(BLUE_LINE_STATIONS, source, destination)
+            segments.append({'line': 'Blue', 'lineColor': '#4facfe', 'from': source, 'to': destination,
+                             'stations': cnt, 'time': cnt * 3 + 2})
+        elif (src_red and dst_red):
+            cnt = station_count(RED_LINE_STATIONS, source, destination)
+            segments.append({'line': 'Red', 'lineColor': '#ef4444', 'from': source, 'to': destination,
+                             'stations': cnt, 'time': cnt * 3 + 2})
+        else:
+            # Cross-line: need interchange at old_high_court
+            interchange = True
+            ic = 'old_high_court'
+            if src_blue:
+                cnt1 = station_count(BLUE_LINE_STATIONS, source, ic)
+                cnt2 = station_count(RED_LINE_STATIONS, ic, destination)
+                segments.append({'line': 'Blue', 'lineColor': '#4facfe', 'from': source, 'to': ic,
+                                 'stations': cnt1, 'time': cnt1 * 3 + 2})
+                segments.append({'line': 'Interchange', 'lineColor': '#f59e0b', 'from': ic, 'to': ic,
+                                 'stations': 0, 'time': 5})
+                segments.append({'line': 'Red', 'lineColor': '#ef4444', 'from': ic, 'to': destination,
+                                 'stations': cnt2, 'time': cnt2 * 3 + 2})
+            else:
+                cnt1 = station_count(RED_LINE_STATIONS, source, ic)
+                cnt2 = station_count(BLUE_LINE_STATIONS, ic, destination)
+                segments.append({'line': 'Red', 'lineColor': '#ef4444', 'from': source, 'to': ic,
+                                 'stations': cnt1, 'time': cnt1 * 3 + 2})
+                segments.append({'line': 'Interchange', 'lineColor': '#f59e0b', 'from': ic, 'to': ic,
+                                 'stations': 0, 'time': 5})
+                segments.append({'line': 'Blue', 'lineColor': '#4facfe', 'from': ic, 'to': destination,
+                                 'stations': cnt2, 'time': cnt2 * 3 + 2})
+
+        total_time = sum(s['time'] for s in segments)
+        total_stations = sum(s['stations'] for s in segments)
+        fare, distance, _, is_peak = calculate_dynamic_fare(source, destination, 1)
+
+        return jsonify({
+            'success': True,
+            'journey': {
+                'source': source, 'destination': destination,
+                'segments': segments, 'interchange': interchange,
+                'totalTime': total_time, 'totalStations': total_stations,
+                'fare': fare, 'distance': distance, 'isPeak': is_peak
+            }
+        })
+    except Exception as e:
+        logger.error(f"Journey plan error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ============================================================================
+# FEATURE: ACHIEVEMENTS & GAMIFICATION
+# ============================================================================
+
+@app.route('/api/achievements', methods=['GET'])
+@require_login
+def api_achievements():
+    """Calculate user achievements from real trip data."""
+    try:
+        user = get_current_user()
+        username = user['username']
+        conn = db.get_db_connection()
+        cursor = conn.cursor(dictionary=True, buffered=True)
+
+        # Gather stats
+        cursor.execute("SELECT COUNT(*) as cnt FROM tickets WHERE username=%s AND cancelled=FALSE", (username,))
+        total_trips = cursor.fetchone()['cnt']
+
+        cursor.execute("SELECT COUNT(DISTINCT source) + COUNT(DISTINCT destination) as cnt FROM tickets WHERE username=%s AND cancelled=FALSE", (username,))
+        unique_stations = cursor.fetchone()['cnt']
+
+        cursor.execute("SELECT COUNT(*) as cnt FROM tickets WHERE username=%s AND cancelled=FALSE AND travelTime NOT IN ('08:00','09:00','10:00','17:00','18:00')", (username,))
+        offpeak_trips = cursor.fetchone()['cnt']
+
+        cursor.execute("SELECT COALESCE(SUM(tripsUsed),0) as cnt FROM monthly_passes WHERE username=%s", (username,))
+        pass_trips = cursor.fetchone()['cnt']
+
+        cursor.execute("SELECT COUNT(*) as cnt FROM wallet_history WHERE username=%s AND type='CREDIT'", (username,))
+        recharges = cursor.fetchone()['cnt']
+
+        cursor.execute("SELECT COALESCE(SUM(distance),0) as d FROM tickets WHERE username=%s AND cancelled=FALSE", (username,))
+        total_km = float(cursor.fetchone()['d'])
+
+        cursor.close()
+        conn.close()
+
+        achievements = [
+            {'id': 'first_ride', 'name': 'First Ride', 'icon': '🎫', 'desc': 'Book your first ticket',
+             'target': 1, 'current': min(total_trips, 1), 'earned': total_trips >= 1},
+            {'id': 'weekly_warrior', 'name': 'Weekly Warrior', 'icon': '🔥', 'desc': '5+ trips in total',
+             'target': 5, 'current': min(total_trips, 5), 'earned': total_trips >= 5},
+            {'id': 'explorer', 'name': 'Explorer', 'icon': '🌍', 'desc': 'Visit 10+ different stations',
+             'target': 10, 'current': min(unique_stations, 10), 'earned': unique_stations >= 10},
+            {'id': 'saver', 'name': 'Smart Saver', 'icon': '💰', 'desc': 'Use monthly pass for 10+ trips',
+             'target': 10, 'current': min(pass_trips, 10), 'earned': pass_trips >= 10},
+            {'id': 'eco_champion', 'name': 'Eco Champion', 'icon': '🌿', 'desc': '50+ total trips',
+             'target': 50, 'current': min(total_trips, 50), 'earned': total_trips >= 50},
+            {'id': 'peak_dodger', 'name': 'Peak Dodger', 'icon': '⚡', 'desc': '5+ off-peak bookings',
+             'target': 5, 'current': min(offpeak_trips, 5), 'earned': offpeak_trips >= 5},
+            {'id': 'loyal_commuter', 'name': 'Loyal Commuter', 'icon': '🎯', 'desc': '100+ total trips',
+             'target': 100, 'current': min(total_trips, 100), 'earned': total_trips >= 100},
+            {'id': 'card_pro', 'name': 'Metro Card Pro', 'icon': '💳', 'desc': 'Recharge 5+ times',
+             'target': 5, 'current': min(recharges, 5), 'earned': recharges >= 5},
+            {'id': 'marathon', 'name': 'Marathon Runner', 'icon': '🏃', 'desc': 'Travel 100+ km total',
+             'target': 100, 'current': min(round(total_km, 1), 100), 'earned': total_km >= 100},
+        ]
+        earned_count = sum(1 for a in achievements if a['earned'])
+        return jsonify({'success': True, 'achievements': achievements, 'earned': earned_count, 'total': len(achievements)})
+    except Exception as e:
+        logger.error(f"Achievements error: {e}")
+        return jsonify({'success': True, 'achievements': [], 'earned': 0, 'total': 0}), 200
+
+
+# ============================================================================
+# FEATURE: COMMUTE INSIGHTS
+# ============================================================================
+
+@app.route('/api/user/commute-insights', methods=['GET'])
+@require_login
+def api_commute_insights():
+    """Personalized weekly/monthly commute report."""
+    try:
+        user = get_current_user()
+        username = user['username']
+        conn = db.get_db_connection()
+        cursor = conn.cursor(dictionary=True, buffered=True)
+
+        # Trips this week vs last week
+        cursor.execute("SELECT COUNT(*) as c FROM tickets WHERE username=%s AND cancelled=FALSE AND bookingDate >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)", (username,))
+        this_week = cursor.fetchone()['c']
+        cursor.execute("SELECT COUNT(*) as c FROM tickets WHERE username=%s AND cancelled=FALSE AND bookingDate >= DATE_SUB(CURDATE(), INTERVAL 14 DAY) AND bookingDate < DATE_SUB(CURDATE(), INTERVAL 7 DAY)", (username,))
+        last_week = cursor.fetchone()['c']
+        week_change = round(((this_week - last_week) / max(last_week, 1)) * 100)
+
+        # Peak vs off-peak
+        cursor.execute("SELECT COUNT(*) as c FROM tickets WHERE username=%s AND cancelled=FALSE AND travelTime IN ('08:00','09:00','10:00','17:00','18:00')", (username,))
+        peak_trips = cursor.fetchone()['c']
+        cursor.execute("SELECT COUNT(*) as c FROM tickets WHERE username=%s AND cancelled=FALSE", (username,))
+        total_trips = cursor.fetchone()['c']
+        offpeak_trips = total_trips - peak_trips
+
+        # CO2 saved (0.14 kg per km vs car)
+        cursor.execute("SELECT COALESCE(SUM(distance),0) as d FROM tickets WHERE username=%s AND cancelled=FALSE", (username,))
+        total_km = float(cursor.fetchone()['d'])
+        co2_saved = round(total_km * 0.14, 1)
+
+        # Monthly pass savings
+        cursor.execute("SELECT COALESCE(SUM(price),0) as p FROM monthly_passes WHERE username=%s", (username,))
+        pass_cost = float(cursor.fetchone()['p'])
+        cursor.execute("SELECT COALESCE(SUM(fare),0) as f FROM tickets t INNER JOIN monthly_passes mp ON t.username=mp.username WHERE t.username=%s AND t.cancelled=FALSE AND t.bookingDate BETWEEN mp.purchaseDate AND mp.expiryDate", (username,))
+        would_have_cost = float(cursor.fetchone()['f'])
+        money_saved = max(0, round(would_have_cost - pass_cost))
+
+        # Busiest day of week
+        cursor.execute("SELECT DAYNAME(bookingDate) as d, COUNT(*) as c FROM tickets WHERE username=%s AND cancelled=FALSE GROUP BY DAYNAME(bookingDate) ORDER BY c DESC LIMIT 1", (username,))
+        busiest_row = cursor.fetchone()
+        busiest_day = busiest_row['d'] if busiest_row else 'N/A'
+
+        # Favorite travel hour
+        cursor.execute("SELECT HOUR(bookingDate) as h, COUNT(*) as c FROM tickets WHERE username=%s AND cancelled=FALSE GROUP BY HOUR(bookingDate) ORDER BY c DESC LIMIT 1", (username,))
+        fav_hour_row = cursor.fetchone()
+        fav_hour = f"{fav_hour_row['h']}:00" if fav_hour_row else 'N/A'
+
+        # Day-of-week distribution
+        cursor.execute("SELECT DAYOFWEEK(bookingDate) as dow, COUNT(*) as c FROM tickets WHERE username=%s AND cancelled=FALSE GROUP BY DAYOFWEEK(bookingDate)", (username,))
+        dow_rows = cursor.fetchall()
+        day_names = ['', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+        day_dist = {day_names[r['dow']]: r['c'] for r in dow_rows}
+
+        cursor.close()
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'insights': {
+                'weeklyTrips': this_week, 'lastWeekTrips': last_week, 'weekChange': week_change,
+                'peakTrips': peak_trips, 'offpeakTrips': offpeak_trips, 'totalTrips': total_trips,
+                'co2Saved': co2_saved, 'totalKm': round(total_km, 1),
+                'moneySaved': money_saved, 'busiestDay': busiest_day,
+                'favoriteTime': fav_hour, 'dayDistribution': day_dist
+            }
+        })
+    except Exception as e:
+        logger.error(f"Commute insights error: {e}")
+        return jsonify({'success': True, 'insights': {}}), 200
+
+
+# ============================================================================
+# FEATURE: STATION INFO PANEL
+# ============================================================================
+
+@app.route('/api/station/info/<string:station_name>', methods=['GET'])
+def api_station_info(station_name):
+    """Get comprehensive station information."""
+    try:
+        station = station_name.lower().strip()
+        # Determine line
+        in_blue = station in BLUE_LINE_STATIONS
+        in_red = station in RED_LINE_STATIONS
+        if not in_blue and not in_red:
+            return jsonify({'success': False, 'error': 'Station not found'}), 404
+
+        line = 'Both' if (in_blue and in_red) else ('Blue' if in_blue else 'Red')
+
+        # Crowd level based on time of day
+        hour = datetime.now().hour
+        if 8 <= hour < 11 or 17 <= hour < 19:
+            crowd = random.choice(['High', 'Very High'])
+            crowd_pct = random.randint(70, 95)
+        elif 11 <= hour < 17:
+            crowd = random.choice(['Moderate', 'Moderate', 'High'])
+            crowd_pct = random.randint(40, 70)
+        else:
+            crowd = random.choice(['Low', 'Low', 'Moderate'])
+            crowd_pct = random.randint(10, 40)
+
+        # Next train ETAs
+        next_trains = []
+        if in_blue:
+            idx = BLUE_LINE_STATIONS.index(station)
+            if idx < len(BLUE_LINE_STATIONS) - 1:
+                next_trains.append({'direction': f'→ {BLUE_LINE_STATIONS[-1].replace("_"," ").title()}',
+                                    'line': 'Blue', 'eta': random.randint(2, 8)})
+            if idx > 0:
+                next_trains.append({'direction': f'→ {BLUE_LINE_STATIONS[0].replace("_"," ").title()}',
+                                    'line': 'Blue', 'eta': random.randint(2, 8)})
+        if in_red:
+            idx = RED_LINE_STATIONS.index(station)
+            if idx < len(RED_LINE_STATIONS) - 1:
+                next_trains.append({'direction': f'→ {RED_LINE_STATIONS[-1].replace("_"," ").title()}',
+                                    'line': 'Red', 'eta': random.randint(2, 8)})
+            if idx > 0:
+                next_trains.append({'direction': f'→ {RED_LINE_STATIONS[0].replace("_"," ").title()}',
+                                    'line': 'Red', 'eta': random.randint(2, 8)})
+
+        # Amenities (simulated but realistic)
+        amenities = ['Wheelchair Access', 'Restrooms']
+        if station in ['old_high_court', 'kalupur_railway_station', 'shahpur', 'motera_stadium', 'gandhigram']:
+            amenities.extend(['Parking', 'Food Court', 'ATM'])
+        elif random.random() > 0.5:
+            amenities.append('Parking')
+
+        # Popular destinations from this station (real DB)
+        popular = []
+        try:
+            conn = db.get_db_connection()
+            cursor = conn.cursor(dictionary=True, buffered=True)
+            cursor.execute("""
+                SELECT destination, COUNT(*) as trips FROM tickets
+                WHERE source=%s AND cancelled=FALSE GROUP BY destination ORDER BY trips DESC LIMIT 4
+            """, (station,))
+            popular = [{'station': r['destination'], 'trips': r['trips']} for r in cursor.fetchall()]
+            cursor.close()
+            conn.close()
+        except Exception:
+            pass
+
+        return jsonify({
+            'success': True,
+            'station': {
+                'name': station, 'displayName': station.replace('_', ' ').title(),
+                'line': line, 'crowd': crowd, 'crowdPct': crowd_pct,
+                'nextTrains': next_trains, 'amenities': amenities,
+                'popularDestinations': popular,
+                'isInterchange': station == 'old_high_court'
+            }
+        })
+    except Exception as e:
+        logger.error(f"Station info error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ============================================================================
+# FEATURE: FARE COMPARISON (Metro vs Cab vs Auto)
+# ============================================================================
+
+@app.route('/api/fare/compare-all', methods=['POST'])
+def api_fare_compare_all():
+    """Compare metro fare against cab, auto, and bus for same route."""
+    try:
+        data = request.json
+        source = data.get('source', '').lower().strip()
+        destination = data.get('destination', '').lower().strip()
+        if not source or not destination or source == destination:
+            return jsonify({'success': False, 'error': 'Valid source and destination required'}), 400
+
+        metro_fare, distance, _, is_peak = calculate_dynamic_fare(source, destination, 1)
+
+        # Realistic fare estimates for Indian cities
+        auto_fare = round(25 + distance * 15 + (random.uniform(-3, 5)), 0)      # ₹25 base + ₹15/km
+        cab_economy = round(50 + distance * 12 + (random.uniform(0, 20)), 0)     # Ola Mini
+        cab_premium = round(80 + distance * 18 + (random.uniform(5, 30)), 0)     # Uber Premier
+        bus_fare = round(max(10, distance * 3), 0)                                # AMTS bus
+        bike_taxi = round(20 + distance * 7, 0)                                   # Rapido
+
+        # Time estimates
+        metro_time = round(distance * 3 + 5)        # 3 min/km + 5 min wait
+        auto_time = round(distance * 4.5 + 3)       # traffic
+        cab_time = round(distance * 4 + 2)
+        bus_time = round(distance * 6 + 10)          # slow + stops
+        bike_time = round(distance * 3.5 + 2)
+
+        # CO2 emissions (grams per km)
+        co2 = {
+            'metro': round(distance * 14, 1),     # 14g/km (electric)
+            'auto': round(distance * 85, 1),      # 85g/km
+            'cab': round(distance * 120, 1),      # 120g/km
+            'bus': round(distance * 40, 1),        # 40g/km
+            'bike': round(distance * 30, 1)
+        }
+
+        modes = [
+            {'mode': 'Metro', 'icon': 'fa-subway', 'color': '#667eea', 'fare': metro_fare,
+             'time': metro_time, 'co2': co2['metro'], 'tag': 'Best Value', 'recommended': True},
+            {'mode': 'Auto', 'icon': 'fa-taxi', 'color': '#f59e0b', 'fare': auto_fare,
+             'time': auto_time, 'co2': co2['auto'], 'tag': '', 'recommended': False},
+            {'mode': 'Cab Economy', 'icon': 'fa-car', 'color': '#3b82f6', 'fare': cab_economy,
+             'time': cab_time, 'co2': co2['cab'], 'tag': '', 'recommended': False},
+            {'mode': 'Cab Premium', 'icon': 'fa-car-side', 'color': '#8b5cf6', 'fare': cab_premium,
+             'time': cab_time, 'co2': co2['cab'], 'tag': 'Comfort', 'recommended': False},
+            {'mode': 'City Bus', 'icon': 'fa-bus', 'color': '#22c55e', 'fare': bus_fare,
+             'time': bus_time, 'co2': co2['bus'], 'tag': 'Cheapest', 'recommended': False},
+            {'mode': 'Bike Taxi', 'icon': 'fa-motorcycle', 'color': '#ef4444', 'fare': bike_taxi,
+             'time': bike_time, 'co2': co2['bike'], 'tag': 'Fastest', 'recommended': False}
+        ]
+
+        savings = round(cab_economy - metro_fare)
+        return jsonify({
+            'success': True,
+            'comparison': modes,
+            'distance': distance,
+            'metroSavings': savings,
+            'isPeak': is_peak
+        })
+    except Exception as e:
+        logger.error(f"Fare compare error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ============================================================================
+# FEATURE: TRIP CALENDAR HEATMAP
+# ============================================================================
+
+@app.route('/api/user/trip-calendar', methods=['GET'])
+@require_login
+def api_trip_calendar():
+    """GitHub-style contribution heatmap of trips over last 6 months."""
+    try:
+        user = get_current_user()
+        conn = db.get_db_connection()
+        cursor = conn.cursor(dictionary=True, buffered=True)
+
+        cursor.execute("""
+            SELECT DATE(bookingDate) as trip_date, COUNT(*) as trips,
+                   SUM(fare) as total_fare, SUM(distance) as total_km
+            FROM tickets WHERE username=%s AND cancelled=FALSE
+            AND bookingDate >= DATE_SUB(CURDATE(), INTERVAL 180 DAY)
+            GROUP BY DATE(bookingDate) ORDER BY trip_date
+        """, (user['username'],))
+        rows = cursor.fetchall()
+
+        # Build daily data
+        trip_map = {}
+        for r in rows:
+            d = r['trip_date'].strftime('%Y-%m-%d')
+            trip_map[d] = {'trips': r['trips'], 'fare': float(r['total_fare']), 'km': float(r['total_km'])}
+
+        # Generate calendar grid (last 180 days)
+        calendar = []
+        for i in range(179, -1, -1):
+            d = (date.today() - timedelta(days=i)).strftime('%Y-%m-%d')
+            info = trip_map.get(d, {'trips': 0, 'fare': 0, 'km': 0})
+            calendar.append({'date': d, **info})
+
+        # Stats
+        total_days = len([c for c in calendar if c['trips'] > 0])
+        max_trips = max((c['trips'] for c in calendar), default=0)
+
+        # Streaks
+        current_streak = 0
+        for c in reversed(calendar):
+            if c['trips'] > 0:
+                current_streak += 1
+            else:
+                break
+
+        cursor.close()
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'calendar': calendar,
+            'stats': {
+                'activeDays': total_days,
+                'maxTripsInDay': max_trips,
+                'currentStreak': current_streak,
+                'totalDays': 180
+            }
+        })
+    except Exception as e:
+        logger.error(f"Trip calendar error: {e}")
+        return jsonify({'success': True, 'calendar': [], 'stats': {}}), 200
+
+
+# ============================================================================
+# FEATURE: NEARBY PLACES AT STATIONS
+# ============================================================================
+
+STATION_NEARBY = {
+    'old_high_court': [
+        {'name': 'High Court of Gujarat', 'type': 'Landmark', 'icon': 'fa-landmark', 'dist': '200m'},
+        {'name': 'Law Garden Food Stalls', 'type': 'Food', 'icon': 'fa-utensils', 'dist': '500m'},
+        {'name': 'Parimal Garden', 'type': 'Park', 'icon': 'fa-tree', 'dist': '400m'},
+        {'name': 'CG Road Shopping', 'type': 'Shopping', 'icon': 'fa-shopping-bag', 'dist': '300m'}
+    ],
+    'kalupur_railway_station': [
+        {'name': 'Ahmedabad Railway Station', 'type': 'Transit', 'icon': 'fa-train', 'dist': '50m'},
+        {'name': 'Sidi Saiyyed Mosque', 'type': 'Heritage', 'icon': 'fa-mosque', 'dist': '800m'},
+        {'name': 'Bhadra Fort', 'type': 'Landmark', 'icon': 'fa-fort-awesome', 'dist': '1km'},
+        {'name': 'Manek Chowk', 'type': 'Food', 'icon': 'fa-utensils', 'dist': '1.2km'}
+    ],
+    'motera_stadium': [
+        {'name': 'Narendra Modi Stadium', 'type': 'Sports', 'icon': 'fa-futbol', 'dist': '100m'},
+        {'name': 'Sabarmati Riverfront', 'type': 'Park', 'icon': 'fa-water', 'dist': '1.5km'},
+        {'name': 'PDPU University', 'type': 'Education', 'icon': 'fa-university', 'dist': '2km'}
+    ],
+    'gandhigram': [
+        {'name': 'IIM Ahmedabad', 'type': 'Education', 'icon': 'fa-university', 'dist': '1km'},
+        {'name': 'Gujarat Science City', 'type': 'Attraction', 'icon': 'fa-flask', 'dist': '3km'},
+        {'name': 'Vastrapur Lake', 'type': 'Park', 'icon': 'fa-water', 'dist': '1.5km'}
+    ],
+    'paldi': [
+        {'name': 'Sardar Patel Museum', 'type': 'Museum', 'icon': 'fa-museum', 'dist': '500m'},
+        {'name': 'Kankaria Lake', 'type': 'Recreation', 'icon': 'fa-water', 'dist': '2km'},
+        {'name': 'Paldi Market', 'type': 'Shopping', 'icon': 'fa-shopping-bag', 'dist': '200m'}
+    ],
+    'gurukul_road': [
+        {'name': 'Gujarat University', 'type': 'Education', 'icon': 'fa-university', 'dist': '800m'},
+        {'name': 'Drive-In Cinema Road', 'type': 'Entertainment', 'icon': 'fa-film', 'dist': '1km'},
+        {'name': 'Gurukul Shopping Complex', 'type': 'Shopping', 'icon': 'fa-shopping-bag', 'dist': '200m'}
+    ]
+}
+
+# Default nearby for stations without specific data
+DEFAULT_NEARBY = [
+    {'name': 'ATM & Banking', 'type': 'Services', 'icon': 'fa-money-bill-wave', 'dist': '100m'},
+    {'name': 'Tea & Snacks', 'type': 'Food', 'icon': 'fa-coffee', 'dist': '50m'},
+    {'name': 'Auto Stand', 'type': 'Transit', 'icon': 'fa-taxi', 'dist': '30m'}
+]
+
+@app.route('/api/station/nearby/<string:station_name>', methods=['GET'])
+def api_station_nearby(station_name):
+    """Get nearby places of interest for a station."""
+    try:
+        station = station_name.lower().strip()
+        places = STATION_NEARBY.get(station, DEFAULT_NEARBY)
+        display = station.replace('_', ' ').title()
+        return jsonify({'success': True, 'station': display, 'places': places})
+    except Exception as e:
+        logger.error(f"Nearby places error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ============================================================================
+# FEATURE: FAVORITE ROUTES
+# ============================================================================
+
+@app.route('/api/user/favorite-routes', methods=['GET'])
+@require_login
+def api_favorite_routes():
+    """Get user's most frequent routes as 'favorites'."""
+    try:
+        user = get_current_user()
+        conn = db.get_db_connection()
+        cursor = conn.cursor(dictionary=True, buffered=True)
+
+        cursor.execute("""
+            SELECT source, destination, COUNT(*) as trip_count,
+                   ROUND(AVG(fare),0) as avg_fare, ROUND(AVG(distance),1) as avg_km,
+                   MAX(bookingDate) as last_used
+            FROM tickets WHERE username=%s AND cancelled=FALSE
+            GROUP BY source, destination
+            ORDER BY trip_count DESC LIMIT 8
+        """, (user['username'],))
+        routes = cursor.fetchall()
+
+        fav_list = []
+        for r in routes:
+            fav_list.append({
+                'source': r['source'],
+                'destination': r['destination'],
+                'sourceDisplay': r['source'].replace('_', ' ').title(),
+                'destDisplay': r['destination'].replace('_', ' ').title(),
+                'tripCount': r['trip_count'],
+                'avgFare': float(r['avg_fare']),
+                'avgKm': float(r['avg_km']),
+                'lastUsed': r['last_used'].strftime('%d %b %Y') if r['last_used'] else 'N/A'
+            })
+
+        cursor.close()
+        conn.close()
+        return jsonify({'success': True, 'routes': fav_list})
+    except Exception as e:
+        logger.error(f"Favorite routes error: {e}")
+        return jsonify({'success': True, 'routes': []}), 200
+
+
+# ============================================================================
+# FEATURE: EMERGENCY SOS & SAFETY
+# ============================================================================
+
+@app.route('/api/emergency/info', methods=['GET'])
+def api_emergency_info():
+    """Get emergency contacts and safety info."""
+    try:
+        contacts = [
+            {'name': 'Metro Control Room', 'number': '1800-METRO', 'icon': 'fa-headset', 'color': '#667eea', 'available': '24/7'},
+            {'name': 'Police Emergency', 'number': '112', 'icon': 'fa-shield-alt', 'color': '#ef4444', 'available': '24/7'},
+            {'name': 'Women Helpline', 'number': '1091', 'icon': 'fa-female', 'color': '#ec4899', 'available': '24/7'},
+            {'name': 'Ambulance', 'number': '108', 'icon': 'fa-ambulance', 'color': '#22c55e', 'available': '24/7'},
+            {'name': 'Fire Brigade', 'number': '101', 'icon': 'fa-fire-extinguisher', 'color': '#f97316', 'available': '24/7'},
+            {'name': 'Railway Protection', 'number': '1512', 'icon': 'fa-user-shield', 'color': '#3b82f6', 'available': '6AM-11PM'}
+        ]
+        tips = [
+            {'title': 'Report Suspicious Activity', 'desc': 'Use the SOS button or contact metro staff immediately', 'icon': 'fa-exclamation-triangle'},
+            {'title': 'Emergency Exit Locations', 'desc': 'Follow green signs on platforms for nearest exits', 'icon': 'fa-sign-out-alt'},
+            {'title': 'First Aid Kits', 'desc': 'Available at every station ticket counter', 'icon': 'fa-first-aid'},
+            {'title': 'CCTV Coverage', 'desc': 'All stations and coaches are monitored 24/7', 'icon': 'fa-video'},
+            {'title': 'Fire Safety', 'desc': 'Fire extinguishers in every coach. Pull chain for emergency stop', 'icon': 'fa-fire'}
+        ]
+        return jsonify({'success': True, 'contacts': contacts, 'tips': tips})
+    except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
 

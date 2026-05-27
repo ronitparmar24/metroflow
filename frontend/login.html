@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
+    <link rel="stylesheet" href="css/enhancements.css">
 
     <style>
         * {
@@ -575,6 +576,22 @@
                     <div id="btnSpinner" class="spinner-border spinner-border-sm text-white d-none"></div>
                 </button>
 
+                <!-- Login Progress Steps -->
+                <div class="login-progress-steps" id="loginProgressSteps">
+                    <div class="login-step" id="loginStep1"><span class="step-dot"></span>Verifying</div>
+                    <div class="step-connector" id="loginConn1"></div>
+                    <div class="login-step" id="loginStep2"><span class="step-dot"></span>Securing</div>
+                    <div class="step-connector" id="loginConn2"></div>
+                    <div class="login-step" id="loginStep3"><span class="step-dot"></span>Redirecting</div>
+                </div>
+
+                <!-- Keyboard shortcut hint -->
+                <div style="text-align:center;margin-top:8px;font-size:11px;color:rgba(0,0,0,0.3);">
+                    <kbd style="background:rgba(0,0,0,0.06);border:1px solid rgba(0,0,0,0.08);border-radius:4px;padding:1px 6px;font-size:10px;">Enter ↵</kbd>
+                    to login
+                </div>
+
+
                 <div class="text-center mb-4">
                     <p class="text-muted small mb-0">
                         Don't have an account? <a href="register.html"
@@ -769,10 +786,29 @@
                 const result = await response.json();
 
                 if (result.success) {
+                    // Show login progress steps animation
+                    const steps = document.getElementById('loginProgressSteps');
+                    if (steps) {
+                        steps.classList.add('visible');
+                        // Step 1: Verifying
+                        document.getElementById('loginStep1').classList.add('active');
+                        setTimeout(() => {
+                            document.getElementById('loginConn1').classList.add('active');
+                            document.getElementById('loginStep2').classList.add('active');
+                        }, 400);
+                        setTimeout(() => {
+                            document.getElementById('loginConn2').classList.add('active');
+                            document.getElementById('loginStep3').classList.add('active');
+                        }, 800);
+                    }
+
                     // Show success overlay animation
                     const overlay = document.getElementById('successOverlay');
                     document.getElementById('successTitle').textContent = `Welcome back, ${result.user.username}!`;
-                    overlay.classList.add('show');
+                    setTimeout(() => overlay.classList.add('show'), 1000);
+
+                    // Save username for returning user greeting
+                    localStorage.setItem('mf_last_user', result.user.username);
 
                     // Show last login toast if available
                     if (result.previous_login) {
@@ -792,14 +828,14 @@
 
                         document.getElementById('lastLoginTime').textContent = timeAgo;
                         const toast = document.getElementById('lastLoginToast');
-                        setTimeout(() => toast.classList.add('show'), 600);
+                        setTimeout(() => toast.classList.add('show'), 1200);
                     }
 
                     // Redirect after animation
                     setTimeout(() => {
                         if (result.user.role === 'ADMIN') window.location.href = 'admin.html';
                         else window.location.href = 'dashboard.html';
-                    }, 2200);
+                    }, 2500);
                 } else {
                     throw new Error(result.error || 'Invalid credentials');
                 }

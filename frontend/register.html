@@ -724,7 +724,7 @@
                     <div class="validation-feedback" id="emailFeedback"></div>
 
                     <!-- Feature Q: Phone number field -->
-                    <div class="form-floating mt-2 position-relative">
+                    <div class="mt-2">
                         <div style="display:flex;gap:8px;align-items:stretch;">
                             <div style="background:#f8fafc;border:2px solid #e2e8f0;border-radius:10px;
                                 padding:0 12px;display:flex;align-items:center;gap:4px;
@@ -733,8 +733,12 @@
                             </div>
                             <input type="tel" class="form-control" id="phoneNumber" placeholder="Phone (optional)"
                                 autocomplete="tel" maxlength="10"
-                                style="border:2px solid #e2e8f0;border-radius:10px;height:52px;padding-left:14px;"
-                                oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                                style="border:2px solid #e2e8f0;border-radius:10px;height:52px;padding-left:14px;transition:border-color 0.25s;"
+                                oninput="validatePhone()">
+                        </div>
+                        <div class="d-flex justify-content-between mt-1">
+                            <div class="validation-feedback" id="phoneFeedback"></div>
+                            <div class="char-counter" id="phoneCounter" style="font-size:0.72rem;color:#a0aec0;">0 / 10</div>
                         </div>
                     </div>
 
@@ -1476,6 +1480,43 @@
         }
 
         // ===========================
+        // PHONE VALIDATION
+        // ===========================
+        function validatePhone() {
+            const input = document.getElementById('phoneNumber');
+            const feedback = document.getElementById('phoneFeedback');
+            const counter = document.getElementById('phoneCounter');
+
+            // Strip non-digits in real time
+            input.value = input.value.replace(/[^0-9]/g, '');
+
+            const len = input.value.length;
+            counter.textContent = len + ' / 10';
+
+            if (len === 0) {
+                // Empty — optional field, reset
+                input.style.borderColor = '#e2e8f0';
+                counter.style.color = '#a0aec0';
+                feedback.innerHTML = '';
+                feedback.className = 'validation-feedback';
+                return;
+            }
+
+            if (len < 10) {
+                input.style.borderColor = '#f59e0b';
+                counter.style.color = '#f59e0b';
+                feedback.innerHTML = '<i class="fas fa-exclamation-circle"></i> Need ' + (10 - len) + ' more digit' + (10 - len > 1 ? 's' : '');
+                feedback.className = 'validation-feedback invalid';
+            } else {
+                // Exactly 10
+                input.style.borderColor = '#10b981';
+                counter.style.color = '#10b981';
+                feedback.innerHTML = '<i class="fas fa-check-circle"></i> Valid phone number';
+                feedback.className = 'validation-feedback valid';
+            }
+        }
+
+        // ===========================
         // PASSWORD REQUIREMENTS CHECKER
         // ===========================
         function checkPasswordStrength() {
@@ -1563,6 +1604,13 @@
                 if (email && !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
                     showAlert('Please enter a valid email address or leave it blank', 'danger');
                     document.getElementById('email').focus();
+                    return;
+                }
+                // Validate phone if provided — must be exactly 10 digits
+                const phone = document.getElementById('phoneNumber').value.trim();
+                if (phone.length > 0 && phone.length !== 10) {
+                    showAlert('Phone number must be exactly 10 digits', 'danger');
+                    document.getElementById('phoneNumber').focus();
                     return;
                 }
             }

@@ -929,35 +929,52 @@
     // ═══════════════════════════════════════════════════════════════
     async function loadEcoTracker() {
         try {
-            const res = await fetch('/api/eco/footprint', { credentials: 'include' });
+            const res = await fetch('/api/user/carbon-footprint', { credentials: 'include' });
             const data = await res.json();
             if (!data.success) return;
-            const eco = data.eco;
 
             const container = document.getElementById('ecoContent');
-            const levelPct = (eco.ecoLevel / 5) * 100;
+            if (!container) return;
+
+            const weekly = data.weekly_activity || [];
+            const rankPct = data.eco_rank_pct || 0;
 
             container.innerHTML = `
-                <div class="eco-hero-card">
-                    <div class="eco-rank-icon">${eco.ecoRank.split(' ')[0]}</div>
-                    <h3 class="eco-rank-title">${eco.ecoRank}</h3>
-                    <div class="eco-level-bar"><div class="eco-level-fill" style="width:${levelPct}%"></div></div>
-                    <div style="font-size:11px;opacity:0.8;margin-top:4px;">Level ${eco.ecoLevel}/5</div>
+                <div class="carbon-hero">
+                    <div style="position:relative;z-index:1;">
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div style="font-size:42px;">🌍</div>
+                            <div>
+                                <h3 class="fw-bold mb-0">Your Eco Impact</h3>
+                                <div style="opacity:0.8;font-size:13px;">${data.total_trips} metro trips • ${data.total_distance} km traveled</div>
+                            </div>
+                        </div>
+                        <div style="font-size:48px;font-weight:900;">${data.co2_saved} kg</div>
+                        <div style="font-size:14px;opacity:0.8;">CO₂ saved vs driving</div>
+                        <div style="margin-top:12px;background:rgba(255,255,255,0.2);border-radius:50px;padding:6px 16px;display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700;">
+                            <span>🏆</span> Top ${100 - rankPct}% of commuters
+                        </div>
+                    </div>
                 </div>
-                <div class="row g-3 mt-3">
-                    <div class="col-6 col-md-3"><div class="eco-stat-card"><div class="eco-stat-icon">🌿</div><div class="eco-stat-num">${eco.co2SavedKg} kg</div><div class="eco-stat-label">CO₂ Saved</div></div></div>
-                    <div class="col-6 col-md-3"><div class="eco-stat-card"><div class="eco-stat-icon">⛽</div><div class="eco-stat-num">${eco.fuelSavedLiters} L</div><div class="eco-stat-label">Fuel Saved</div></div></div>
-                    <div class="col-6 col-md-3"><div class="eco-stat-card"><div class="eco-stat-icon">🌳</div><div class="eco-stat-num">${eco.treesEquivalent}</div><div class="eco-stat-label">Trees Worth</div></div></div>
-                    <div class="col-6 col-md-3"><div class="eco-stat-card"><div class="eco-stat-icon">📱</div><div class="eco-stat-num">${eco.phoneCharges}</div><div class="eco-stat-label">Phone Charges</div></div></div>
+                <div class="carbon-stat-grid">
+                    <div class="carbon-stat-card"><div class="carbon-stat-icon">🌿</div><div class="carbon-stat-value">${data.co2_saved} kg</div><div class="carbon-stat-label">CO₂ Saved</div></div>
+                    <div class="carbon-stat-card"><div class="carbon-stat-icon">🌳</div><div class="carbon-stat-value">${data.trees_equivalent}</div><div class="carbon-stat-label">Trees Equivalent</div></div>
+                    <div class="carbon-stat-card"><div class="carbon-stat-icon">⛽</div><div class="carbon-stat-value">${data.fuel_saved} L</div><div class="carbon-stat-label">Fuel Saved</div></div>
+                    <div class="carbon-stat-card"><div class="carbon-stat-icon">🔥</div><div class="carbon-stat-value">${data.green_streak}</div><div class="carbon-stat-label">Day Streak</div></div>
                 </div>
+                ${weekly.length ? `
                 <div class="glass-card mt-4">
-                    <h6 class="fw-bold mb-3"><i class="fas fa-chart-line me-2" style="color:#22c55e;"></i>Monthly CO₂ Savings Trend</h6>
-                    <div class="eco-chart">
-                        ${eco.monthlyTrend.length ? eco.monthlyTrend.map(m => {
-                const maxCo2 = Math.max(...eco.monthlyTrend.map(x => x.co2Saved), 1);
-                const height = Math.max((m.co2Saved / maxCo2) * 120, 8);
-                return `<div class="eco-bar-wrap"><div class="eco-bar" style="height:${height}px"><span class="eco-bar-val">${m.co2Saved}kg</span></div><div class="eco-bar-label">${m.month.slice(5)}</div></div>`;
-            }).join('') : '<div style="color:#94a3b8;text-align:center;padding:30px;">Start traveling to see your impact!</div>'}
+                    <h6 class="fw-bold mb-3"><i class="fas fa-calendar-week me-2" style="color:#059669;"></i>Weekly Metro Activity</h6>
+                    <div class="green-streak-bar">${weekly.map(d => `<div class="streak-day ${d.active ? 'active' : 'inactive'}"><div>${d.day}</div>${d.active ? '<div>✓</div>' : ''}</div>`).join('')}</div>
+                    <div style="margin-top:12px;font-size:12px;color:#94a3b8;text-align:center;">${data.green_streak > 0 ? '🔥 ' + data.green_streak + '-day green streak! Keep going!' : 'Take the metro today to start a streak!'}</div>
+                </div>` : ''}
+                <div class="glass-card mt-4" style="background:linear-gradient(135deg,rgba(5,150,105,0.04),rgba(52,211,153,0.02));">
+                    <div class="d-flex align-items-center gap-3">
+                        <div style="font-size:36px;">💡</div>
+                        <div>
+                            <div style="font-weight:800;font-size:15px;color:#059669;">Did you know?</div>
+                            <div style="font-size:13px;color:#6b7280;">If every car commuter in Ahmedabad took metro once a week, we'd save <strong>2,400 tonnes</strong> of CO₂ annually.</div>
+                        </div>
                     </div>
                 </div>
             `;

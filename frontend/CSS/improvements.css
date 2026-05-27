@@ -1991,9 +1991,13 @@
 
 /* ── Section Title ────────────────────────────────────────────────────── */
 #my-tickets-section h2 {
-    color: #ffffff;
-    -webkit-text-fill-color: #ffffff;
-    text-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    background: linear-gradient(135deg, #fff 0%, #c4b5fd 40%, #a78bfa 60%, #fff 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: twGradientShift 6s ease infinite;
+    filter: drop-shadow(0 2px 8px rgba(167,139,250,0.3));
 }
 
 /* ── Stat Orbs — Circular with SVG Ring ──────────────────────────────── */
@@ -2025,9 +2029,14 @@
 .tw-stat-orb:nth-child(4) { animation-delay: 240ms; }
 
 .tw-stat-orb:hover {
-    transform: translateY(-8px) scale(1.05);
-    box-shadow: 0 16px 48px rgba(102,126,234,0.15);
+    transform: translateY(-10px) scale(1.08);
+    box-shadow: 0 16px 48px rgba(102,126,234,0.2), 0 0 20px var(--orb-glow, rgba(129,140,248,0.15));
 }
+
+.tw-stat-orb.orb-total    { --orb-glow: rgba(129,140,248,0.2); }
+.tw-stat-orb.orb-active   { --orb-glow: rgba(52,211,153,0.2); }
+.tw-stat-orb.orb-completed { --orb-glow: rgba(148,163,184,0.15); }
+.tw-stat-orb.orb-cancelled { --orb-glow: rgba(248,113,113,0.2); }
 
 .tw-stat-orb .tw-ring-wrap {
     width: 64px;
@@ -2261,8 +2270,8 @@
 }
 
 .tw-card:hover {
-    transform: translateY(-8px) scale(1.01) rotateX(1deg);
-    box-shadow: var(--tw-card-hover-shadow);
+    transform: translateY(-10px) scale(1.015) rotateX(1deg);
+    box-shadow: var(--tw-card-hover-shadow), 0 0 40px rgba(102,126,234,0.06);
 }
 
 /* Holographic stripe overlay */
@@ -2537,19 +2546,31 @@
 
 /* Start/end dots */
 .tw-dot-start {
-    width: 10px; height: 10px;
+    width: 12px; height: 12px;
     border-radius: 50%;
     background: #34d399;
-    box-shadow: 0 0 0 3px rgba(52,211,153,0.15), 0 0 8px rgba(52,211,153,0.25);
+    box-shadow: 0 0 0 4px rgba(52,211,153,0.15), 0 0 12px rgba(52,211,153,0.3);
     flex-shrink: 0;
+    transition: box-shadow 0.3s, transform 0.3s;
+}
+
+.tw-card:hover .tw-dot-start {
+    box-shadow: 0 0 0 5px rgba(52,211,153,0.2), 0 0 20px rgba(52,211,153,0.5);
+    transform: scale(1.2);
 }
 
 .tw-dot-end {
-    width: 10px; height: 10px;
+    width: 12px; height: 12px;
     border-radius: 50%;
     background: #f87171;
-    box-shadow: 0 0 0 3px rgba(248,113,113,0.15), 0 0 8px rgba(248,113,113,0.25);
+    box-shadow: 0 0 0 4px rgba(248,113,113,0.15), 0 0 12px rgba(248,113,113,0.3);
     flex-shrink: 0;
+    transition: box-shadow 0.3s, transform 0.3s;
+}
+
+.tw-card:hover .tw-dot-end {
+    box-shadow: 0 0 0 5px rgba(248,113,113,0.2), 0 0 20px rgba(248,113,113,0.5);
+    transform: scale(1.2);
 }
 
 /* — Tearline — */

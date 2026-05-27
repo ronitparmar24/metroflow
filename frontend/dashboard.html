@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/responsive.css">
     <link rel="stylesheet" href="css/improvements.css">
+    <link rel="stylesheet" href="css/enhancements.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
@@ -4512,6 +4513,13 @@
 
                 <div class="d-flex align-items-center gap-3">
 
+                    <!-- Live IST Clock -->
+                    <div class="dash-live-clock d-none d-lg-flex">
+                        <i class="fas fa-clock" style="font-size:11px;opacity:0.7;"></i>
+                        <span class="clock-time" id="dashClock">--:--:--</span>
+                        <span style="font-size:9px;opacity:0.5;">IST</span>
+                    </div>
+
                     <!-- Feature A: Global Smart Search -->
                     <button class="btn btn-link text-white" onclick="openGlobalSearch()" title="Search"
                         id="globalSearchBtn">
@@ -4947,6 +4955,226 @@
                 margin-top: 78px !important;
             }
         }
+
+        /* ═══════════════════════════════════════════
+           METRO STATUS STRIP (top of main content)
+           ═══════════════════════════════════════════ */
+        .dash-metro-strip {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 10px 18px;
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(12px);
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.12);
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .dash-metro-strip .status-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            animation: statusPulse 2s infinite;
+        }
+        @keyframes statusPulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 currentColor; }
+            50% { opacity: 0.7; box-shadow: 0 0 0 4px transparent; }
+        }
+        .dash-metro-strip .strip-item {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 12px; font-weight: 700; color: white;
+        }
+        .dash-metro-strip .strip-divider {
+            width: 1px; height: 20px;
+            background: rgba(255,255,255,0.15);
+        }
+
+        /* ═══════════════════════════════════════════
+           DAILY TIP / FUN FACT WIDGET
+           ═══════════════════════════════════════════ */
+        .daily-tip-card {
+            background: linear-gradient(135deg, rgba(34,197,94,0.08), rgba(16,185,129,0.04));
+            border: 1px solid rgba(34,197,94,0.12);
+            border-radius: 16px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+        .daily-tip-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(34,197,94,0.1);
+        }
+        .tip-icon {
+            width: 44px; height: 44px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            display: grid; place-items: center;
+            color: white; font-size: 18px; flex-shrink: 0;
+        }
+        .dark-mode .daily-tip-card {
+            background: linear-gradient(135deg, rgba(34,197,94,0.12), rgba(16,185,129,0.06));
+            border-color: rgba(34,197,94,0.15);
+        }
+
+        /* ═══════════════════════════════════════════
+           ACHIEVEMENT BADGES ROW
+           ═══════════════════════════════════════════ */
+        .dash-badges-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .dash-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 700;
+            border: 1px solid rgba(102,126,234,0.12);
+            background: rgba(255,255,255,0.9);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            transition: all 0.3s ease;
+        }
+        .dash-badge:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+        }
+        .dash-badge.earned {
+            border-color: rgba(34,197,94,0.2);
+            background: rgba(34,197,94,0.06);
+        }
+        .dash-badge.locked {
+            opacity: 0.5;
+            filter: grayscale(0.3);
+        }
+        .dark-mode .dash-badge {
+            background: rgba(255,255,255,0.06);
+            border-color: rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.9);
+        }
+        .dark-mode .dash-badge.earned {
+            background: rgba(34,197,94,0.1);
+            border-color: rgba(34,197,94,0.2);
+        }
+
+        /* ═══════════════════════════════════════════
+           EMERGENCY / HELP STRIP
+           ═══════════════════════════════════════════ */
+        .dash-emergency-strip {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 18px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, rgba(239,68,68,0.06), rgba(220,38,38,0.03));
+            border: 1px solid rgba(239,68,68,0.1);
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+        .dark-mode .dash-emergency-strip {
+            background: linear-gradient(135deg, rgba(239,68,68,0.1), rgba(220,38,38,0.05));
+            border-color: rgba(239,68,68,0.15);
+        }
+
+        /* ═══════════════════════════════════════════
+           LIVE CLOCK WIDGET (in navbar area)
+           ═══════════════════════════════════════════ */
+        .dash-live-clock {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border-radius: 50px;
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.15);
+            font-size: 12px;
+            font-weight: 700;
+            color: white;
+        }
+        .dash-live-clock .clock-time {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            font-weight: 900;
+            letter-spacing: 1px;
+        }
+
+        /* ═══════════════════════════════════════════
+           WEEKLY TRAVEL SUMMARY MINI CHART
+           ═══════════════════════════════════════════ */
+        .weekly-summary {
+            display: flex;
+            align-items: flex-end;
+            gap: 6px;
+            height: 60px;
+            padding: 0 4px;
+        }
+        .weekly-bar {
+            flex: 1;
+            min-width: 24px;
+            border-radius: 6px 6px 2px 2px;
+            transition: all 0.3s ease;
+            position: relative;
+            cursor: pointer;
+        }
+        .weekly-bar:hover {
+            opacity: 0.85;
+            transform: scaleY(1.05);
+            transform-origin: bottom;
+        }
+        .weekly-bar-label {
+            text-align: center;
+            font-size: 9px;
+            font-weight: 700;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+
+        /* ═══════════════════════════════════════════
+           TRAVEL SAVINGS CARD
+           ═══════════════════════════════════════════ */
+        .savings-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 18px;
+            padding: 20px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        .savings-card::before {
+            content: '';
+            position: absolute;
+            top: -50%; right: -50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 60%);
+        }
+
+        /* ═══════════════════════════════════════════
+           COMMUTER RANK CARD
+           ═══════════════════════════════════════════ */
+        .rank-card {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            border-radius: 18px;
+            padding: 20px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+        }
+        .rank-badge {
+            width: 60px; height: 60px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: grid; place-items: center;
+            font-size: 28px;
+            margin: 0 auto 10px;
+            border: 3px solid rgba(255,255,255,0.3);
+        }
     </style>
     <!-- Floating Sidebar -->
     <div class="sidebar" id="sidebar">
@@ -5024,6 +5252,38 @@
             <i class="fas fa-map-marked-alt"></i>
             <span>Metro Map</span>
         </a>
+        <a href="#" class="sidebar-link" onclick="showSection('live-trains')">
+            <i class="fas fa-satellite-dish"></i>
+            <span>Live Trains</span>
+        </a>
+        <a href="#" class="sidebar-link" onclick="showSection('journey-planner')">
+            <i class="fas fa-route"></i>
+            <span>Journey Planner</span>
+        </a>
+        <a href="#" class="sidebar-link" onclick="showSection('commute-insights')">
+            <i class="fas fa-chart-line"></i>
+            <span>Commute Insights</span>
+        </a>
+        <a href="#" class="sidebar-link" onclick="showSection('fare-compare')">
+            <i class="fas fa-balance-scale"></i>
+            <span>Fare Compare</span>
+        </a>
+        <a href="#" class="sidebar-link" onclick="showSection('trip-calendar')">
+            <i class="fas fa-calendar-alt"></i>
+            <span>Trip Calendar</span>
+        </a>
+        <a href="#" class="sidebar-link" onclick="showSection('nearby-places')">
+            <i class="fas fa-map-pin"></i>
+            <span>Nearby Places</span>
+        </a>
+        <a href="#" class="sidebar-link" onclick="showSection('favorite-routes')">
+            <i class="fas fa-heart"></i>
+            <span>Favorite Routes</span>
+        </a>
+        <a href="#" class="sidebar-link" onclick="showSection('emergency-sos')">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>Emergency SOS</span>
+        </a>
         <a href="#" class="sidebar-link" onclick="showSection('lost-found')">
             <i class="fas fa-search-location"></i>
             <span>Lost &amp; Found</span>
@@ -5033,6 +5293,17 @@
             <span>Settings</span>
         </a>
 
+
+        <!-- Sidebar Emergency Badge -->
+        <div style="margin:16px 15px 0;padding:12px;border-radius:12px;background:linear-gradient(135deg,rgba(239,68,68,0.06),rgba(220,38,38,0.03));border:1px solid rgba(239,68,68,0.1);text-align:center;">
+            <div style="font-size:10px;font-weight:800;color:#dc2626;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">
+                <i class="fas fa-phone-alt me-1"></i>Emergency
+            </div>
+            <div style="font-size:12px;font-weight:700;color:#64748b;">
+                <span style="color:#dc2626;">112</span> · 
+                <span style="color:#dc2626;">1800-METRO</span>
+            </div>
+        </div>
 
         <!-- Logout button for mobile -->
         <a href="#" class="sidebar-link text-danger" onclick="API.logout()"
@@ -5093,6 +5364,85 @@
                 </div>
                 <div id="greetingBadge" style="background:rgba(255,255,255,0.18);border-radius:50px;padding:4px 14px;
                     font-size:11px;font-weight:800;color:white;white-space:nowrap;">---</div>
+            </div>
+
+            <!-- ═══════ LIVE METRO STATUS STRIP ═══════ -->
+            <div class="dash-metro-strip" data-aos="fade-up">
+                <div class="strip-item">
+                    <div class="status-dot" style="background:#22c55e;color:rgba(34,197,94,0.4);"></div>
+                    <span>Blue Line</span>
+                    <span style="font-size:10px;opacity:0.6;">Normal</span>
+                </div>
+                <div class="strip-divider d-none d-sm-block"></div>
+                <div class="strip-item">
+                    <div class="status-dot" style="background:#22c55e;color:rgba(34,197,94,0.4);"></div>
+                    <span>Green Line</span>
+                    <span style="font-size:10px;opacity:0.6;">Normal</span>
+                </div>
+                <div class="strip-divider d-none d-sm-block"></div>
+                <div class="strip-item">
+                    <i class="fas fa-train" style="font-size:11px;opacity:0.5;"></i>
+                    <span id="dashLiveTrains">32</span>
+                    <span style="font-size:10px;opacity:0.6;">trains running</span>
+                </div>
+                <div class="strip-divider d-none d-md-block"></div>
+                <div class="strip-item">
+                    <i class="fas fa-users" style="font-size:11px;opacity:0.5;"></i>
+                    <span id="dashLivePassengers">2,341</span>
+                    <span style="font-size:10px;opacity:0.6;">passengers now</span>
+                </div>
+                <div class="strip-divider d-none d-md-block"></div>
+                <div class="strip-item ms-auto">
+                    <i class="fas fa-clock" style="font-size:10px;opacity:0.4;"></i>
+                    <span style="font-size:10px;opacity:0.5;">Updated just now</span>
+                </div>
+            </div>
+
+            <!-- ═══════ DAILY TIP / FUN FACT ═══════ -->
+            <div class="daily-tip-card" data-aos="fade-up" id="dailyTipCard">
+                <div class="tip-icon">
+                    <i class="fas fa-lightbulb"></i>
+                </div>
+                <div style="flex:1;">
+                    <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;color:#16a34a;margin-bottom:2px;">
+                        <i class="fas fa-star me-1" style="font-size:9px;"></i>Daily Metro Tip
+                    </div>
+                    <div style="font-size:13px;font-weight:600;" id="dailyTipText">
+                        Ahmedabad Metro saves over 12,500 kg of CO₂ every month. By riding metro, you're helping build a greener city! 🌿
+                    </div>
+                </div>
+                <button onclick="nextDailyTip()" style="background:none;border:none;color:#16a34a;font-size:16px;cursor:pointer;padding:6px;opacity:0.6;transition:opacity 0.2s;" 
+                    onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'" title="Next tip">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
+
+            <!-- ═══════ ACHIEVEMENT BADGES ═══════ -->
+            <div class="dash-badges-row" data-aos="fade-up">
+                <div class="dash-badge earned" title="Completed your first metro ride!">
+                    <span>🎫</span> First Ride
+                    <i class="fas fa-check-circle" style="color:#22c55e;font-size:10px;"></i>
+                </div>
+                <div class="dash-badge earned" title="Added money to wallet">
+                    <span>💰</span> Wallet Pro
+                    <i class="fas fa-check-circle" style="color:#22c55e;font-size:10px;"></i>
+                </div>
+                <div class="dash-badge earned" title="Used QR ticket to board">
+                    <span>📱</span> QR Scanner
+                    <i class="fas fa-check-circle" style="color:#22c55e;font-size:10px;"></i>
+                </div>
+                <div class="dash-badge locked" title="Take 10 trips to unlock">
+                    <span>🏆</span> 10 Trips
+                    <i class="fas fa-lock" style="color:#94a3b8;font-size:9px;"></i>
+                </div>
+                <div class="dash-badge locked" title="Travel 5 consecutive days">
+                    <span>🔥</span> Streak Master
+                    <i class="fas fa-lock" style="color:#94a3b8;font-size:9px;"></i>
+                </div>
+                <div class="dash-badge locked" title="Save 10 kg CO₂">
+                    <span>🌍</span> Eco Hero
+                    <i class="fas fa-lock" style="color:#94a3b8;font-size:9px;"></i>
+                </div>
             </div>
 
             <!-- Next Train Countdown + Travel Streak Row (Feature H: TfL-style live countdown) -->
@@ -5315,6 +5665,118 @@
                             <h6 class="mb-0">Monthly Pass</h6>
                         </a>
                     </div>
+                </div>
+            </div>
+
+            <!-- ═══════ SAVINGS + WEEKLY GRAPH + RANK ROW ═══════ -->
+            <div class="row g-4 mb-4">
+                <!-- Travel Savings Card -->
+                <div class="col-12 col-lg-4" data-aos="fade-up" data-aos-delay="100">
+                    <div class="savings-card h-100">
+                        <div style="position:relative;z-index:1;">
+                            <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;opacity:0.7;margin-bottom:8px;">
+                                <i class="fas fa-piggy-bank me-1"></i>Total Savings vs Car
+                            </div>
+                            <div style="font-size:36px;font-weight:900;line-height:1;" id="dashTotalSaved">₹2,450</div>
+                            <div style="font-size:12px;opacity:0.7;margin-top:4px;">saved this month by choosing metro</div>
+                            <div style="display:flex;gap:12px;margin-top:16px;">
+                                <div style="background:rgba(255,255,255,0.12);border-radius:10px;padding:8px 12px;flex:1;text-align:center;">
+                                    <div style="font-size:16px;font-weight:800;" id="dashTripsMonth">12</div>
+                                    <div style="font-size:9px;opacity:0.7;text-transform:uppercase;">Trips</div>
+                                </div>
+                                <div style="background:rgba(255,255,255,0.12);border-radius:10px;padding:8px 12px;flex:1;text-align:center;">
+                                    <div style="font-size:16px;font-weight:800;">48 km</div>
+                                    <div style="font-size:9px;opacity:0.7;text-transform:uppercase;">Distance</div>
+                                </div>
+                                <div style="background:rgba(255,255,255,0.12);border-radius:10px;padding:8px 12px;flex:1;text-align:center;">
+                                    <div style="font-size:16px;font-weight:800;">2.4 kg</div>
+                                    <div style="font-size:9px;opacity:0.7;text-transform:uppercase;">CO₂ Saved</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Weekly Travel Summary -->
+                <div class="col-12 col-lg-4" data-aos="fade-up" data-aos-delay="200">
+                    <div class="glass-card h-100">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <div>
+                                <h6 class="mb-0 fw-bold" style="font-size:14px;">This Week's Travel</h6>
+                                <small class="text-muted" style="font-size:11px;">Trips per day</small>
+                            </div>
+                            <span style="font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px;background:rgba(102,126,234,0.1);color:#667eea;">
+                                <i class="fas fa-chart-bar me-1"></i>7 days
+                            </span>
+                        </div>
+                        <div class="weekly-summary" id="weeklyBars">
+                            <div style="flex:1;text-align:center;">
+                                <div class="weekly-bar" style="height:30px;background:linear-gradient(180deg,#667eea,#764ba2);" title="Mon: 2 trips"></div>
+                                <div class="weekly-bar-label">Mon</div>
+                            </div>
+                            <div style="flex:1;text-align:center;">
+                                <div class="weekly-bar" style="height:45px;background:linear-gradient(180deg,#667eea,#764ba2);" title="Tue: 3 trips"></div>
+                                <div class="weekly-bar-label">Tue</div>
+                            </div>
+                            <div style="flex:1;text-align:center;">
+                                <div class="weekly-bar" style="height:15px;background:linear-gradient(180deg,#667eea,#764ba2);" title="Wed: 1 trip"></div>
+                                <div class="weekly-bar-label">Wed</div>
+                            </div>
+                            <div style="flex:1;text-align:center;">
+                                <div class="weekly-bar" style="height:60px;background:linear-gradient(180deg,#22c55e,#16a34a);" title="Thu: 4 trips"></div>
+                                <div class="weekly-bar-label">Thu</div>
+                            </div>
+                            <div style="flex:1;text-align:center;">
+                                <div class="weekly-bar" style="height:30px;background:linear-gradient(180deg,#667eea,#764ba2);" title="Fri: 2 trips"></div>
+                                <div class="weekly-bar-label">Fri</div>
+                            </div>
+                            <div style="flex:1;text-align:center;">
+                                <div class="weekly-bar" style="height:0px;background:linear-gradient(180deg,#e2e8f0,#cbd5e1);" title="Sat: 0 trips"></div>
+                                <div class="weekly-bar-label">Sat</div>
+                            </div>
+                            <div style="flex:1;text-align:center;">
+                                <div class="weekly-bar" style="height:0px;background:linear-gradient(180deg,#e2e8f0,#cbd5e1);" title="Sun: 0 trips"></div>
+                                <div class="weekly-bar-label">Sun</div>
+                            </div>
+                        </div>
+                        <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center;">
+                            <small class="text-muted" style="font-size:11px;"><strong style="color:#667eea;">12</strong> total trips this week</small>
+                            <small style="color:#22c55e;font-weight:700;font-size:11px;"><i class="fas fa-arrow-up me-1"></i>+28% vs last week</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Commuter Rank Card -->
+                <div class="col-12 col-lg-4" data-aos="fade-up" data-aos-delay="300">
+                    <div class="rank-card h-100">
+                        <div class="rank-badge">🥉</div>
+                        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;opacity:0.8;">Your Commuter Rank</div>
+                        <div style="font-size:22px;font-weight:900;margin:4px 0;">Bronze Explorer</div>
+                        <div style="font-size:12px;opacity:0.8;">Complete 8 more trips to reach <strong>Silver Voyager</strong></div>
+                        <div style="background:rgba(255,255,255,0.15);border-radius:50px;height:8px;margin-top:14px;overflow:hidden;">
+                            <div style="width:40%;height:100%;background:white;border-radius:50px;transition:width 1s ease;"></div>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:10px;opacity:0.7;">
+                            <span>12 trips</span>
+                            <span>20 trips</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══════ EMERGENCY CONTACT STRIP ═══════ -->
+            <div class="dash-emergency-strip" data-aos="fade-up">
+                <div style="width:32px;height:32px;border-radius:10px;background:rgba(239,68,68,0.12);display:grid;place-items:center;flex-shrink:0;">
+                    <i class="fas fa-phone-alt" style="color:#ef4444;font-size:14px;"></i>
+                </div>
+                <div style="flex:1;">
+                    <span style="font-size:12px;font-weight:700;color:#dc2626;">Emergency</span>
+                    <span style="font-size:12px;color:#94a3b8;"> | </span>
+                    <span style="font-size:12px;font-weight:600;">Police: <strong style="color:#dc2626;">100</strong></span>
+                    <span style="font-size:12px;color:#94a3b8;"> · </span>
+                    <span style="font-size:12px;font-weight:600;">Metro Helpline: <strong style="color:#dc2626;">1800-METRO-00</strong></span>
+                    <span style="font-size:12px;color:#94a3b8;"> · </span>
+                    <span style="font-size:12px;font-weight:600;">Women Safety: <strong style="color:#dc2626;">1091</strong></span>
                 </div>
             </div>
 
@@ -6561,17 +7023,17 @@
                 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;">
                     <div>
                         <h2 class="mb-1" style="font-weight:900;font-size:28px;letter-spacing:-0.5px;">
-                            <i class="fas fa-wallet me-2" style="font-size:24px;"></i>My Tickets
+                            <i class="fas fa-ticket-alt me-2" style="font-size:24px;color:#a78bfa;"></i>My Tickets
                         </h2>
                         <p class="mb-0" style="color:rgba(255,255,255,0.5);font-size:12px;font-weight:600;letter-spacing:0.5px;">
                             <i class="fas fa-subway me-1" style="font-size:9px;color:#818cf8;"></i>
-                            Transit Wallet
+                            Boarding Passes
                             <span style="margin:0 6px;opacity:0.3;">•</span>
                             <i class="fas fa-qrcode me-1" style="font-size:9px;color:#4ade80;"></i>
-                            QR Passes
+                            QR Codes
                             <span style="margin:0 6px;opacity:0.3;">•</span>
-                            <i class="fas fa-shield-alt me-1" style="font-size:9px;color:#fbbf24;"></i>
-                            Secure
+                            <i class="fas fa-receipt me-1" style="font-size:9px;color:#fbbf24;"></i>
+                            Receipts
                         </p>
                     </div>
                     <button onclick="showSection('book-ticket')" 
@@ -6584,11 +7046,37 @@
                 </div>
             </div>
 
-            <!-- Hidden stat count holders (used by JS) -->
-            <span id="ticketCountAll" style="display:none;">0</span>
-            <span id="ticketCountActive" style="display:none;">0</span>
-            <span id="ticketCountPast" style="display:none;">0</span>
-            <span id="ticketCountCancelled" style="display:none;">0</span>
+            <!-- Stat Orbs Row -->
+            <div class="tw-stats-row" data-aos="fade-up">
+                <div class="tw-stat-orb orb-total">
+                    <div class="tw-ring-wrap">
+                        <svg viewBox="0 0 64 64"><circle class="tw-ring-bg" cx="32" cy="32" r="26"/><circle class="tw-ring-fg" cx="32" cy="32" r="26"/></svg>
+                        <div class="tw-ring-value" id="ticketCountAll">0</div>
+                    </div>
+                    <div class="tw-stat-label">Total</div>
+                </div>
+                <div class="tw-stat-orb orb-active">
+                    <div class="tw-ring-wrap">
+                        <svg viewBox="0 0 64 64"><circle class="tw-ring-bg" cx="32" cy="32" r="26"/><circle class="tw-ring-fg" cx="32" cy="32" r="26"/></svg>
+                        <div class="tw-ring-value" id="ticketCountActive">0</div>
+                    </div>
+                    <div class="tw-stat-label">Upcoming</div>
+                </div>
+                <div class="tw-stat-orb orb-completed">
+                    <div class="tw-ring-wrap">
+                        <svg viewBox="0 0 64 64"><circle class="tw-ring-bg" cx="32" cy="32" r="26"/><circle class="tw-ring-fg" cx="32" cy="32" r="26"/></svg>
+                        <div class="tw-ring-value" id="ticketCountPast">0</div>
+                    </div>
+                    <div class="tw-stat-label">Completed</div>
+                </div>
+                <div class="tw-stat-orb orb-cancelled">
+                    <div class="tw-ring-wrap">
+                        <svg viewBox="0 0 64 64"><circle class="tw-ring-bg" cx="32" cy="32" r="26"/><circle class="tw-ring-fg" cx="32" cy="32" r="26"/></svg>
+                        <div class="tw-ring-value" id="ticketCountCancelled">0</div>
+                    </div>
+                    <div class="tw-stat-label">Cancelled</div>
+                </div>
+            </div>
 
             <!-- Filter Tabs (Sliding Pill) -->
             <div class="tw-filters" data-aos="fade-up">
@@ -8212,6 +8700,302 @@
             </div>
         </div>
 
+        <!-- ============================================================ -->
+        <!-- LIVE TRAINS SECTION -->
+        <!-- ============================================================ -->
+        <div id="live-trains-section" class="content-section" style="display: none;">
+            <div class="mb-4" data-aos="fade-down">
+                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+                    <div>
+                        <h2 class="text-white mb-1" style="font-weight:800;">
+                            <i class="fas fa-satellite-dish me-2" style="background:linear-gradient(135deg,#4facfe,#00f2fe);-webkit-background-clip:text;-webkit-text-fill-color:transparent;"></i>Live Train Tracker
+                        </h2>
+                        <p class="text-white mb-0" style="opacity:0.65;font-size:13px;">
+                            Real-time train positions across the Ahmedabad Metro network
+                        </p>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span id="liveTrainTime" style="background:rgba(79,172,254,0.15);color:#4facfe;font-size:11px;font-weight:700;padding:5px 14px;border-radius:20px;">
+                            <i class="fas fa-circle me-1" style="font-size:6px;animation:pulse 1.5s infinite;"></i> LIVE
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <!-- Blue Line -->
+                <div class="col-lg-6" data-aos="fade-right">
+                    <div class="glass-card" style="border-top:3px solid #4facfe;">
+                        <h6 class="fw-bold mb-3"><span style="display:inline-block;width:12px;height:12px;background:#4facfe;border-radius:50%;margin-right:8px;"></span>Blue Line — East-West Corridor</h6>
+                        <div id="blueLineTrains" style="display:grid;gap:10px;">
+                            <div style="text-align:center;padding:30px;color:#94a3b8;"><i class="fas fa-spinner fa-spin me-2"></i>Loading trains...</div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Red Line -->
+                <div class="col-lg-6" data-aos="fade-left">
+                    <div class="glass-card" style="border-top:3px solid #ef4444;">
+                        <h6 class="fw-bold mb-3"><span style="display:inline-block;width:12px;height:12px;background:#ef4444;border-radius:50%;margin-right:8px;"></span>Red Line — North-South Corridor</h6>
+                        <div id="redLineTrains" style="display:grid;gap:10px;">
+                            <div style="text-align:center;padding:30px;color:#94a3b8;"><i class="fas fa-spinner fa-spin me-2"></i>Loading trains...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- JOURNEY PLANNER SECTION -->
+        <!-- ============================================================ -->
+        <div id="journey-planner-section" class="content-section" style="display: none;">
+            <div class="mb-4" data-aos="fade-down">
+                <h2 class="text-white mb-1" style="font-weight:800;">
+                    <i class="fas fa-route me-2" style="background:linear-gradient(135deg,#11998e,#38ef7d);-webkit-background-clip:text;-webkit-text-fill-color:transparent;"></i>Journey Planner
+                </h2>
+                <p class="text-white mb-0" style="opacity:0.65;font-size:13px;">
+                    Plan your route with interchange detection & fare estimates
+                </p>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-lg-5" data-aos="fade-right">
+                    <div class="glass-card">
+                        <h6 class="fw-bold mb-3"><i class="fas fa-map-pin me-2" style="color:#667eea;"></i>Plan Your Route</h6>
+                        <div class="mb-3">
+                            <label class="form-label-modern">From Station</label>
+                            <select id="jpSource" class="form-control form-control-modern" style="padding-left:15px;"></select>
+                        </div>
+                        <div style="text-align:center;margin:-10px 0;">
+                            <button onclick="document.getElementById('jpSource').value=[document.getElementById('jpDest').value,document.getElementById('jpDest').value=document.getElementById('jpSource').value][0]" style="background:none;border:none;color:#667eea;font-size:20px;cursor:pointer;padding:5px;" title="Swap stations">
+                                <i class="fas fa-exchange-alt fa-rotate-90"></i>
+                            </button>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label-modern">To Station</label>
+                            <select id="jpDest" class="form-control form-control-modern" style="padding-left:15px;"></select>
+                        </div>
+                        <button onclick="planJourney()" class="btn btn-gradient w-100" style="border-radius:14px;">
+                            <i class="fas fa-search me-2"></i>Find Route
+                        </button>
+                    </div>
+                </div>
+                <div class="col-lg-7" data-aos="fade-left">
+                    <div class="glass-card" id="jpResults" style="min-height:300px;">
+                        <div style="text-align:center;padding:60px 20px;color:#94a3b8;">
+                            <i class="fas fa-route" style="font-size:48px;opacity:0.15;margin-bottom:16px;display:block;"></i>
+                            <h6 style="font-weight:700;color:#64748b;">Select stations to plan your journey</h6>
+                            <p style="font-size:13px;">We'll find the best route including interchanges</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- COMMUTE INSIGHTS SECTION -->
+        <!-- ============================================================ -->
+        <div id="commute-insights-section" class="content-section" style="display: none;">
+            <div class="mb-4" data-aos="fade-down">
+                <h2 class="text-white mb-1" style="font-weight:800;">
+                    <i class="fas fa-chart-line me-2" style="background:linear-gradient(135deg,#f093fb,#f5576c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;"></i>Commute Insights
+                </h2>
+                <p class="text-white mb-0" style="opacity:0.65;font-size:13px;">
+                    Your personalized weekly travel analytics & environmental impact
+                </p>
+            </div>
+
+            <div class="row g-4" id="insightsGrid">
+                <div style="text-align:center;padding:60px;color:#94a3b8;width:100%;">
+                    <i class="fas fa-spinner fa-spin me-2"></i>Loading insights...
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- ENHANCED ACHIEVEMENTS SECTION (replaces empty one) -->
+        <!-- ============================================================ -->
+        <div id="achievements-section" class="content-section" style="display: none;">
+            <div class="mb-4" data-aos="fade-down">
+                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+                    <div>
+                        <h2 class="text-white mb-1" style="font-weight:800;">
+                            <i class="fas fa-trophy me-2" style="background:linear-gradient(135deg,#f2994a,#f2c94c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;"></i>Achievements
+                        </h2>
+                        <p class="text-white mb-0" style="opacity:0.65;font-size:13px;">
+                            Unlock badges by using MetroFlow — track your commute milestones
+                        </p>
+                    </div>
+                    <div id="achievementCounter" style="background:rgba(242,153,74,0.15);color:#f2994a;font-size:13px;font-weight:700;padding:6px 16px;border-radius:20px;">
+                        0 / 0 Unlocked
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3" id="achievementsGrid">
+                <div style="text-align:center;padding:60px;color:#94a3b8;width:100%;">
+                    <i class="fas fa-spinner fa-spin me-2"></i>Loading achievements...
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- FARE COMPARE SECTION -->
+        <!-- ============================================================ -->
+        <div id="fare-compare-section" class="content-section" style="display: none;">
+            <div class="mb-4" data-aos="fade-down">
+                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+                    <div>
+                        <h2 class="text-white mb-1" style="font-weight:800;">
+                            <i class="fas fa-balance-scale me-2" style="background:linear-gradient(135deg,#f59e0b,#ef4444);-webkit-background-clip:text;-webkit-text-fill-color:transparent;"></i>Fare Compare
+                        </h2>
+                        <p class="text-white mb-0" style="opacity:0.65;font-size:13px;">
+                            Metro vs Cab vs Auto — see how much you save
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-lg-5">
+                    <div class="glass-card">
+                        <h6 class="fw-bold mb-3"><i class="fas fa-exchange-alt me-2" style="color:#667eea;"></i>Compare Routes</h6>
+                        <label style="font-size:12px;font-weight:700;text-transform:uppercase;color:#94a3b8;margin-bottom:6px;">From Station</label>
+                        <select id="fcSource" class="form-select mb-3" style="border-radius:12px;border:1px solid rgba(0,0,0,0.08);padding:12px 14px;font-size:14px;">
+                            <option value="">— Select —</option>
+                        </select>
+                        <label style="font-size:12px;font-weight:700;text-transform:uppercase;color:#94a3b8;margin-bottom:6px;">To Station</label>
+                        <select id="fcDest" class="form-select mb-3" style="border-radius:12px;border:1px solid rgba(0,0,0,0.08);padding:12px 14px;font-size:14px;">
+                            <option value="">— Select —</option>
+                        </select>
+                        <button onclick="compareFares()" class="btn btn-gradient w-100" style="border-radius:14px;font-weight:700;padding:12px;">
+                            <i class="fas fa-chart-bar me-2"></i>Compare Fares
+                        </button>
+                    </div>
+                </div>
+                <div class="col-lg-7">
+                    <div class="glass-card" id="fcResults">
+                        <div style="text-align:center;padding:60px;color:#94a3b8;">
+                            <i class="fas fa-balance-scale" style="font-size:48px;opacity:0.3;display:block;margin-bottom:16px;"></i>
+                            <div style="font-weight:700;font-size:16px;">Select stations to compare</div>
+                            <div style="font-size:12px;">We'll show you fares across 6 transport modes</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- TRIP CALENDAR SECTION -->
+        <!-- ============================================================ -->
+        <div id="trip-calendar-section" class="content-section" style="display: none;">
+            <div class="mb-4" data-aos="fade-down">
+                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+                    <div>
+                        <h2 class="text-white mb-1" style="font-weight:800;">
+                            <i class="fas fa-calendar-alt me-2" style="background:linear-gradient(135deg,#22c55e,#38ef7d);-webkit-background-clip:text;-webkit-text-fill-color:transparent;"></i>Trip Calendar
+                        </h2>
+                        <p class="text-white mb-0" style="opacity:0.65;font-size:13px;">
+                            Your travel activity over the last 6 months
+                        </p>
+                    </div>
+                    <div id="calendarStreak" style="background:rgba(34,197,94,0.15);color:#22c55e;font-size:13px;font-weight:700;padding:6px 16px;border-radius:20px;">
+                        <i class="fas fa-fire me-1"></i>Loading...
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card mb-4">
+                <div class="row g-3 mb-4" id="calendarStats">
+                    <div style="text-align:center;padding:40px;color:#94a3b8;width:100%;"><i class="fas fa-spinner fa-spin me-2"></i>Loading calendar...</div>
+                </div>
+                <div id="calendarHeatmap" style="overflow-x:auto;padding:8px 0;"></div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- NEARBY PLACES SECTION -->
+        <!-- ============================================================ -->
+        <div id="nearby-places-section" class="content-section" style="display: none;">
+            <div class="mb-4" data-aos="fade-down">
+                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+                    <div>
+                        <h2 class="text-white mb-1" style="font-weight:800;">
+                            <i class="fas fa-map-pin me-2" style="background:linear-gradient(135deg,#4facfe,#00f2fe);-webkit-background-clip:text;-webkit-text-fill-color:transparent;"></i>Nearby Places
+                        </h2>
+                        <p class="text-white mb-0" style="opacity:0.65;font-size:13px;">
+                            Discover attractions, food, and services near metro stations
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card mb-4">
+                <h6 class="fw-bold mb-3"><i class="fas fa-search me-2" style="color:#667eea;"></i>Select a Station</h6>
+                <select id="nearbyStationSelect" onchange="loadNearbyPlaces()" class="form-select" style="border-radius:12px;border:1px solid rgba(0,0,0,0.08);padding:12px 14px;font-size:14px;max-width:400px;">
+                    <option value="">— Choose Station —</option>
+                </select>
+            </div>
+
+            <div class="row g-4" id="nearbyGrid">
+                <div style="text-align:center;padding:60px;color:#94a3b8;width:100%;">
+                    <i class="fas fa-map-marked-alt" style="font-size:48px;opacity:0.3;display:block;margin-bottom:16px;"></i>
+                    <div style="font-weight:700;font-size:16px;">Select a station to explore</div>
+                    <div style="font-size:12px;">Find nearby food, landmarks, parks, and more</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- FAVORITE ROUTES SECTION -->
+        <!-- ============================================================ -->
+        <div id="favorite-routes-section" class="content-section" style="display: none;">
+            <div class="mb-4" data-aos="fade-down">
+                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+                    <div>
+                        <h2 class="text-white mb-1" style="font-weight:800;">
+                            <i class="fas fa-heart me-2" style="background:linear-gradient(135deg,#ec4899,#f43f5e);-webkit-background-clip:text;-webkit-text-fill-color:transparent;"></i>Favorite Routes
+                        </h2>
+                        <p class="text-white mb-0" style="opacity:0.65;font-size:13px;">
+                            Your most-used routes — quick-book in one tap
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4" id="favRoutesGrid">
+                <div style="text-align:center;padding:60px;color:#94a3b8;width:100%;">
+                    <i class="fas fa-spinner fa-spin me-2"></i>Loading favorites...
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- EMERGENCY SOS SECTION -->
+        <!-- ============================================================ -->
+        <div id="emergency-sos-section" class="content-section" style="display: none;">
+            <div class="mb-4" data-aos="fade-down">
+                <div>
+                    <h2 class="text-white mb-1" style="font-weight:800;">
+                        <i class="fas fa-exclamation-circle me-2" style="color:#ef4444;"></i>Emergency SOS
+                    </h2>
+                    <p class="text-white mb-0" style="opacity:0.65;font-size:13px;">
+                        Quick access to emergency contacts & safety information
+                    </p>
+                </div>
+            </div>
+
+            <div class="row g-4" id="sosContacts">
+                <div style="text-align:center;padding:60px;color:#94a3b8;width:100%;">
+                    <i class="fas fa-spinner fa-spin me-2"></i>Loading emergency info...
+                </div>
+            </div>
+
+            <div class="glass-card mt-4">
+                <h6 class="fw-bold mb-3"><i class="fas fa-shield-alt me-2" style="color:#22c55e;"></i>Safety Tips</h6>
+                <div id="sosTips"></div>
+            </div>
+        </div>
+
         <!-- Settings Section -->
         <div id="settings-section" class="content-section" style="display: none;">
             <div class="mb-4" data-aos="fade-down">
@@ -9608,7 +10392,7 @@
                                     <i class="fas fa-ticket-alt"></i>
                                 </div>
                                 <div>
-                                    <div class="tw-card-id-label">Transit Pass</div>
+                                    <div class="tw-card-id-label">Boarding Pass</div>
                                     <div class="tw-card-id-num">#${ticket.ticketId}</div>
                                 </div>
                             </div>
@@ -16309,6 +17093,14 @@
                 'achievements': 'View your achievements and badges',
                 'spending': 'View spending breakdown',
                 'metro-map': 'View the metro route map',
+                'live-trains': 'View live train positions',
+                'journey-planner': 'Plan your metro journey',
+                'commute-insights': 'View your commute analytics',
+                'fare-compare': 'Compare metro fares with other transport',
+                'trip-calendar': 'View your trip calendar heatmap',
+                'nearby-places': 'Explore places near metro stations',
+                'favorite-routes': 'View your favorite routes',
+                'emergency-sos': 'Emergency contacts and safety info',
                 'lost-found': 'Report or find lost items',
                 'settings': 'App preferences and settings'
             };
@@ -16422,6 +17214,11 @@
                 'journey-history': 'Journey History', 'feedback': 'Feedback', 'transactions': 'Transactions',
                 'analytics': 'Analytics', 'fare-calculator': 'Fare Calculator', 'profile': 'My Profile',
                 'achievements': 'Achievements', 'spending': 'My Spending', 'metro-map': 'Metro Map',
+                'live-trains': 'Live Train Tracker', 'journey-planner': 'Journey Planner',
+                'commute-insights': 'Commute Insights',
+                'fare-compare': 'Fare Compare', 'trip-calendar': 'Trip Calendar',
+                'nearby-places': 'Nearby Places', 'favorite-routes': 'Favorite Routes',
+                'emergency-sos': 'Emergency SOS',
                 'lost-found': 'Lost and Found', 'settings': 'Settings'
             };
             const _origShow = window.showSection;
@@ -16642,6 +17439,69 @@
     </style>
 
     <script src="js/improvements.js"></script>
+    <script src="js/enhancements.js"></script>
+
+    <!-- Dashboard Enhancement Scripts -->
+    <script>
+    /* ═══════ DASHBOARD LIVE CLOCK ═══════ */
+    (function initDashClock() {
+        const el = document.getElementById('dashClock');
+        if (!el) return;
+        function tick() {
+            const now = new Date();
+            const ist = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+            el.textContent = ist.getHours().toString().padStart(2,'0') + ':' +
+                             ist.getMinutes().toString().padStart(2,'0') + ':' +
+                             ist.getSeconds().toString().padStart(2,'0');
+        }
+        tick();
+        setInterval(tick, 1000);
+    })();
+
+    /* ═══════ DAILY TIP ROTATOR ═══════ */
+    const dashTips = [
+        "Ahmedabad Metro saves over 12,500 kg of CO\u2082 every month. By riding metro, you\u2019re helping build a greener city! \uD83C\uDF3F",
+        "Pro tip: Book your tickets during off-peak hours (11 AM \u2013 4 PM) for shorter queues and more seat availability! \uD83D\uDCA1",
+        "Did you know? MetroFlow\u2019s QR tickets work offline \u2013 no internet needed at the gate! Just scan and go. \uD83D\uDCF1",
+        "Monthly Pass holders save up to 40% on daily commute costs. Upgrade today from the sidebar! \uD83D\uDCB0",
+        "Metro trains in Ahmedabad run every 4 minutes during peak hours (8\u201311 AM & 5\u20137 PM). Plan accordingly! \u23F0",
+        "Your MetroCard earns loyalty points on every ride. Check your points in the Achievements section! \u2B50",
+        "Women travelers: A dedicated ladies coach is available in every train for your safety and comfort. \uD83D\uDE89",
+        "Free WiFi is available at all metro stations. Connect to \u2018MetroFlow-Free\u2019 and enjoy! \uD83D\uDCF6",
+        "Lost something on the metro? Use our Lost & Found section to report and track items. \uD83D\uDD0D",
+        "The Green Line now extends to GIFT City! 4 new stations are operational since March 2026. \uD83C\uDF89"
+    ];
+    let tipIndex = 0;
+    function nextDailyTip() {
+        tipIndex = (tipIndex + 1) % dashTips.length;
+        const el = document.getElementById('dailyTipText');
+        if (el) {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(6px)';
+            setTimeout(() => {
+                el.textContent = dashTips[tipIndex];
+                el.style.transition = 'all 0.3s ease';
+                el.style.opacity = '1';
+                el.style.transform = 'translateY(0)';
+            }, 200);
+        }
+    }
+
+    /* ═══════ SIMULATED LIVE PASSENGER COUNTER (dashboard) ═══════ */
+    (function initDashLive() {
+        const passEl = document.getElementById('dashLivePassengers');
+        const trainEl = document.getElementById('dashLiveTrains');
+        if (!passEl) return;
+        function update() {
+            const p = 1800 + Math.floor(Math.random() * 1200);
+            const t = 28 + Math.floor(Math.random() * 8);
+            passEl.textContent = p.toLocaleString('en-IN');
+            if (trainEl) trainEl.textContent = t;
+        }
+        update();
+        setInterval(update, 6000);
+    })();
+    </script>
 </body>
 
 </html>

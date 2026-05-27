@@ -48,8 +48,7 @@ body {
 }
 
 /* === RESPONSIVE NAVBAR === */
-.dashboard-navbar,
-.navbar {
+.dashboard-navbar {
     position: fixed;
     top: 0;
     left: 0;

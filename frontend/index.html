@@ -142,32 +142,62 @@
             }
         }
 
-        /* --- Navbar (Premium Glassmorphism) --- */
+        /* --- Navbar (Premium Catchy Glassmorphism) --- */
         .navbar {
-            background: rgba(255, 255, 255, 0.82);
-            backdrop-filter: blur(24px) saturate(180%);
-            -webkit-backdrop-filter: blur(24px) saturate(180%);
-            box-shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 32px rgba(102,126,234,0.06);
-            padding: 12px 0;
-            transition: all 0.4s ease;
-            border-bottom: 1px solid rgba(102,126,234,0.08);
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(28px) saturate(200%);
+            -webkit-backdrop-filter: blur(28px) saturate(200%);
+            box-shadow: 0 4px 40px rgba(102,126,234,0.08);
+            padding: 14px 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+            position: relative;
+        }
+        .navbar::after {
+            content: '';
+            position: absolute;
+            bottom: 0px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(102,126,234,0.8), rgba(118,75,162,0.8), transparent);
+            background-size: 200% 100%;
+            animation: panGradient 4s linear infinite;
+            opacity: 0.6;
+        }
+        @keyframes panGradient {
+            0% { background-position: 100% 0; }
+            100% { background-position: -100% 0; }
         }
         .navbar.scrolled {
-            background: rgba(255, 255, 255, 0.95);
-            box-shadow: 0 4px 30px rgba(102,126,234,0.1);
-            padding: 8px 0;
+            background: rgba(255, 255, 255, 0.92);
+            box-shadow: 0 8px 32px rgba(102,126,234,0.12);
+            padding: 10px 0;
         }
 
         .navbar-brand {
-            font-size: 1.35rem;
+            font-size: 1.5rem;
+            letter-spacing: -0.5px;
         }
-        .navbar-brand i {
+        .brand-icon-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            background: var(--primary-gradient);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(102,126,234,0.4);
+            animation: float 3s ease-in-out infinite;
+        }
+        .brand-icon-wrap i {
+            color: white;
+            font-size: 1.1rem;
+        }
+        .navbar-brand span {
             background: var(--primary-gradient);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            animation: float 3s ease-in-out infinite;
-            display: inline-block;
-            font-size: 1.4rem;
         }
 
         .nav-link {
@@ -227,7 +257,7 @@
 
         /* --- Hero (Premium) --- */
         .hero-section {
-            padding: 160px 0 100px;
+            padding: 80px 0 100px;
             background: linear-gradient(165deg, #f8faff 0%, #f0f0ff 30%, #fff 60%, #fdf4ff 100%);
             position: relative;
             overflow: hidden;
@@ -312,6 +342,8 @@
             background-repeat: no-repeat;
             background-position: right 14px center;
             padding-right: 34px;
+            min-width: 0;
+            text-overflow: ellipsis;
         }
         .qfw-select:focus {
             border-color: #667eea;
@@ -418,6 +450,14 @@
             transform: scaleX(1);
         }
 
+        /* 3D Flip icon container */
+        .icon-circle-wrap {
+            width: 64px;
+            height: 64px;
+            perspective: 600px;
+            margin: 0 auto 22px;
+        }
+
         .icon-circle {
             width: 64px;
             height: 64px;
@@ -427,15 +467,19 @@
             place-items: center;
             font-size: 1.4rem;
             color: #667eea;
-            margin-bottom: 22px;
-            transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1);
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1),
+                        background 0.4s ease,
+                        box-shadow 0.4s ease,
+                        color 0.4s ease;
+            will-change: transform;
         }
 
         .feature-card:hover .icon-circle {
             background: var(--primary-gradient);
             color: white;
-            transform: scale(1.1) rotate(-5deg);
-            box-shadow: 0 6px 20px rgba(102,126,234,0.3);
+            transform: rotateY(180deg) scale(1.08);
+            box-shadow: 0 8px 28px rgba(102,126,234,0.35);
         }
 
         /* --- Live Network --- */
@@ -921,18 +965,213 @@
             box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
         }
 
-        /* Cookie Consent Banner */
+        /* ═══ Cookie Consent Banner ═══ */
         .cookie-banner {
             position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(255, 255, 255, 0.97);
-            backdrop-filter: blur(12px);
-            border-top: 1px solid #e2e8f0;
-            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(0);
+            width: calc(100% - 48px);
+            max-width: 860px;
+            background: rgba(255,255,255,0.98);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(102,126,234,0.15);
+            border-radius: 20px;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.12), 0 1px 0 rgba(255,255,255,0.6) inset;
             z-index: 9999;
-            transition: transform 0.4s ease;
+            transition: transform 0.5s cubic-bezier(0.4,0,0.2,1), opacity 0.5s ease;
+            animation: cookieSlideUp 0.6s cubic-bezier(0.34,1.56,0.64,1) forwards;
+        }
+
+        @keyframes cookieSlideUp {
+            from { transform: translateX(-50%) translateY(120px); opacity: 0; }
+            to   { transform: translateX(-50%) translateY(0);     opacity: 1; }
+        }
+
+        .cookie-banner.hide {
+            transform: translateX(-50%) translateY(140px) !important;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .cookie-icon-anim {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: linear-gradient(135deg,#fef3c7,#fde68a);
+            display: grid;
+            place-items: center;
+            font-size: 1.3rem;
+            flex-shrink: 0;
+            animation: cookieWiggle 3s ease-in-out infinite;
+        }
+        @keyframes cookieWiggle {
+            0%,100% { transform: rotate(0deg);  }
+            20%      { transform: rotate(-10deg); }
+            40%      { transform: rotate(10deg);  }
+            60%      { transform: rotate(-6deg);  }
+            80%      { transform: rotate(6deg);   }
+        }
+
+        .cookie-btn-learn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: transparent;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 50px;
+            padding: 8px 18px;
+            font-size: 0.83rem;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            white-space: nowrap;
+        }
+        .cookie-btn-learn:hover {
+            border-color: #667eea;
+            color: #667eea;
+            background: rgba(102,126,234,0.06);
+            transform: translateY(-1px);
+        }
+
+        .cookie-btn-accept {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg,#667eea,#764ba2);
+            border: none;
+            border-radius: 50px;
+            padding: 9px 22px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            white-space: nowrap;
+            box-shadow: 0 4px 16px rgba(102,126,234,0.35);
+            position: relative;
+            overflow: hidden;
+        }
+        .cookie-btn-accept::before {
+            content:'';
+            position:absolute;
+            inset:0;
+            background:rgba(255,255,255,0.15);
+            transform:translateX(-100%);
+            transition:transform 0.4s ease;
+        }
+        .cookie-btn-accept:hover::before { transform:translateX(100%); }
+        .cookie-btn-accept:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 28px rgba(102,126,234,0.45);
+        }
+        .cookie-btn-accept:active { transform: scale(0.97); }
+
+        /* ═══ Cookie Modal ═══ */
+        .cookie-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15,23,42,0.55);
+            backdrop-filter: blur(6px);
+            z-index: 10001;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding: 0 16px 32px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.35s ease;
+        }
+        .cookie-modal-overlay.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+        .cookie-modal {
+            background: #fff;
+            border-radius: 24px 24px 20px 20px;
+            width: 100%;
+            max-width: 640px;
+            box-shadow: 0 -4px 0 rgba(102,126,234,0.3), 0 24px 60px rgba(0,0,0,0.2);
+            padding: 0;
+            overflow: hidden;
+            transform: translateY(60px);
+            transition: transform 0.45s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        .cookie-modal-overlay.open .cookie-modal {
+            transform: translateY(0);
+        }
+        .cookie-modal-header {
+            background: linear-gradient(135deg,#667eea,#764ba2);
+            padding: 22px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: white;
+        }
+        .cookie-modal-body {
+            padding: 24px 28px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+        .cookie-modal-body::-webkit-scrollbar { width: 5px; }
+        .cookie-modal-body::-webkit-scrollbar-track { background: #f1f5f9; }
+        .cookie-modal-body::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .cookie-type-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 16px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 14px;
+            margin-bottom: 12px;
+            transition: border-color 0.2s;
+        }
+        .cookie-type-row:hover { border-color: rgba(102,126,234,0.3); }
+        .cookie-type-icon {
+            width: 42px; height: 42px;
+            border-radius: 12px;
+            display: grid; place-items: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+        .cookie-toggle {
+            position: relative;
+            width: 44px; height: 24px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        .cookie-toggle input { opacity:0; width:0; height:0; position:absolute; }
+        .cookie-toggle-slider {
+            position: absolute;
+            inset: 0;
+            background: #e2e8f0;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .cookie-toggle-slider::before {
+            content:'';
+            position:absolute;
+            width:18px; height:18px;
+            left:3px; top:3px;
+            background:#fff;
+            border-radius:50%;
+            transition:transform 0.3s;
+            box-shadow:0 1px 4px rgba(0,0,0,0.15);
+        }
+        .cookie-toggle input:checked + .cookie-toggle-slider { background: linear-gradient(135deg,#667eea,#764ba2); }
+        .cookie-toggle input:checked + .cookie-toggle-slider::before { transform:translateX(20px); }
+        .cookie-toggle input:disabled + .cookie-toggle-slider { opacity:0.5; cursor:not-allowed; }
+        .cookie-modal-footer {
+            padding: 18px 28px;
+            border-top: 1px solid #f1f5f9;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            background: #fafbfc;
         }
 
         /* ═══════════════════════════════════════════
@@ -1946,10 +2185,12 @@
         </div>
     </div>
 
-    <nav class="navbar navbar-expand-lg fixed-top" id="navbarMain">
+    <nav class="navbar navbar-expand-lg sticky-top" id="navbarMain" style="z-index: 10000;">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="#" style="color: #764ba2;">
-                <i class="fas fa-train fa-lg"></i>
+                <div class="brand-icon-wrap">
+                    <i class="fas fa-train"></i>
+                </div>
                 <span>MetroFlow</span>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -1962,14 +2203,7 @@
                     <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
                     <li class="nav-item"><a class="nav-link" href="#network">Network</a></li>
                     <li class="nav-item"><a class="nav-link" href="#faq">FAQ</a></li>
-                    <!-- Live Clock -->
-                    <li class="nav-item ms-lg-2">
-                        <div class="nav-live-clock" id="navClock">
-                            <i class="fas fa-clock" style="color:#667eea;"></i>
-                            <span id="navClockTime">--:--</span>
-                            <span style="color:#667eea;font-size:9px;">IST</span>
-                        </div>
-                    </li>
+
                     <li class="nav-item ms-lg-2">
                         <a href="register.html" class="btn fw-bold"
                             style="font-size: 0.88rem; padding: 9px 22px; border-radius: 12px; border: 2px solid #e2e8f0; color: #4a5568; transition: all 0.3s;"
@@ -2263,31 +2497,6 @@
         </div>
     </section>
 
-    <!-- Feature HH: Social Proof Booking Ticker -->
-    <div style="
-        background: linear-gradient(135deg, rgba(102,126,234,0.06), rgba(118,75,162,0.04));
-        border-top: 1px solid rgba(102,126,234,0.12);
-        border-bottom: 1px solid rgba(102,126,234,0.12);
-        padding: 10px 0;
-        overflow: hidden;
-        position: relative;
-    ">
-        <div
-            style="position:absolute;left:0;top:0;bottom:0;width:60px;background:linear-gradient(90deg,#fff,transparent);z-index:2;">
-        </div>
-        <div
-            style="position:absolute;right:0;top:0;bottom:0;width:60px;background:linear-gradient(-90deg,#fff,transparent);z-index:2;">
-        </div>
-        <div id="bookingTicker" style="
-            display: flex;
-            gap: 0;
-            animation: tickerScroll 40s linear infinite;
-            white-space: nowrap;
-        ">
-            <!-- Items injected by JS -->
-        </div>
-    </div>
-
     <section id="process" class="py-5 bg-light position-relative" style="overflow:hidden;">
         <!-- Process Blobs -->
         <div class="page-blob"
@@ -2339,65 +2548,6 @@
                         <p class="text-muted small">Use QR code for instant, contactless entry.</p>
                     </div>
                 </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ============ ECO-IMPACT / SUSTAINABILITY ============ -->
-    <section class="eco-section" id="eco-impact">
-        <div class="page-blob" style="width:400px;height:400px;background:rgba(34,197,94,0.06);top:-80px;left:-60px;animation:blobMorph 20s ease-in-out infinite;"></div>
-        <div class="page-blob" style="width:300px;height:300px;background:rgba(22,163,74,0.04);bottom:-40px;right:-40px;animation:blobMorph 16s ease-in-out infinite 5s;"></div>
-
-        <div class="container position-relative" style="z-index:1;">
-            <div class="text-center mb-5" data-aos="fade-up">
-                <span class="badge px-3 py-2 rounded-pill fw-bold mb-3" style="background:rgba(34,197,94,0.1);color:#16a34a;border:1px solid rgba(34,197,94,0.2);">
-                    <i class="fas fa-seedling me-1"></i> Green Transit
-                </span>
-                <h2 class="fw-bold display-5 mt-2" style="color:#1e293b;">Commute Green, Live Clean</h2>
-                <p class="text-muted mt-2 mx-auto" style="max-width:540px;">Every metro ride contributes to a cleaner Ahmedabad. Here's the impact our commuters make every single month.</p>
-            </div>
-
-            <div class="row g-4">
-                <div class="col-md-3 col-6" data-aos="zoom-in" data-aos-delay="100">
-                    <div class="eco-stat-card">
-                        <div class="eco-icon" style="background:linear-gradient(135deg,rgba(34,197,94,0.12),rgba(22,163,74,0.08));color:#16a34a;">
-                            <i class="fas fa-cloud"></i>
-                        </div>
-                        <div class="eco-number" data-eco-target="12500" data-eco-suffix="">12,500</div>
-                        <div class="eco-label">kg CO₂ Saved / Month</div>
-                    </div>
-                </div>
-                <div class="col-md-3 col-6" data-aos="zoom-in" data-aos-delay="200">
-                    <div class="eco-stat-card">
-                        <div class="eco-icon" style="background:linear-gradient(135deg,rgba(59,130,246,0.12),rgba(29,78,216,0.08));color:#2563eb;">
-                            <i class="fas fa-car-side"></i>
-                        </div>
-                        <div class="eco-number" data-eco-target="3200" data-eco-suffix="+">3,200+</div>
-                        <div class="eco-label">Cars Off Road Daily</div>
-                    </div>
-                </div>
-                <div class="col-md-3 col-6" data-aos="zoom-in" data-aos-delay="300">
-                    <div class="eco-stat-card">
-                        <div class="eco-icon" style="background:linear-gradient(135deg,rgba(34,197,94,0.12),rgba(5,150,105,0.08));color:#059669;">
-                            <i class="fas fa-tree"></i>
-                        </div>
-                        <div class="eco-number" data-eco-target="850" data-eco-suffix="+">850+</div>
-                        <div class="eco-label">Trees Equivalent</div>
-                    </div>
-                </div>
-                <div class="col-md-3 col-6" data-aos="zoom-in" data-aos-delay="400">
-                    <div class="eco-stat-card">
-                        <div class="eco-icon" style="background:linear-gradient(135deg,rgba(249,115,22,0.12),rgba(234,88,12,0.08));color:#ea580c;">
-                            <i class="fas fa-gas-pump"></i>
-                        </div>
-                        <div class="eco-number" data-eco-target="45000" data-eco-suffix="L">45,000L</div>
-                        <div class="eco-label">Fuel Saved Monthly</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="text-center mt-5" data-aos="fade-up" data-aos-delay="500">
-                <p class="text-muted small mb-0"><i class="fas fa-info-circle me-1"></i> Data based on average metro ridership vs. equivalent private vehicle trips</p>
             </div>
         </div>
     </section>
@@ -2474,168 +2624,6 @@
                                 <p class="small text-muted mb-0">Mobile Ready</p>
                             </div>
                         </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ============ TRUST / ACHIEVEMENTS ============ -->
-    <section class="trust-section" id="trust-achievements">
-        <div class="container">
-            <div class="text-center mb-5" data-aos="fade-up">
-                <span class="badge bg-light text-primary px-3 py-2 rounded-pill fw-bold mb-3">
-                    <i class="fas fa-award me-1"></i> Recognition
-                </span>
-                <h2 class="fw-bold display-5" style="color:#1e293b;">Trusted by the City</h2>
-                <p class="text-muted mt-2 mx-auto" style="max-width:520px;">MetroFlow is recognized for excellence in smart urban mobility and citizen-first design.</p>
-            </div>
-
-            <div class="row g-4 mb-5">
-                <div class="col-md-3 col-6" data-aos="fade-up" data-aos-delay="100">
-                    <div class="trust-badge-card">
-                        <div class="trust-badge-icon" style="background:linear-gradient(135deg,rgba(234,179,8,0.15),rgba(217,119,6,0.08));color:#d97706;">
-                            <i class="fas fa-trophy"></i>
-                        </div>
-                        <h6 class="fw-bold mt-2 mb-1">Smart City Award</h6>
-                        <small class="text-muted">2025 Winner</small>
-                    </div>
-                </div>
-                <div class="col-md-3 col-6" data-aos="fade-up" data-aos-delay="200">
-                    <div class="trust-badge-card">
-                        <div class="trust-badge-icon" style="background:linear-gradient(135deg,rgba(59,130,246,0.12),rgba(37,99,235,0.08));color:#2563eb;">
-                            <i class="fas fa-certificate"></i>
-                        </div>
-                        <h6 class="fw-bold mt-2 mb-1">ISO 27001</h6>
-                        <small class="text-muted">Data Security</small>
-                    </div>
-                </div>
-                <div class="col-md-3 col-6" data-aos="fade-up" data-aos-delay="300">
-                    <div class="trust-badge-card">
-                        <div class="trust-badge-icon" style="background:linear-gradient(135deg,rgba(34,197,94,0.12),rgba(22,163,74,0.08));color:#16a34a;">
-                            <i class="fas fa-star"></i>
-                        </div>
-                        <h6 class="fw-bold mt-2 mb-1">4.8 Rating</h6>
-                        <small class="text-muted">User Reviews</small>
-                    </div>
-                </div>
-                <div class="col-md-3 col-6" data-aos="fade-up" data-aos-delay="400">
-                    <div class="trust-badge-card">
-                        <div class="trust-badge-icon" style="background:linear-gradient(135deg,rgba(168,85,247,0.12),rgba(147,51,234,0.08));color:#9333ea;">
-                            <i class="fas fa-users"></i>
-                        </div>
-                        <h6 class="fw-bold mt-2 mb-1">500+ Users</h6>
-                        <small class="text-muted">Active Community</small>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Partner / Integration Chips -->
-            <div class="text-center" data-aos="fade-up" data-aos-delay="300">
-                <small class="text-muted fw-bold text-uppercase ls-1 d-block mb-3">Integrations & Partners</small>
-                <div class="partner-logo-strip">
-                    <span class="partner-chip"><i class="fas fa-map-marked-alt" style="color:#4285f4;"></i> Google Maps</span>
-                    <span class="partner-chip"><i class="fas fa-fingerprint" style="color:#ff6f00;"></i> Aadhaar</span>
-                    <span class="partner-chip"><i class="fas fa-mobile-alt" style="color:#00c853;"></i> UPI Pay</span>
-                    <span class="partner-chip"><i class="fas fa-wifi" style="color:#667eea;"></i> Free WiFi</span>
-                    <span class="partner-chip"><i class="fas fa-wheelchair" style="color:#f59e0b;"></i> Accessible</span>
-                    <span class="partner-chip"><i class="fas fa-qrcode" style="color:#1e293b;"></i> QR Enabled</span>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ============ CITY SKYLINE DIVIDER ============ -->
-    <div class="skyline-divider" data-aos="fade-up">
-        <svg viewBox="0 0 1440 120" preserveAspectRatio="none" fill="none">
-            <!-- City buildings silhouette -->
-            <rect x="60" y="50" width="30" height="70" rx="2" fill="rgba(102,126,234,0.05)"/>
-            <rect x="100" y="30" width="25" height="90" rx="2" fill="rgba(102,126,234,0.06)"/>
-            <rect x="135" y="55" width="35" height="65" rx="2" fill="rgba(102,126,234,0.04)"/>
-            <rect x="180" y="20" width="20" height="100" rx="2" fill="rgba(102,126,234,0.07)"/>
-            <rect x="210" y="45" width="40" height="75" rx="2" fill="rgba(102,126,234,0.05)"/>
-            <rect x="280" y="35" width="28" height="85" rx="2" fill="rgba(102,126,234,0.06)"/>
-            <rect x="320" y="50" width="22" height="70" rx="2" fill="rgba(102,126,234,0.04)"/>
-            <rect x="400" y="25" width="30" height="95" rx="2" fill="rgba(102,126,234,0.05)"/>
-            <rect x="450" y="40" width="35" height="80" rx="2" fill="rgba(102,126,234,0.06)"/>
-            <rect x="550" y="45" width="25" height="75" rx="2" fill="rgba(102,126,234,0.04)"/>
-            <rect x="600" y="30" width="30" height="90" rx="2" fill="rgba(102,126,234,0.07)"/>
-            <rect x="700" y="50" width="40" height="70" rx="2" fill="rgba(102,126,234,0.05)"/>
-            <rect x="800" y="35" width="20" height="85" rx="2" fill="rgba(102,126,234,0.06)"/>
-            <rect x="850" y="55" width="30" height="65" rx="2" fill="rgba(102,126,234,0.04)"/>
-            <rect x="950" y="25" width="28" height="95" rx="2" fill="rgba(102,126,234,0.07)"/>
-            <rect x="1050" y="40" width="35" height="80" rx="2" fill="rgba(102,126,234,0.05)"/>
-            <rect x="1150" y="50" width="25" height="70" rx="2" fill="rgba(102,126,234,0.06)"/>
-            <rect x="1250" y="30" width="30" height="90" rx="2" fill="rgba(102,126,234,0.05)"/>
-            <rect x="1350" y="45" width="20" height="75" rx="2" fill="rgba(102,126,234,0.04)"/>
-            <!-- Metro rail line -->
-            <line x1="0" y1="118" x2="1440" y2="118" stroke="rgba(102,126,234,0.12)" stroke-width="2"/>
-            <circle cx="200" cy="118" r="4" fill="rgba(102,126,234,0.15)"/>
-            <circle cx="500" cy="118" r="4" fill="rgba(102,126,234,0.15)"/>
-            <circle cx="800" cy="118" r="4" fill="rgba(102,126,234,0.15)"/>
-            <circle cx="1100" cy="118" r="4" fill="rgba(102,126,234,0.15)"/>
-        </svg>
-    </div>
-
-    <!-- ============ JOURNEY EXPERIENCE ============ -->
-    <section class="journey-section" id="journey-experience">
-        <div class="journey-train-anim">
-            <div class="journey-train-dot"></div>
-        </div>
-
-        <div class="container position-relative" style="z-index:2;">
-            <div class="text-center mb-5" data-aos="fade-up">
-                <span class="badge px-3 py-2 rounded-pill fw-bold mb-3" style="background:rgba(102,126,234,0.15);color:#a5b4fc;border:1px solid rgba(102,126,234,0.25);">
-                    <i class="fas fa-route me-1"></i> Your Journey
-                </span>
-                <h2 class="fw-bold display-5 text-white mt-2">Seamless Metro Experience</h2>
-                <p class="mt-2 mx-auto" style="max-width:520px;color:rgba(255,255,255,0.6);">From your doorstep to your destination — here's how simple it is.</p>
-            </div>
-
-            <div class="row g-4 align-items-start">
-                <div class="col-md-3 col-6" data-aos="fade-up" data-aos-delay="100">
-                    <div class="journey-step">
-                        <div class="journey-icon-box" style="background:linear-gradient(135deg,rgba(99,102,241,0.2),rgba(99,102,241,0.1));color:#818cf8;">
-                            <i class="fas fa-user-plus"></i>
-                        </div>
-                        <h6 class="text-white fw-bold mb-1">Sign Up</h6>
-                        <small style="color:rgba(255,255,255,0.5);">Create your free MetroFlow account in 30 seconds</small>
-                        <div class="journey-connector d-none d-md-block">
-                            <div class="journey-connector-line"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3 col-6" data-aos="fade-up" data-aos-delay="200">
-                    <div class="journey-step">
-                        <div class="journey-icon-box" style="background:linear-gradient(135deg,rgba(236,72,153,0.2),rgba(236,72,153,0.1));color:#f472b6;">
-                            <i class="fas fa-wallet"></i>
-                        </div>
-                        <h6 class="text-white fw-bold mb-1">Add Funds</h6>
-                        <small style="color:rgba(255,255,255,0.5);">Recharge your wallet or get a MetroCard</small>
-                        <div class="journey-connector d-none d-md-block">
-                            <div class="journey-connector-line"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3 col-6" data-aos="fade-up" data-aos-delay="300">
-                    <div class="journey-step">
-                        <div class="journey-icon-box" style="background:linear-gradient(135deg,rgba(34,197,94,0.2),rgba(34,197,94,0.1));color:#4ade80;">
-                            <i class="fas fa-ticket-alt"></i>
-                        </div>
-                        <h6 class="text-white fw-bold mb-1">Book Ticket</h6>
-                        <small style="color:rgba(255,255,255,0.5);">Choose stations, class, and get dynamic pricing</small>
-                        <div class="journey-connector d-none d-md-block">
-                            <div class="journey-connector-line"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3 col-6" data-aos="fade-up" data-aos-delay="400">
-                    <div class="journey-step">
-                        <div class="journey-icon-box" style="background:linear-gradient(135deg,rgba(249,115,22,0.2),rgba(249,115,22,0.1));color:#fb923c;">
-                            <i class="fas fa-qrcode"></i>
-                        </div>
-                        <h6 class="text-white fw-bold mb-1">Scan & Go</h6>
-                        <small style="color:rgba(255,255,255,0.5);">Show your QR ticket and enter the metro</small>
                     </div>
                 </div>
             </div>
@@ -2787,688 +2775,6 @@
         </div>
     </section>
 
-    <!-- ============ MOBILE APP CTA ============ -->
-    <section class="app-cta-section" id="download-app">
-        <div class="container">
-            <div class="row align-items-center g-5">
-                <div class="col-lg-5 text-center" data-aos="fade-right">
-                    <div class="phone-mockup">
-                        <div class="phone-frame">
-                            <div class="phone-screen">
-                                <div class="phone-notch"></div>
-                                <div class="phone-app-content">
-                                    <div style="text-align:center;margin-bottom:16px;">
-                                        <i class="fas fa-train" style="font-size:28px;margin-bottom:8px;display:block;"></i>
-                                        <div style="font-weight:800;font-size:16px;">MetroFlow</div>
-                                        <div style="font-size:10px;opacity:0.6;">Smart Transit</div>
-                                    </div>
-                                    <div style="background:rgba(255,255,255,0.1);border-radius:14px;padding:12px;margin-bottom:10px;">
-                                        <div style="font-size:10px;opacity:0.5;margin-bottom:4px;">NEXT METRO</div>
-                                        <div style="font-weight:800;font-size:18px;">03:42</div>
-                                        <div style="font-size:10px;opacity:0.5;">minutes</div>
-                                    </div>
-                                    <div style="display:flex;gap:8px;margin-bottom:10px;">
-                                        <div style="flex:1;background:rgba(255,255,255,0.08);border-radius:10px;padding:8px;text-align:center;">
-                                            <div style="font-size:16px;">🎫</div>
-                                            <div style="font-size:8px;opacity:0.6;margin-top:2px;">Tickets</div>
-                                        </div>
-                                        <div style="flex:1;background:rgba(255,255,255,0.08);border-radius:10px;padding:8px;text-align:center;">
-                                            <div style="font-size:16px;">💳</div>
-                                            <div style="font-size:8px;opacity:0.6;margin-top:2px;">Card</div>
-                                        </div>
-                                        <div style="flex:1;background:rgba(255,255,255,0.08);border-radius:10px;padding:8px;text-align:center;">
-                                            <div style="font-size:16px;">🗺️</div>
-                                            <div style="font-size:8px;opacity:0.6;margin-top:2px;">Map</div>
-                                        </div>
-                                    </div>
-                                    <div style="background:rgba(34,197,94,0.2);border-radius:10px;padding:10px;border:1px solid rgba(34,197,94,0.3);">
-                                        <div style="display:flex;align-items:center;gap:6px;">
-                                            <div style="width:8px;height:8px;border-radius:50%;background:#22c55e;animation:statusPulse 2s infinite;"></div>
-                                            <span style="font-size:10px;font-weight:700;">All Systems Normal</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-lg-7" data-aos="fade-left">
-                    <span class="badge px-3 py-2 rounded-pill fw-bold mb-3" style="background:rgba(102,126,234,0.1);color:#667eea;border:1px solid rgba(102,126,234,0.2);">
-                        <i class="fas fa-mobile-alt me-1"></i> Coming Soon
-                    </span>
-                    <h2 class="fw-bold display-5 mb-3" style="color:#1e293b;">MetroFlow in<br>Your Pocket</h2>
-                    <p class="text-muted mb-4" style="max-width:460px;">Get real-time metro updates, offline QR tickets, and instant booking — all from our upcoming mobile app.</p>
-
-                    <div class="d-flex flex-column gap-3 mb-4">
-                        <div class="app-feature-pill">
-                            <i class="fas fa-qrcode" style="background:linear-gradient(135deg,rgba(99,102,241,0.12),rgba(99,102,241,0.06));color:#667eea;"></i>
-                            <div>
-                                <strong style="color:#1e293b;font-size:14px;">Offline QR Tickets</strong><br>
-                                <small class="text-muted">Access tickets without internet</small>
-                            </div>
-                        </div>
-                        <div class="app-feature-pill">
-                            <i class="fas fa-bell" style="background:linear-gradient(135deg,rgba(236,72,153,0.12),rgba(236,72,153,0.06));color:#ec4899;"></i>
-                            <div>
-                                <strong style="color:#1e293b;font-size:14px;">Smart Notifications</strong><br>
-                                <small class="text-muted">Delays, arrivals & pay reminders</small>
-                            </div>
-                        </div>
-                        <div class="app-feature-pill">
-                            <i class="fas fa-map-marker-alt" style="background:linear-gradient(135deg,rgba(34,197,94,0.12),rgba(34,197,94,0.06));color:#22c55e;"></i>
-                            <div>
-                                <strong style="color:#1e293b;font-size:14px;">Live Train Tracking</strong><br>
-                                <small class="text-muted">Know exactly when your train arrives</small>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="d-flex gap-3 flex-wrap">
-                        <a href="#" class="store-badge">
-                            <i class="fab fa-apple"></i>
-                            <div>
-                                <div style="font-size:9px;opacity:0.7;line-height:1;">Download on the</div>
-                                <div style="font-size:14px;font-weight:800;">App Store</div>
-                            </div>
-                        </a>
-                        <a href="#" class="store-badge">
-                            <i class="fab fa-google-play"></i>
-                            <div>
-                                <div style="font-size:9px;opacity:0.7;line-height:1;">Get it on</div>
-                                <div style="font-size:14px;font-weight:800;">Google Play</div>
-                            </div>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ============ METRO STATUS TEASER ============ -->
-    <section class="status-teaser" id="metro-status">
-        <div class="container">
-            <div class="row align-items-center g-4">
-                <div class="col-lg-4" data-aos="fade-right">
-                    <h4 class="text-white fw-bold mb-2"><i class="fas fa-signal me-2"></i>Live Metro Status</h4>
-                    <p style="color:rgba(255,255,255,0.5);font-size:14px;margin:0;">Real-time operational status of the Ahmedabad Metro network.</p>
-                </div>
-                <div class="col-lg-8">
-                    <div class="row g-3">
-                        <div class="col-md-3 col-6" data-aos="fade-up" data-aos-delay="100">
-                            <div class="status-card">
-                                <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
-                                    <span class="status-dot" style="background:#22c55e;"></span>
-                                    <span style="color:white;font-weight:700;font-size:13px;">Blue Line</span>
-                                </div>
-                                <small style="color:rgba(255,255,255,0.4);">Normal Operations</small>
-                            </div>
-                        </div>
-                        <div class="col-md-3 col-6" data-aos="fade-up" data-aos-delay="200">
-                            <div class="status-card">
-                                <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
-                                    <span class="status-dot" style="background:#22c55e;"></span>
-                                    <span style="color:white;font-weight:700;font-size:13px;">Green Line</span>
-                                </div>
-                                <small style="color:rgba(255,255,255,0.4);">Normal Operations</small>
-                            </div>
-                        </div>
-                        <div class="col-md-3 col-6" data-aos="fade-up" data-aos-delay="300">
-                            <div class="status-card">
-                                <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
-                                    <span class="status-dot" style="background:#22c55e;"></span>
-                                    <span style="color:white;font-weight:700;font-size:13px;">Ticketing</span>
-                                </div>
-                                <small style="color:rgba(255,255,255,0.4);">All Systems Go</small>
-                            </div>
-                        </div>
-                        <div class="col-md-3 col-6" data-aos="fade-up" data-aos-delay="400">
-                            <div class="status-card">
-                                <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
-                                    <span class="status-dot" style="background:#22c55e;"></span>
-                                    <span style="color:white;font-weight:700;font-size:13px;">API</span>
-                                </div>
-                                <small style="color:rgba(255,255,255,0.4);">99.9% Uptime</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ============ PRICING / FARE COMPARISON ============ -->
-    <section class="pricing-section" id="pricing">
-        <div class="container">
-            <div class="text-center mb-5" data-aos="fade-up">
-                <span class="badge bg-light text-primary px-3 py-2 rounded-pill fw-bold mb-3">
-                    <i class="fas fa-tags me-1"></i> Fare Plans
-                </span>
-                <h2 class="fw-bold display-5" style="color:#1e293b;">Simple, Transparent Pricing</h2>
-                <p class="text-muted mt-2 mx-auto" style="max-width:520px;">Choose how you travel. Save more with MetroCard and Monthly Pass.</p>
-            </div>
-
-            <div class="row g-4 justify-content-center">
-                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="100">
-                    <div class="pricing-card">
-                        <div style="width:50px;height:50px;border-radius:14px;background:linear-gradient(135deg,rgba(59,130,246,0.1),rgba(59,130,246,0.05));display:grid;place-items:center;margin:0 auto 16px;color:#3b82f6;font-size:20px;">
-                            <i class="fas fa-ticket-alt"></i>
-                        </div>
-                        <h5 class="fw-bold mb-1" style="color:#1e293b;">Single Trip</h5>
-                        <small class="text-muted d-block mb-3">Standard Economy</small>
-                        <div class="pricing-amount mb-1">₹10</div>
-                        <small class="text-muted d-block mb-4">starting fare</small>
-                        <div class="text-start">
-                            <div class="pricing-feature"><i class="fas fa-check-circle"></i> Distance-based fare</div>
-                            <div class="pricing-feature"><i class="fas fa-check-circle"></i> QR code ticket</div>
-                            <div class="pricing-feature"><i class="fas fa-check-circle"></i> PDF receipt download</div>
-                            <div class="pricing-feature"><i class="fas fa-check-circle"></i> Peak hour pricing</div>
-                        </div>
-                        <a href="register.html" class="btn btn-outline-primary w-100 mt-4 rounded-pill fw-bold py-2">Get Started</a>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="200">
-                    <div class="pricing-card featured">
-                        <div style="width:50px;height:50px;border-radius:14px;background:linear-gradient(135deg,rgba(102,126,234,0.15),rgba(118,75,162,0.1));display:grid;place-items:center;margin:0 auto 16px;color:#667eea;font-size:20px;">
-                            <i class="fas fa-id-card"></i>
-                        </div>
-                        <h5 class="fw-bold mb-1" style="color:#1e293b;">MetroCard</h5>
-                        <small class="text-muted d-block mb-3">Smart Commuter</small>
-                        <div class="pricing-amount mb-1">₹50</div>
-                        <small class="text-muted d-block mb-4">one-time fee + balance</small>
-                        <div class="text-start">
-                            <div class="pricing-feature"><i class="fas fa-check-circle"></i> All Single Trip features</div>
-                            <div class="pricing-feature"><i class="fas fa-check-circle"></i> Auto-debit fare</div>
-                            <div class="pricing-feature"><i class="fas fa-check-circle"></i> Reloadable balance</div>
-                            <div class="pricing-feature"><i class="fas fa-check-circle"></i> Priority boarding</div>
-                            <div class="pricing-feature"><i class="fas fa-check-circle"></i> Loyalty points</div>
-                        </div>
-                        <a href="register.html" class="btn text-white w-100 mt-4 rounded-pill fw-bold py-2" style="background:linear-gradient(135deg,#667eea,#764ba2);border:none;">Get MetroCard</a>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="300">
-                    <div class="pricing-card">
-                        <div style="width:50px;height:50px;border-radius:14px;background:linear-gradient(135deg,rgba(34,197,94,0.1),rgba(22,163,74,0.05));display:grid;place-items:center;margin:0 auto 16px;color:#16a34a;font-size:20px;">
-                            <i class="fas fa-calendar-alt"></i>
-                        </div>
-                        <h5 class="fw-bold mb-1" style="color:#1e293b;">Monthly Pass</h5>
-                        <small class="text-muted d-block mb-3">Unlimited Travel</small>
-                        <div class="pricing-amount mb-1">₹900</div>
-                        <small class="text-muted d-block mb-4">per month</small>
-                        <div class="text-start">
-                            <div class="pricing-feature"><i class="fas fa-check-circle"></i> All MetroCard features</div>
-                            <div class="pricing-feature"><i class="fas fa-check-circle"></i> Unlimited rides</div>
-                            <div class="pricing-feature"><i class="fas fa-check-circle"></i> No peak surcharge</div>
-                            <div class="pricing-feature"><i class="fas fa-check-circle"></i> Business class option</div>
-                            <div class="pricing-feature"><i class="fas fa-check-circle"></i> Family add-ons</div>
-                        </div>
-                        <a href="register.html" class="btn btn-outline-success w-100 mt-4 rounded-pill fw-bold py-2">Subscribe</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ============ LIVE PASSENGER COUNTER BAR ============ -->
-    <div class="passenger-counter-bar">
-        <div class="container">
-            <div class="d-flex flex-wrap justify-content-center justify-content-lg-between gap-3 gap-lg-4">
-                <div class="counter-item">
-                    <div class="live-pulse"></div>
-                    <span style="font-size:12px;font-weight:600;opacity:0.5;">LIVE</span>
-                    <span style="font-weight:800;font-size:18px;" id="livePassengers">2,341</span>
-                    <span style="font-size:12px;opacity:0.6;">passengers traveling now</span>
-                </div>
-                <div class="counter-item">
-                    <i class="fas fa-train" style="color:#667eea;font-size:14px;"></i>
-                    <span style="font-weight:700;font-size:13px;" id="liveTrains">32</span>
-                    <span style="font-size:12px;opacity:0.6;">trains running</span>
-                </div>
-                <div class="counter-item">
-                    <i class="fas fa-clock" style="color:#f59e0b;font-size:14px;"></i>
-                    <span style="font-weight:700;font-size:13px;">~4 min</span>
-                    <span style="font-size:12px;opacity:0.6;">avg. frequency</span>
-                </div>
-                <div class="counter-item">
-                    <i class="fas fa-check-circle" style="color:#22c55e;font-size:14px;"></i>
-                    <span style="font-weight:700;font-size:13px;">98.7%</span>
-                    <span style="font-size:12px;opacity:0.6;">on-time rate</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============ TRANSPORT COMPARISON ============ -->
-    <section class="comparison-section" id="compare-transport">
-        <div class="container">
-            <div class="text-center mb-5" data-aos="fade-up">
-                <span class="badge bg-light text-primary px-3 py-2 rounded-pill fw-bold mb-3">
-                    <i class="fas fa-balance-scale me-1"></i> Compare
-                </span>
-                <h2 class="fw-bold display-5" style="color:#1e293b;">Why Metro Wins</h2>
-                <p class="text-muted mt-2 mx-auto" style="max-width:520px;">See how MetroFlow compares to other modes of transport in Ahmedabad.</p>
-            </div>
-
-            <div class="table-responsive" data-aos="fade-up" data-aos-delay="200">
-                <table class="compare-table table mb-0">
-                    <thead>
-                        <tr>
-                            <th style="min-width:160px;">Feature</th>
-                            <th><i class="fas fa-train me-1"></i> Metro</th>
-                            <th><i class="fas fa-car me-1"></i> Car</th>
-                            <th><i class="fas fa-taxi me-1"></i> Auto/Cab</th>
-                            <th><i class="fas fa-bus me-1"></i> Bus</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><i class="fas fa-rupee-sign me-2 text-primary"></i>Avg. Cost (10 km)</td>
-                            <td class="metro-highlight">₹25</td>
-                            <td>₹120</td>
-                            <td>₹180</td>
-                            <td>₹15</td>
-                        </tr>
-                        <tr>
-                            <td><i class="fas fa-clock me-2 text-primary"></i>Travel Time</td>
-                            <td class="metro-highlight">18 min</td>
-                            <td>35 min</td>
-                            <td>30 min</td>
-                            <td>45 min</td>
-                        </tr>
-                        <tr>
-                            <td><i class="fas fa-cloud me-2 text-primary"></i>CO₂ Emissions</td>
-                            <td class="metro-highlight"><i class="fas fa-leaf text-success"></i> Lowest</td>
-                            <td>High</td>
-                            <td>Medium</td>
-                            <td>Medium</td>
-                        </tr>
-                        <tr>
-                            <td><i class="fas fa-shield-alt me-2 text-primary"></i>Safety Rating</td>
-                            <td class="metro-highlight">⭐⭐⭐⭐⭐</td>
-                            <td>⭐⭐⭐</td>
-                            <td>⭐⭐</td>
-                            <td>⭐⭐⭐</td>
-                        </tr>
-                        <tr>
-                            <td><i class="fas fa-wifi me-2 text-primary"></i>Free WiFi</td>
-                            <td class="metro-highlight"><i class="fas fa-check text-success"></i></td>
-                            <td><i class="fas fa-times text-muted"></i></td>
-                            <td><i class="fas fa-times text-muted"></i></td>
-                            <td><i class="fas fa-times text-muted"></i></td>
-                        </tr>
-                        <tr>
-                            <td><i class="fas fa-snowflake me-2 text-primary"></i>Air Conditioned</td>
-                            <td class="metro-highlight"><i class="fas fa-check text-success"></i></td>
-                            <td><i class="fas fa-check text-success"></i></td>
-                            <td><i class="fas fa-times text-muted"></i></td>
-                            <td>Partial</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </section>
-
-    <!-- ============ METRO SCHEDULE / OPERATING HOURS ============ -->
-    <section class="schedule-section" id="metro-schedule">
-        <div class="container">
-            <div class="text-center mb-5" data-aos="fade-up">
-                <span class="badge bg-light text-primary px-3 py-2 rounded-pill fw-bold mb-3">
-                    <i class="fas fa-clock me-1"></i> Timings
-                </span>
-                <h2 class="fw-bold display-5" style="color:#1e293b;">Operating Hours</h2>
-                <p class="text-muted mt-2 mx-auto" style="max-width:520px;">Plan your journey with our consistent daily schedule.</p>
-            </div>
-
-            <div class="row g-4 justify-content-center">
-                <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="100">
-                    <div class="schedule-card">
-                        <i class="fas fa-sun fa-lg mb-3" style="color:#f59e0b;"></i>
-                        <div class="schedule-time">6:00 AM</div>
-                        <h6 class="fw-bold mt-2 mb-1">First Train</h6>
-                        <small class="text-muted">Both Blue & Green Lines</small>
-                        <div class="schedule-badge" style="background:rgba(34,197,94,0.1);color:#16a34a;">Weekdays</div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="200">
-                    <div class="schedule-card">
-                        <i class="fas fa-moon fa-lg mb-3" style="color:#667eea;"></i>
-                        <div class="schedule-time">10:00 PM</div>
-                        <h6 class="fw-bold mt-2 mb-1">Last Train</h6>
-                        <small class="text-muted">Both Blue & Green Lines</small>
-                        <div class="schedule-badge" style="background:rgba(102,126,234,0.1);color:#667eea;">Weekdays</div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="300">
-                    <div class="schedule-card">
-                        <i class="fas fa-tachometer-alt fa-lg mb-3" style="color:#ec4899;"></i>
-                        <div class="schedule-time">4 min</div>
-                        <h6 class="fw-bold mt-2 mb-1">Peak Frequency</h6>
-                        <small class="text-muted">8 AM - 11 AM & 5 PM - 7 PM</small>
-                        <div class="schedule-badge" style="background:rgba(236,72,153,0.1);color:#ec4899;">Rush Hour</div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="400">
-                    <div class="schedule-card">
-                        <i class="fas fa-calendar-week fa-lg mb-3" style="color:#22c55e;"></i>
-                        <div class="schedule-time">7 Days</div>
-                        <h6 class="fw-bold mt-2 mb-1">Weekly Service</h6>
-                        <small class="text-muted">Including public holidays</small>
-                        <div class="schedule-badge" style="background:rgba(34,197,94,0.1);color:#16a34a;">Everyday</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ============ SAFETY TIPS ============ -->
-    <section class="safety-section" id="safety-tips">
-        <div class="container">
-            <div class="text-center mb-5" data-aos="fade-up">
-                <span class="badge bg-light text-danger px-3 py-2 rounded-pill fw-bold mb-3">
-                    <i class="fas fa-shield-alt me-1"></i> Safety
-                </span>
-                <h2 class="fw-bold display-5" style="color:#1e293b;">Passenger Safety Guidelines</h2>
-                <p class="text-muted mt-2 mx-auto" style="max-width:520px;">Your safety is our top priority. Follow these guidelines for a safe journey.</p>
-            </div>
-
-            <div class="row g-3">
-                <div class="col-lg-3 col-md-4 col-6" data-aos="fade-up" data-aos-delay="100">
-                    <div class="safety-card">
-                        <div class="safety-icon" style="background:linear-gradient(135deg,rgba(239,68,68,0.1),rgba(239,68,68,0.05));color:#ef4444;">
-                            <i class="fas fa-door-open"></i>
-                        </div>
-                        <h6 class="fw-bold mb-1" style="font-size:14px;">Mind the Gap</h6>
-                        <small class="text-muted">Watch your step between train and platform edges</small>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-4 col-6" data-aos="fade-up" data-aos-delay="150">
-                    <div class="safety-card">
-                        <div class="safety-icon" style="background:linear-gradient(135deg,rgba(59,130,246,0.1),rgba(59,130,246,0.05));color:#3b82f6;">
-                            <i class="fas fa-hand-paper"></i>
-                        </div>
-                        <h6 class="fw-bold mb-1" style="font-size:14px;">Hold Handrails</h6>
-                        <small class="text-muted">Use handrails on escalators and moving trains</small>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-4 col-6" data-aos="fade-up" data-aos-delay="200">
-                    <div class="safety-card">
-                        <div class="safety-icon" style="background:linear-gradient(135deg,rgba(249,115,22,0.1),rgba(249,115,22,0.05));color:#f97316;">
-                            <i class="fas fa-phone-alt"></i>
-                        </div>
-                        <h6 class="fw-bold mb-1" style="font-size:14px;">Emergency: 112</h6>
-                        <small class="text-muted">Press emergency button or call for immediate help</small>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-4 col-6" data-aos="fade-up" data-aos-delay="250">
-                    <div class="safety-card">
-                        <div class="safety-icon" style="background:linear-gradient(135deg,rgba(168,85,247,0.1),rgba(168,85,247,0.05));color:#a855f7;">
-                            <i class="fas fa-video"></i>
-                        </div>
-                        <h6 class="fw-bold mb-1" style="font-size:14px;">CCTV Monitored</h6>
-                        <small class="text-muted">24/7 surveillance across all stations</small>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-4 col-6" data-aos="fade-up" data-aos-delay="300">
-                    <div class="safety-card">
-                        <div class="safety-icon" style="background:linear-gradient(135deg,rgba(34,197,94,0.1),rgba(34,197,94,0.05));color:#22c55e;">
-                            <i class="fas fa-suitcase"></i>
-                        </div>
-                        <h6 class="fw-bold mb-1" style="font-size:14px;">Secure Luggage</h6>
-                        <small class="text-muted">Keep belongings in sight at all times</small>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-4 col-6" data-aos="fade-up" data-aos-delay="350">
-                    <div class="safety-card">
-                        <div class="safety-icon" style="background:linear-gradient(135deg,rgba(236,72,153,0.1),rgba(236,72,153,0.05));color:#ec4899;">
-                            <i class="fas fa-female"></i>
-                        </div>
-                        <h6 class="fw-bold mb-1" style="font-size:14px;">Ladies Coach</h6>
-                        <small class="text-muted">Dedicated reserved coach for women travelers</small>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-4 col-6" data-aos="fade-up" data-aos-delay="400">
-                    <div class="safety-card">
-                        <div class="safety-icon" style="background:linear-gradient(135deg,rgba(14,165,233,0.1),rgba(14,165,233,0.05));color:#0ea5e9;">
-                            <i class="fas fa-fire-extinguisher"></i>
-                        </div>
-                        <h6 class="fw-bold mb-1" style="font-size:14px;">Fire Safety</h6>
-                        <small class="text-muted">Extinguishers & alarms at every platform</small>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-4 col-6" data-aos="fade-up" data-aos-delay="450">
-                    <div class="safety-card">
-                        <div class="safety-icon" style="background:linear-gradient(135deg,rgba(234,179,8,0.1),rgba(234,179,8,0.05));color:#eab308;">
-                            <i class="fas fa-ban"></i>
-                        </div>
-                        <h6 class="fw-bold mb-1" style="font-size:14px;">No Smoking</h6>
-                        <small class="text-muted">Smoking prohibited in all metro premises</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ============ ACCESSIBILITY ============ -->
-    <section class="accessibility-section" id="accessibility">
-        <div class="container">
-            <div class="text-center mb-5" data-aos="fade-up">
-                <span class="badge px-3 py-2 rounded-pill fw-bold mb-3" style="background:rgba(234,179,8,0.1);color:#d97706;border:1px solid rgba(234,179,8,0.15);">
-                    <i class="fas fa-universal-access me-1"></i> For Everyone
-                </span>
-                <h2 class="fw-bold display-5" style="color:#1e293b;">Inclusive Transportation</h2>
-                <p class="text-muted mt-2 mx-auto" style="max-width:540px;">MetroFlow is designed to be accessible to all citizens, regardless of physical ability.</p>
-            </div>
-
-            <div class="row g-4">
-                <div class="col-md-3 col-6" data-aos="zoom-in" data-aos-delay="100">
-                    <div class="access-card">
-                        <div class="access-icon" style="background:linear-gradient(135deg,rgba(59,130,246,0.12),rgba(59,130,246,0.06));color:#3b82f6;">
-                            <i class="fas fa-wheelchair"></i>
-                        </div>
-                        <h6 class="fw-bold mb-1">Wheelchair Ramps</h6>
-                        <small class="text-muted">All stations equipped with ramps and lifts</small>
-                    </div>
-                </div>
-                <div class="col-md-3 col-6" data-aos="zoom-in" data-aos-delay="200">
-                    <div class="access-card">
-                        <div class="access-icon" style="background:linear-gradient(135deg,rgba(168,85,247,0.12),rgba(168,85,247,0.06));color:#a855f7;">
-                            <i class="fas fa-braille"></i>
-                        </div>
-                        <h6 class="fw-bold mb-1">Braille Signage</h6>
-                        <small class="text-muted">Tactile and braille navigation support</small>
-                    </div>
-                </div>
-                <div class="col-md-3 col-6" data-aos="zoom-in" data-aos-delay="300">
-                    <div class="access-card">
-                        <div class="access-icon" style="background:linear-gradient(135deg,rgba(234,179,8,0.12),rgba(234,179,8,0.06));color:#d97706;">
-                            <i class="fas fa-volume-up"></i>
-                        </div>
-                        <h6 class="fw-bold mb-1">Audio Announcements</h6>
-                        <small class="text-muted">Multilingual audio in Hindi, Gujarati & English</small>
-                    </div>
-                </div>
-                <div class="col-md-3 col-6" data-aos="zoom-in" data-aos-delay="400">
-                    <div class="access-card">
-                        <div class="access-icon" style="background:linear-gradient(135deg,rgba(34,197,94,0.12),rgba(34,197,94,0.06));color:#16a34a;">
-                            <i class="fas fa-user-friends"></i>
-                        </div>
-                        <h6 class="fw-bold mb-1">Senior Priority</h6>
-                        <small class="text-muted">Reserved seating & priority boarding</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ============ NEWS / UPDATES ============ -->
-    <section class="news-section" id="metro-news">
-        <div class="container">
-            <div class="text-center mb-5" data-aos="fade-up">
-                <span class="badge bg-light text-primary px-3 py-2 rounded-pill fw-bold mb-3">
-                    <i class="fas fa-newspaper me-1"></i> Updates
-                </span>
-                <h2 class="fw-bold display-5" style="color:#1e293b;">Latest Metro News</h2>
-                <p class="text-muted mt-2 mx-auto" style="max-width:520px;">Stay updated with the latest developments in the Ahmedabad Metro network.</p>
-            </div>
-
-            <div class="row g-4">
-                <div class="col-lg-4" data-aos="fade-up" data-aos-delay="100">
-                    <div class="news-card">
-                        <div class="news-card-img" style="background:linear-gradient(135deg,#667eea,#764ba2);">
-                            <i class="fas fa-route" style="color:rgba(255,255,255,0.3);"></i>
-                        </div>
-                        <div class="news-card-body">
-                            <div class="news-meta" style="color:#667eea;">
-                                <i class="fas fa-calendar-alt me-1"></i> March 2026 · Network
-                            </div>
-                            <h5 class="fw-bold mb-2" style="font-size:16px;color:#1e293b;">Green Line Extension Opens to GIFT City</h5>
-                            <p class="text-muted small mb-0">The Phase-2 extension adds 4 new stations connecting GIFT City to the existing metro network, reducing commute time by 35%.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-4" data-aos="fade-up" data-aos-delay="200">
-                    <div class="news-card">
-                        <div class="news-card-img" style="background:linear-gradient(135deg,#22c55e,#16a34a);">
-                            <i class="fas fa-mobile-alt" style="color:rgba(255,255,255,0.3);"></i>
-                        </div>
-                        <div class="news-card-body">
-                            <div class="news-meta" style="color:#16a34a;">
-                                <i class="fas fa-calendar-alt me-1"></i> February 2026 · Technology
-                            </div>
-                            <h5 class="fw-bold mb-2" style="font-size:16px;color:#1e293b;">MetroFlow App Crosses 10,000 Downloads</h5>
-                            <p class="text-muted small mb-0">Our smart ticketing platform has reached a major milestone with commuters across the city adopting QR-based travel.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-4" data-aos="fade-up" data-aos-delay="300">
-                    <div class="news-card">
-                        <div class="news-card-img" style="background:linear-gradient(135deg,#f59e0b,#d97706);">
-                            <i class="fas fa-award" style="color:rgba(255,255,255,0.3);"></i>
-                        </div>
-                        <div class="news-card-body">
-                            <div class="news-meta" style="color:#d97706;">
-                                <i class="fas fa-calendar-alt me-1"></i> January 2026 · Award
-                            </div>
-                            <h5 class="fw-bold mb-2" style="font-size:16px;color:#1e293b;">Ahmedabad Metro Wins Smart City Innovation Award</h5>
-                            <p class="text-muted small mb-0">Recognized for digital ticketing innovation and citizen-first design at the National Smart City Conference 2026.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ============ METRO TIMELINE ============ -->
-    <section class="timeline-section" id="metro-timeline">
-        <div class="container">
-            <div class="text-center mb-5" data-aos="fade-up">
-                <span class="badge px-3 py-2 rounded-pill fw-bold mb-3" style="background:rgba(102,126,234,0.15);color:#a5b4fc;border:1px solid rgba(102,126,234,0.25);">
-                    <i class="fas fa-history me-1"></i> Milestones
-                </span>
-                <h2 class="fw-bold display-5 text-white mt-2">Our Journey So Far</h2>
-                <p class="mt-2 mx-auto" style="max-width:500px;color:rgba(255,255,255,0.5);">Key milestones in the Ahmedabad Metro & MetroFlow story.</p>
-            </div>
-
-            <div class="timeline-container" data-aos="fade-up" data-aos-delay="200">
-                <div class="timeline-line"></div>
-                <div class="timeline-item">
-                    <div class="timeline-dot"></div>
-                    <div class="timeline-year">2015</div>
-                    <div class="timeline-title">Metro Project Approved</div>
-                    <div class="timeline-desc">Government of Gujarat approves Ahmedabad Metro Rail Project with 2 corridors spanning 40.03 km.</div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-dot" style="border-color:#f093fb;"></div>
-                    <div class="timeline-year">2019</div>
-                    <div class="timeline-title">Phase-1 Construction Begins</div>
-                    <div class="timeline-desc">Underground and elevated section construction begins across major Ahmedabad arterial roads.</div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-dot" style="border-color:#22c55e;"></div>
-                    <div class="timeline-year">2022</div>
-                    <div class="timeline-title">First Metro Train Runs</div>
-                    <div class="timeline-desc">Ahmedabad Metro's first commercial operation begins on the Blue Line between Apparel Park and Vastral.</div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-dot" style="border-color:#f59e0b;"></div>
-                    <div class="timeline-year">2025</div>
-                    <div class="timeline-title">MetroFlow Platform Launched</div>
-                    <div class="timeline-desc">Smart ticketing platform with QR codes, digital wallet, and real-time analytics goes live.</div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-dot" style="border-color:#ec4899;"></div>
-                    <div class="timeline-year">2026</div>
-                    <div class="timeline-title">Green Line Extension to GIFT City</div>
-                    <div class="timeline-desc">Phase-2 extension connecting GIFT City opens, bringing 4 new stations and 500+ daily commuters.</div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ============ DOWNLOAD RESOURCES ============ -->
-    <section class="downloads-section" id="resources">
-        <div class="container">
-            <div class="text-center mb-5" data-aos="fade-up">
-                <span class="badge bg-light text-primary px-3 py-2 rounded-pill fw-bold mb-3">
-                    <i class="fas fa-download me-1"></i> Resources
-                </span>
-                <h2 class="fw-bold display-5" style="color:#1e293b;">Download Resources</h2>
-                <p class="text-muted mt-2 mx-auto" style="max-width:520px;">Official documents and guides for your reference.</p>
-            </div>
-
-            <div class="row g-3 justify-content-center" style="max-width:800px;margin:0 auto;">
-                <div class="col-md-6" data-aos="fade-up" data-aos-delay="100">
-                    <a href="#" class="download-card">
-                        <div class="download-icon" style="background:linear-gradient(135deg,rgba(239,68,68,0.1),rgba(239,68,68,0.05));color:#ef4444;">
-                            <i class="fas fa-file-pdf"></i>
-                        </div>
-                        <div>
-                            <h6 class="fw-bold mb-1" style="font-size:14px;">Metro Route Map 2026</h6>
-                            <small class="text-muted">PDF · 2.4 MB</small>
-                        </div>
-                        <i class="fas fa-download ms-auto text-muted"></i>
-                    </a>
-                </div>
-                <div class="col-md-6" data-aos="fade-up" data-aos-delay="200">
-                    <a href="#" class="download-card">
-                        <div class="download-icon" style="background:linear-gradient(135deg,rgba(59,130,246,0.1),rgba(59,130,246,0.05));color:#3b82f6;">
-                            <i class="fas fa-file-alt"></i>
-                        </div>
-                        <div>
-                            <h6 class="fw-bold mb-1" style="font-size:14px;">Train Timetable</h6>
-                            <small class="text-muted">PDF · 1.1 MB</small>
-                        </div>
-                        <i class="fas fa-download ms-auto text-muted"></i>
-                    </a>
-                </div>
-                <div class="col-md-6" data-aos="fade-up" data-aos-delay="300">
-                    <a href="#" class="download-card">
-                        <div class="download-icon" style="background:linear-gradient(135deg,rgba(34,197,94,0.1),rgba(34,197,94,0.05));color:#22c55e;">
-                            <i class="fas fa-file-invoice"></i>
-                        </div>
-                        <div>
-                            <h6 class="fw-bold mb-1" style="font-size:14px;">Fare Chart</h6>
-                            <small class="text-muted">PDF · 800 KB</small>
-                        </div>
-                        <i class="fas fa-download ms-auto text-muted"></i>
-                    </a>
-                </div>
-                <div class="col-md-6" data-aos="fade-up" data-aos-delay="400">
-                    <a href="#" class="download-card">
-                        <div class="download-icon" style="background:linear-gradient(135deg,rgba(168,85,247,0.1),rgba(168,85,247,0.05));color:#a855f7;">
-                            <i class="fas fa-book"></i>
-                        </div>
-                        <div>
-                            <h6 class="fw-bold mb-1" style="font-size:14px;">Passenger Handbook</h6>
-                            <small class="text-muted">PDF · 3.6 MB</small>
-                        </div>
-                        <i class="fas fa-download ms-auto text-muted"></i>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </section>
 
     <section id="network" class="py-5 bg-dark text-white position-relative overflow-hidden">
         <div
@@ -3520,43 +2826,105 @@
 
     <!-- Cookie Consent Banner -->
     <div class="cookie-banner" id="cookieBanner">
-        <div class="container d-flex flex-wrap align-items-center justify-content-between gap-3 py-3">
-            <div class="d-flex align-items-center gap-3" style="flex:1;min-width:200px;">
-                <i class="fas fa-cookie-bite fa-lg" style="color:#f59e0b;"></i>
-                <p class="mb-0 small text-muted">We use cookies to enhance your experience. By continuing to visit this
-                    site you agree to our use of cookies.</p>
+        <div style="display:flex;align-items:center;gap:16px;padding:16px 22px;">
+            <div class="cookie-icon-anim">
+                <i class="fas fa-cookie-bite" style="color:#d97706;"></i>
             </div>
-            <div class="d-flex gap-2 flex-shrink-0">
-                <button class="btn btn-sm btn-outline-secondary rounded-pill px-3"
-                    onclick="document.getElementById('cookieBanner').remove()">Learn More</button>
-                <button class="btn btn-sm text-white rounded-pill px-4 fw-bold"
-                    style="background:linear-gradient(135deg,#667eea,#764ba2);border:none;"
-                    onclick="acceptCookies()">Accept</button>
+            <div style="flex:1;min-width:0;">
+                <p style="margin:0;font-size:0.88rem;font-weight:600;color:#1e293b;line-height:1.3;">🍪 We value your privacy</p>
+                <p style="margin:0;font-size:0.78rem;color:#64748b;line-height:1.5;margin-top:2px;">We use cookies to enhance your browsing experience, serve personalised content, and analyse traffic. By clicking <strong>Accept</strong>, you consent to our use of cookies.</p>
+            </div>
+            <div style="display:flex;gap:8px;flex-shrink:0;align-items:center;">
+                <button class="cookie-btn-learn" onclick="openCookieModal()">
+                    <i class="fas fa-sliders-h" style="font-size:0.75rem;"></i> Manage
+                </button>
+                <button class="cookie-btn-accept" id="cookieAcceptBtn" onclick="acceptCookies()">
+                    <i class="fas fa-check" style="font-size:0.75rem;"></i> Accept All
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- ============ NEWSLETTER ============ -->
-    <section class="newsletter-section" id="newsletter">
-        <div class="container position-relative" style="z-index:2;">
-            <div class="row align-items-center g-5">
-                <div class="col-lg-6" data-aos="fade-right">
-                    <h2 class="fw-bold text-white display-6 mb-3">Stay in the Loop</h2>
-                    <p style="color:rgba(255,255,255,0.7);max-width:400px;">Get metro updates, fare deals, and new feature announcements directly in your inbox. No spam, ever.</p>
-                </div>
-                <div class="col-lg-6" data-aos="fade-left">
-                    <div class="newsletter-input-wrap" id="newsletterForm">
-                        <input type="email" placeholder="Your email address" id="newsletterEmail" required>
-                        <button onclick="subscribeNewsletter()">Subscribe <i class="fas fa-arrow-right ms-1"></i></button>
+    <!-- Cookie Preferences Modal -->
+    <div class="cookie-modal-overlay" id="cookieModalOverlay" onclick="closeCookieModalOnBg(event)">
+        <div class="cookie-modal" id="cookieModal">
+            <div class="cookie-modal-header">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <div style="width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,0.2);display:grid;place-items:center;font-size:1.2rem;">🍪</div>
+                    <div>
+                        <h5 style="margin:0;font-weight:800;font-size:1rem;">Cookie Preferences</h5>
+                        <p style="margin:0;font-size:0.75rem;opacity:0.85;">Control how we use cookies on this site</p>
                     </div>
-                    <div id="newsletterFeedback" style="margin-top:10px;display:none;"></div>
-                    <p style="color:rgba(255,255,255,0.4);font-size:12px;margin-top:14px;">
-                        <i class="fas fa-lock me-1"></i> We respect your privacy. Unsubscribe anytime.
-                    </p>
                 </div>
+                <button onclick="closeCookieModal()" style="background:rgba(255,255,255,0.15);border:none;border-radius:10px;width:34px;height:34px;color:#fff;font-size:1rem;cursor:pointer;display:grid;place-items:center;transition:background 0.2s;" onmouseenter="this.style.background='rgba(255,255,255,0.25)'" onmouseleave="this.style.background='rgba(255,255,255,0.15)'">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="cookie-modal-body">
+                <p style="font-size:0.83rem;color:#64748b;margin-bottom:18px;line-height:1.6;">We use different types of cookies to optimise your experience on our website. Click on the categories below to learn more and customise your preferences.</p>
+
+                <!-- Strictly Necessary -->
+                <div class="cookie-type-row">
+                    <div class="cookie-type-icon" style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);color:#059669;"><i class="fas fa-shield-alt"></i></div>
+                    <div style="flex:1;">
+                        <p style="margin:0;font-weight:700;font-size:0.88rem;color:#1e293b;">Strictly Necessary</p>
+                        <p style="margin:4px 0 0;font-size:0.78rem;color:#64748b;line-height:1.5;">Essential for the website to function. Cannot be disabled — they keep you logged in and secure.</p>
+                    </div>
+                    <label class="cookie-toggle">
+                        <input type="checkbox" checked disabled>
+                        <span class="cookie-toggle-slider"></span>
+                    </label>
+                </div>
+
+                <!-- Analytics -->
+                <div class="cookie-type-row">
+                    <div class="cookie-type-icon" style="background:linear-gradient(135deg,#eff6ff,#dbeafe);color:#2563eb;"><i class="fas fa-chart-bar"></i></div>
+                    <div style="flex:1;">
+                        <p style="margin:0;font-weight:700;font-size:0.88rem;color:#1e293b;">Analytics Cookies</p>
+                        <p style="margin:4px 0 0;font-size:0.78rem;color:#64748b;line-height:1.5;">Help us understand how visitors interact with the site so we can improve performance and content.</p>
+                    </div>
+                    <label class="cookie-toggle">
+                        <input type="checkbox" checked id="analyticsToggle">
+                        <span class="cookie-toggle-slider"></span>
+                    </label>
+                </div>
+
+                <!-- Personalisation -->
+                <div class="cookie-type-row">
+                    <div class="cookie-type-icon" style="background:linear-gradient(135deg,#fdf4ff,#fae8ff);color:#9333ea;"><i class="fas fa-user-cog"></i></div>
+                    <div style="flex:1;">
+                        <p style="margin:0;font-weight:700;font-size:0.88rem;color:#1e293b;">Personalisation</p>
+                        <p style="margin:4px 0 0;font-size:0.78rem;color:#64748b;line-height:1.5;">Allow us to remember your preferences and show you a tailored experience across sessions.</p>
+                    </div>
+                    <label class="cookie-toggle">
+                        <input type="checkbox" id="personalisationToggle">
+                        <span class="cookie-toggle-slider"></span>
+                    </label>
+                </div>
+
+                <!-- Marketing -->
+                <div class="cookie-type-row">
+                    <div class="cookie-type-icon" style="background:linear-gradient(135deg,#fff7ed,#ffedd5);color:#ea580c;"><i class="fas fa-bullhorn"></i></div>
+                    <div style="flex:1;">
+                        <p style="margin:0;font-weight:700;font-size:0.88rem;color:#1e293b;">Marketing</p>
+                        <p style="margin:4px 0 0;font-size:0.78rem;color:#64748b;line-height:1.5;">Used to deliver relevant advertisements and track campaign effectiveness across platforms.</p>
+                    </div>
+                    <label class="cookie-toggle">
+                        <input type="checkbox" id="marketingToggle">
+                        <span class="cookie-toggle-slider"></span>
+                    </label>
+                </div>
+
+                <p style="font-size:0.74rem;color:#94a3b8;margin-top:16px;line-height:1.5;">For more information visit our <a href="#" style="color:#667eea;">Privacy Policy</a> and <a href="#" style="color:#667eea;">Cookie Policy</a>.</p>
+            </div>
+            <div class="cookie-modal-footer">
+                <button class="cookie-btn-learn" onclick="rejectAllCookies()" style="border-color:#fca5a5;color:#ef4444;">Reject All</button>
+                <button class="cookie-btn-learn" onclick="saveCustomCookies()">Save My Choices</button>
+                <button class="cookie-btn-accept" onclick="acceptCookies()" style="box-shadow:0 4px 16px rgba(102,126,234,0.35);"><i class="fas fa-check" style="font-size:0.75rem;"></i> Accept All</button>
             </div>
         </div>
-    </section>
+    </div>
+
 
     <!-- ============ FLOATING HELP WIDGET ============ -->
     <div class="floating-help" id="floatingHelp">
@@ -3927,9 +3295,51 @@
 
         function acceptCookies() {
             localStorage.setItem('cookieAccepted', 'true');
+            localStorage.setItem('cookiePrefs', JSON.stringify({ analytics: true, personalisation: true, marketing: true }));
             const banner = document.getElementById('cookieBanner');
-            banner.style.transform = 'translateY(100%)';
-            setTimeout(() => banner.remove(), 400);
+            const overlay = document.getElementById('cookieModalOverlay');
+            if (overlay) { overlay.classList.remove('open'); }
+            if (banner) {
+                banner.classList.add('hide');
+                setTimeout(() => banner.remove(), 600);
+            }
+        }
+
+        function rejectAllCookies() {
+            localStorage.setItem('cookieAccepted', 'true');
+            localStorage.setItem('cookiePrefs', JSON.stringify({ analytics: false, personalisation: false, marketing: false }));
+            closeCookieModal();
+            const banner = document.getElementById('cookieBanner');
+            if (banner) { banner.classList.add('hide'); setTimeout(() => banner.remove(), 600); }
+        }
+
+        function saveCustomCookies() {
+            const prefs = {
+                analytics: document.getElementById('analyticsToggle')?.checked ?? true,
+                personalisation: document.getElementById('personalisationToggle')?.checked ?? false,
+                marketing: document.getElementById('marketingToggle')?.checked ?? false,
+            };
+            localStorage.setItem('cookieAccepted', 'true');
+            localStorage.setItem('cookiePrefs', JSON.stringify(prefs));
+            closeCookieModal();
+            const banner = document.getElementById('cookieBanner');
+            if (banner) { banner.classList.add('hide'); setTimeout(() => banner.remove(), 600); }
+        }
+
+        function openCookieModal() {
+            const overlay = document.getElementById('cookieModalOverlay');
+            if (overlay) overlay.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeCookieModal() {
+            const overlay = document.getElementById('cookieModalOverlay');
+            if (overlay) overlay.classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        function closeCookieModalOnBg(e) {
+            if (e.target === document.getElementById('cookieModalOverlay')) closeCookieModal();
         }
         // ═══════════════════════════════════════════════════
         // Feature O: Typewriter Hero Subtitle (Vercel/Linear)
@@ -4278,36 +3688,267 @@
         })();
 
         // ═══════════════════════════════════════════════════
-        // Quick Fare Check Widget
+        // Quick Fare Check Widget — Autocomplete Search
         // ═══════════════════════════════════════════════════
         (() => {
             const src = document.getElementById('qfwSource');
             const dst = document.getElementById('qfwDest');
             if (!src || !dst) return;
 
+            // ── Inject autocomplete styles ──────────────────
+            const st = document.createElement('style');
+            st.textContent = `
+                .qfw-ac-wrap {
+                    position: relative; flex: 1; min-width: 0;
+                }
+                .qfw-ac-input {
+                    width: 100%; padding: 11px 38px 11px 16px;
+                    border: 2px solid #e8ecf4; border-radius: 14px;
+                    font-size: 13px; font-weight: 600;
+                    font-family: 'Poppins', sans-serif;
+                    background: #f8fafc; color: #334155;
+                    outline: none; transition: all 0.25s; cursor: pointer;
+                    box-sizing: border-box; text-overflow: ellipsis;
+                    white-space: nowrap; overflow: hidden;
+                }
+                .qfw-ac-input::placeholder { color: #94a3b8; font-weight: 500; }
+                .qfw-ac-input:focus {
+                    border-color: #667eea; background: #fff;
+                    box-shadow: 0 0 0 3px rgba(102,126,234,0.13);
+                    cursor: text;
+                }
+                .qfw-ac-icon {
+                    position: absolute; right: 13px; top: 50%;
+                    transform: translateY(-50%); pointer-events: none;
+                    color: #94a3b8; font-size: 13px; transition: color 0.2s;
+                }
+                .qfw-ac-wrap:focus-within .qfw-ac-icon { color: #667eea; }
+                .qfw-ac-list {
+                    position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+                    background: #fff; border: 1.5px solid rgba(102,126,234,0.18);
+                    border-radius: 14px; z-index: 9999; max-height: 210px;
+                    overflow-y: auto; display: none;
+                    box-shadow: 0 8px 32px rgba(102,126,234,0.16), 0 2px 8px rgba(0,0,0,0.06);
+                    animation: qfwDropIn 0.18s ease;
+                    scrollbar-width: thin; scrollbar-color: #c7d2fe #f1f5f9;
+                }
+                .qfw-ac-list.open { display: block; }
+                @keyframes qfwDropIn {
+                    from { opacity: 0; transform: translateY(-6px); }
+                    to   { opacity: 1; transform: translateY(0); }
+                }
+                .qfw-ac-item {
+                    padding: 10px 16px; font-size: 13px; font-weight: 600;
+                    font-family: 'Poppins', sans-serif; color: #334155;
+                    cursor: pointer; transition: background 0.15s, color 0.15s;
+                    display: flex; align-items: center; gap: 10px;
+                    border-bottom: 1px solid rgba(102,126,234,0.05);
+                }
+                .qfw-ac-item:last-child { border-bottom: none; }
+                .qfw-ac-item:hover, .qfw-ac-item.active {
+                    background: linear-gradient(90deg, rgba(102,126,234,0.08), rgba(118,75,162,0.04));
+                    color: #667eea;
+                }
+                .qfw-ac-item .ac-dot {
+                    width: 8px; height: 8px; border-radius: 50%;
+                    background: linear-gradient(135deg, #667eea, #764ba2);
+                    flex-shrink: 0; opacity: 0.7;
+                }
+                .qfw-ac-item mark {
+                    background: none; color: #667eea; font-weight: 800; padding: 0;
+                }
+                .qfw-ac-empty {
+                    padding: 14px 16px; font-size: 12.5px; color: #94a3b8;
+                    font-family: 'Poppins', sans-serif; text-align: center;
+                    font-style: italic;
+                }
+            `;
+            document.head.appendChild(st);
+
+            let _allStations = [];
+
+            // ── Build one autocomplete field ────────────────
+            function buildAutocomplete(oldSel, placeholder) {
+                const wrap = document.createElement('div');
+                wrap.className = 'qfw-ac-wrap';
+
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'qfw-ac-input';
+                input.placeholder = placeholder;
+                input.autocomplete = 'off';
+                input.spellcheck = false;
+
+                const icon = document.createElement('i');
+                icon.className = 'fas fa-search qfw-ac-icon';
+
+                const list = document.createElement('div');
+                list.className = 'qfw-ac-list';
+
+                wrap.appendChild(input);
+                wrap.appendChild(icon);
+                wrap.appendChild(list);
+
+                oldSel.style.display = 'none';
+                oldSel.parentNode.insertBefore(wrap, oldSel);
+
+                let activeIdx = -1;
+                let currentValue = null;   // stored station value
+                let filtered = [];
+
+                // Highlight matching part
+                function highlight(text, query) {
+                    if (!query) return text;
+                    const idx = text.toLowerCase().indexOf(query.toLowerCase());
+                    if (idx === -1) return text;
+                    return text.slice(0, idx)
+                        + '<mark>' + text.slice(idx, idx + query.length) + '</mark>'
+                        + text.slice(idx + query.length);
+                }
+
+                function renderList(query) {
+                    const q = query.trim().toLowerCase();
+                    filtered = q
+                        ? _allStations.filter(s => s.label.toLowerCase().includes(q))
+                        : [..._allStations];
+
+                    list.innerHTML = '';
+                    activeIdx = -1;
+
+                    if (!filtered.length) {
+                        list.innerHTML = `<div class="qfw-ac-empty">No stations found</div>`;
+                        list.classList.add('open');
+                        return;
+                    }
+
+                    filtered.forEach((s, i) => {
+                        const item = document.createElement('div');
+                        item.className = 'qfw-ac-item';
+                        item.innerHTML = `<span class="ac-dot"></span><span>${highlight(s.label, query.trim())}</span>`;
+                        item.addEventListener('mousedown', (e) => {
+                            e.preventDefault();
+                            selectStation(s);
+                        });
+                        list.appendChild(item);
+                    });
+                    list.classList.add('open');
+                }
+
+                function selectStation(s) {
+                    currentValue = s.value;
+                    input.value = s.label;
+                    icon.className = 'fas fa-map-marker-alt qfw-ac-icon';
+                    icon.style.color = '#667eea';
+                    list.classList.remove('open');
+                    oldSel.innerHTML = `<option value="${s.value}" selected>${s.label}</option>`;
+                    oldSel.value = s.value;
+                    oldSel.dispatchEvent(new Event('change'));
+                }
+
+                function closeList() {
+                    list.classList.remove('open');
+                    // If input doesn't match a valid station, restore last valid
+                    if (currentValue) {
+                        const found = _allStations.find(s => s.value === currentValue);
+                        if (found) input.value = found.label;
+                    }
+                }
+
+                input.addEventListener('focus', () => {
+                    input.select();
+                    icon.className = 'fas fa-search qfw-ac-icon';
+                    icon.style.color = '';
+                    renderList(input.value);
+                });
+
+                input.addEventListener('input', () => {
+                    currentValue = null;
+                    renderList(input.value);
+                });
+
+                input.addEventListener('keydown', (e) => {
+                    const items = list.querySelectorAll('.qfw-ac-item');
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        activeIdx = Math.min(activeIdx + 1, items.length - 1);
+                        items.forEach((el, i) => el.classList.toggle('active', i === activeIdx));
+                        if (items[activeIdx]) items[activeIdx].scrollIntoView({ block: 'nearest' });
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        activeIdx = Math.max(activeIdx - 1, 0);
+                        items.forEach((el, i) => el.classList.toggle('active', i === activeIdx));
+                        if (items[activeIdx]) items[activeIdx].scrollIntoView({ block: 'nearest' });
+                    } else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (activeIdx >= 0 && filtered[activeIdx]) {
+                            selectStation(filtered[activeIdx]);
+                        } else if (filtered.length === 1) {
+                            selectStation(filtered[0]);
+                        }
+                    } else if (e.key === 'Escape') {
+                        closeList();
+                        input.blur();
+                    }
+                });
+
+                input.addEventListener('blur', () => {
+                    setTimeout(closeList, 150);
+                });
+
+                return {
+                    setStation: (val) => {
+                        const s = _allStations.find(st => st.value === val);
+                        if (s) {
+                            selectStation(s);
+                        }
+                    },
+                    getStation: () => currentValue
+                };
+            }
+
+            let srcStepper, dstStepper;
+
             fetch('/api/stations').then(r => r.json()).then(data => {
                 if (!data.success) return;
-                (data.stations || []).forEach(st => {
-                    const nm = st.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-                    src.innerHTML += `<option value="${st}">${nm}</option>`;
-                    dst.innerHTML += `<option value="${st}">${nm}</option>`;
-                });
+                _allStations = (data.stations || []).map(st => ({
+                    value: st,
+                    label: st.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+                }));
+
+                srcStepper = buildAutocomplete(src, '🚇 From station...');
+                dstStepper = buildAutocomplete(dst, '🏁 To station...');
+
+                if (_allStations.length > 0) srcStepper.setStation(_allStations[0].value);
+                if (_allStations.length > 1) dstStepper.setStation(_allStations[1].value);
+
             }).catch(() => {});
 
             function check() {
-                if (!src.value || !dst.value || src.value === dst.value) return;
-                fetch(`/api/fare-details?source=${encodeURIComponent(src.value)}&destination=${encodeURIComponent(dst.value)}&passengers=1`)
+                const result = document.getElementById('qfwResult');
+                // Hide result if same station or incomplete selection
+                if (!src.value || !dst.value || src.value === dst.value) {
+                    result.classList.remove('show');
+                    return;
+                }
+                fetch(`/api/fare/compare?source=${encodeURIComponent(src.value)}&destination=${encodeURIComponent(dst.value)}&passengers=1`)
                     .then(r => r.json()).then(d => {
-                        if (!d.success) return;
-                        document.getElementById('qfwFare').textContent = '₹' + Math.round(d.fare);
-                        document.getElementById('qfwTime').textContent = d.travel_time || 'N/A';
-                        document.getElementById('qfwDist').textContent = (d.distance || 0).toFixed(1) + ' km';
-                        document.getElementById('qfwResult').classList.add('show');
-                    }).catch(() => {});
+                        if (!d.success) { result.classList.remove('show'); return; }
+                        document.getElementById('qfwFare').textContent = '₹' + Math.round(d.metro.fare);
+                        document.getElementById('qfwTime').textContent = d.metro.time || 'N/A';
+                        document.getElementById('qfwDist').textContent = (d.route.distance || 0).toFixed(1) + ' km';
+                        result.classList.add('show');
+                    }).catch(() => { result.classList.remove('show'); });
             }
+
             src.addEventListener('change', check);
             dst.addEventListener('change', check);
-            window.swapQfw = () => { const t = src.value; src.value = dst.value; dst.value = t; check(); };
+
+            window.swapQfw = () => {
+                if (!srcStepper || !dstStepper) return;
+                const t = srcStepper.getStation();
+                srcStepper.setStation(dstStepper.getStation());
+                dstStepper.setStation(t);
+            };
         })();
 
         // ═══════════════════════════════════════════════════
@@ -4375,86 +4016,13 @@
 
     </script>
 
-    <!-- ============ NEW FEATURES JS ============ -->
+    <!-- ============ UTILITY JS ============ -->
     <script>
-    /* ═══════════════════════════════════════════
-       ECO COUNTER ANIMATION (Scroll Triggered)
-       ═══════════════════════════════════════════ */
-    (function initEcoCounters() {
-        const ecoNumbers = document.querySelectorAll('.eco-number[data-eco-target]');
-        if (!ecoNumbers.length) return;
-
-        let ecoAnimated = false;
-        const ecoObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting && !ecoAnimated) {
-                    ecoAnimated = true;
-                    ecoNumbers.forEach(el => {
-                        const target = parseInt(el.dataset.ecoTarget);
-                        const suffix = el.dataset.ecoSuffix || '';
-                        const duration = 2200;
-                        const startTime = performance.now();
-
-                        function animateCount(now) {
-                            const elapsed = now - startTime;
-                            const progress = Math.min(elapsed / duration, 1);
-                            // Ease-out cubic
-                            const eased = 1 - Math.pow(1 - progress, 3);
-                            const current = Math.round(target * eased);
-                            el.textContent = current.toLocaleString('en-IN') + suffix;
-                            if (progress < 1) requestAnimationFrame(animateCount);
-                        }
-                        requestAnimationFrame(animateCount);
-                    });
-                }
-            });
-        }, { threshold: 0.3 });
-
-        const ecoSection = document.getElementById('eco-impact');
-        if (ecoSection) ecoObserver.observe(ecoSection);
-    })();
-
-    /* ═══════════════════════════════════════════
-       NEWSLETTER SUBSCRIPTION (Mock)
-       ═══════════════════════════════════════════ */
-    function subscribeNewsletter() {
-        const emailInput = document.getElementById('newsletterEmail');
-        const feedback = document.getElementById('newsletterFeedback');
-        const email = emailInput ? emailInput.value.trim() : '';
-
-        if (!email || !email.includes('@')) {
-            feedback.style.display = 'block';
-            feedback.innerHTML = '<span style="color:#fca5a5;font-size:13px;font-weight:600;"><i class="fas fa-exclamation-circle me-1"></i> Please enter a valid email</span>';
-            return;
-        }
-
-        // Simulate subscription
-        const btn = emailInput.nextElementSibling;
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-        btn.disabled = true;
-
-        setTimeout(() => {
-            feedback.style.display = 'block';
-            feedback.innerHTML = '<span style="color:#86efac;font-size:13px;font-weight:600;"><i class="fas fa-check-circle me-1"></i> Successfully subscribed! Welcome aboard.</span>';
-            emailInput.value = '';
-            btn.innerHTML = '<i class="fas fa-check me-1"></i> Done';
-            btn.disabled = false;
-
-            setTimeout(() => {
-                btn.innerHTML = originalText;
-            }, 3000);
-        }, 1200);
-    }
-
-    /* ═══════════════════════════════════════════
-       FLOATING HELP WIDGET
-       ═══════════════════════════════════════════ */
+    /* Floating Help Widget */
     function toggleHelpBubble() {
         const bubble = document.getElementById('helpBubble');
         const icon = document.getElementById('helpIcon');
         if (!bubble) return;
-
         const isShowing = bubble.classList.contains('show');
         if (isShowing) {
             bubble.classList.remove('show');
@@ -4475,8 +4043,6 @@
                 const icon = document.getElementById('helpIcon');
                 if (icon) icon.className = 'fas fa-times';
                 sessionStorage.setItem('helpShown', '1');
-
-                // Auto-hide after 5 seconds
                 setTimeout(() => {
                     bubble.classList.remove('show');
                     if (icon) icon.className = 'fas fa-headset';
@@ -4485,9 +4051,7 @@
         }, 15000);
     })();
 
-    /* ═══════════════════════════════════════════
-       SMOOTH NAV ANCHOR SCROLLING
-       ═══════════════════════════════════════════ */
+    /* Smooth Nav Anchor Scrolling */
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function(e) {
             const targetId = this.getAttribute('href');
@@ -4500,13 +4064,10 @@
         });
     });
 
-    /* ═══════════════════════════════════════════
-       NAVBAR LIVE CLOCK (IST)
-       ═══════════════════════════════════════════ */
+    /* Navbar Live Clock (IST) */
     (function initNavClock() {
         const clockEl = document.getElementById('navClockTime');
         if (!clockEl) return;
-
         function updateClock() {
             const now = new Date();
             const ist = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
@@ -4517,24 +4078,6 @@
         }
         updateClock();
         setInterval(updateClock, 1000);
-    })();
-
-    /* ═══════════════════════════════════════════
-       SIMULATED LIVE PASSENGER COUNTER
-       ═══════════════════════════════════════════ */
-    (function initLivePassengers() {
-        const passEl = document.getElementById('livePassengers');
-        const trainEl = document.getElementById('liveTrains');
-        if (!passEl) return;
-
-        function randomize() {
-            const base = 1800 + Math.floor(Math.random() * 1200);
-            const trains = 28 + Math.floor(Math.random() * 8);
-            passEl.textContent = base.toLocaleString('en-IN');
-            if (trainEl) trainEl.textContent = trains;
-        }
-        randomize();
-        setInterval(randomize, 5000);
     })();
     </script>
 </body>
