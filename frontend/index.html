@@ -2338,161 +2338,741 @@
                     </div>
                 </div>
 
-                <!-- Feature CC: Animated SVG Metro Map -->
+                <!-- Feature CC: Redesigned Premium Metro Map -->
                 <div class="col-lg-6" data-aos="fade-left" data-aos-duration="1200">
-                    <div style="
-                        background: linear-gradient(145deg, #0f172a 0%, #1e1b4b 50%, #0c1445 100%);
-                        border-radius: 28px;
-                        padding: 28px;
-                        position: relative;
-                        overflow: hidden;
-                        box-shadow: 0 30px 80px rgba(102,126,234,0.35), 0 0 0 1px rgba(255,255,255,0.06);
-                    ">
-                        <!-- Glow orbs -->
-                        <div
-                            style="position:absolute;top:-40px;right:-40px;width:200px;height:200px;background:radial-gradient(circle,rgba(102,126,234,0.25),transparent 70%);pointer-events:none;">
-                        </div>
-                        <div
-                            style="position:absolute;bottom:-30px;left:-30px;width:150px;height:150px;background:radial-gradient(circle,rgba(240,147,251,0.2),transparent 70%);pointer-events:none;">
-                        </div>
+                    <div class="metro-map-card" id="metroMapCard">
+                        <!-- Ambient glow orbs -->
+                        <div class="map-orb map-orb-blue"></div>
+                        <div class="map-orb map-orb-purple"></div>
+                        <div class="map-orb map-orb-green"></div>
 
-                        <!-- Header -->
-                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-                            <div
-                                style="font-size:13px;font-weight:800;color:rgba(255,255,255,0.9);letter-spacing:1.5px;text-transform:uppercase;">
-                                🗺️ Metro Network</div>
-                            <div
-                                style="display:flex;align-items:center;gap:6px;background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.3);border-radius:20px;padding:4px 10px;">
-                                <span
-                                    style="width:7px;height:7px;background:#22c55e;border-radius:50%;animation:statPulse2 2s infinite;"></span>
-                                <span
-                                    style="font-size:10px;font-weight:800;color:#22c55e;letter-spacing:1px;">LIVE</span>
+                        <!-- Header bar -->
+                        <div class="map-header">
+                            <div class="map-title">
+                                <span class="map-icon">🚇</span>
+                                <span>Ahmedabad Metro</span>
+                            </div>
+                            <div class="map-live-badge">
+                                <span class="live-dot-pulse"></span>
+                                <span>LIVE</span>
                             </div>
                         </div>
 
-                        <!-- SVG Metro Map — Ahmedabad Metro -->
-                        <svg id="metroMapSVG" viewBox="0 0 340 250" xmlns="http://www.w3.org/2000/svg"
-                            style="width:100%;max-width:340px;display:block;margin:0 auto;">
+                        <!-- Stats row -->
+                        <div class="map-stats-row">
+                            <div class="map-stat">
+                                <span class="map-stat-val" style="color:#60a5fa;">2</span>
+                                <span class="map-stat-label">Lines</span>
+                            </div>
+                            <div class="map-stat-divider"></div>
+                            <div class="map-stat">
+                                <span class="map-stat-val" style="color:#4ade80;">14</span>
+                                <span class="map-stat-label">Stations</span>
+                            </div>
+                            <div class="map-stat-divider"></div>
+                            <div class="map-stat">
+                                <span class="map-stat-val" style="color:#f472b6;">32</span>
+                                <span class="map-stat-label">Trains</span>
+                            </div>
+                        </div>
+
+                        <!-- SVG Metro Map -->
+                        <div class="metro-svg-wrap">
+                        <svg id="metroMapSVG" viewBox="0 0 500 380" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;">
                             <defs>
-                                <filter id="glowB">
-                                    <feGaussianBlur stdDeviation="2" result="coloredBlur" />
-                                    <feMerge><feMergeNode in="coloredBlur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                                <!-- Blue line glow filter -->
+                                <filter id="glowB" x="-50%" y="-50%" width="200%" height="200%">
+                                    <feGaussianBlur stdDeviation="3" result="blur"/>
+                                    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
                                 </filter>
-                                <filter id="glowG">
-                                    <feGaussianBlur stdDeviation="2" result="coloredBlur" />
-                                    <feMerge><feMergeNode in="coloredBlur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                                <!-- Green line glow filter -->
+                                <filter id="glowG" x="-50%" y="-50%" width="200%" height="200%">
+                                    <feGaussianBlur stdDeviation="3" result="blur"/>
+                                    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
                                 </filter>
-                                <path id="trainPathBlue" d="M 20,125 L 60,125 L 100,125 L 140,125 L 180,125 L 220,125 L 260,125 L 310,125" fill="none" />
-                                <path id="trainPathGreen" d="M 180,25 L 180,55 L 180,85 L 180,125 L 180,155 L 180,185 L 180,215" fill="none" />
+                                <!-- Station glow -->
+                                <filter id="stGlow" x="-100%" y="-100%" width="300%" height="300%">
+                                    <feGaussianBlur stdDeviation="2.5" result="blur"/>
+                                    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                                </filter>
+                                <!-- Interchange glow -->
+                                <filter id="ixGlow" x="-100%" y="-100%" width="300%" height="300%">
+                                    <feGaussianBlur stdDeviation="4" result="blur"/>
+                                    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                                </filter>
+                                <!-- Blue gradient -->
+                                <linearGradient id="blueGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" style="stop-color:#1d4ed8;stop-opacity:1"/>
+                                    <stop offset="50%" style="stop-color:#3b82f6;stop-opacity:1"/>
+                                    <stop offset="100%" style="stop-color:#60a5fa;stop-opacity:1"/>
+                                </linearGradient>
+                                <!-- Green gradient -->
+                                <linearGradient id="greenGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#4ade80;stop-opacity:1"/>
+                                    <stop offset="50%" style="stop-color:#22c55e;stop-opacity:1"/>
+                                    <stop offset="100%" style="stop-color:#16a34a;stop-opacity:1"/>
+                                </linearGradient>
+                                <!-- Train paths for animation -->
+                                <path id="trainPathBlue"  d="M 35,192 L 95,192 L 155,192 L 210,192 L 260,192 L 310,192 L 360,192 L 420,192 L 465,192" fill="none"/>
+                                <path id="trainPathBlue2" d="M 465,192 L 420,192 L 360,192 L 310,192 L 260,192 L 210,192 L 155,192 L 95,192 L 35,192" fill="none"/>
+                                <path id="trainPathGreen" d="M 260,35 L 260,80 L 260,120 L 260,155 L 260,192 L 260,230 L 260,270 L 260,310 L 260,345" fill="none"/>
+                                <path id="trainPathGreen2" d="M 260,345 L 260,310 L 260,270 L 260,230 L 260,192 L 260,155 L 260,120 L 260,80 L 260,35" fill="none"/>
                             </defs>
 
-                            <!-- Grid lines -->
-                            <line x1="20" y1="20" x2="20" y2="230" stroke="rgba(255,255,255,0.04)" stroke-width="1" />
-                            <line x1="60" y1="20" x2="60" y2="230" stroke="rgba(255,255,255,0.04)" stroke-width="1" />
-                            <line x1="100" y1="20" x2="100" y2="230" stroke="rgba(255,255,255,0.04)" stroke-width="1" />
-                            <line x1="140" y1="20" x2="140" y2="230" stroke="rgba(255,255,255,0.04)" stroke-width="1" />
-                            <line x1="180" y1="20" x2="180" y2="230" stroke="rgba(255,255,255,0.04)" stroke-width="1" />
-                            <line x1="220" y1="20" x2="220" y2="230" stroke="rgba(255,255,255,0.04)" stroke-width="1" />
-                            <line x1="260" y1="20" x2="260" y2="230" stroke="rgba(255,255,255,0.04)" stroke-width="1" />
-                            <line x1="310" y1="20" x2="310" y2="230" stroke="rgba(255,255,255,0.04)" stroke-width="1" />
+                            <!-- ── City grid background (subtle) ── -->
+                            <g opacity="0.06" stroke="#a5b4fc" stroke-width="0.5">
+                                <line x1="0" y1="50"  x2="500" y2="50"/>
+                                <line x1="0" y1="100" x2="500" y2="100"/>
+                                <line x1="0" y1="150" x2="500" y2="150"/>
+                                <line x1="0" y1="200" x2="500" y2="200"/>
+                                <line x1="0" y1="250" x2="500" y2="250"/>
+                                <line x1="0" y1="300" x2="500" y2="300"/>
+                                <line x1="0" y1="350" x2="500" y2="350"/>
+                                <line x1="50"  y1="0" x2="50"  y2="380"/>
+                                <line x1="100" y1="0" x2="100" y2="380"/>
+                                <line x1="150" y1="0" x2="150" y2="380"/>
+                                <line x1="200" y1="0" x2="200" y2="380"/>
+                                <line x1="250" y1="0" x2="250" y2="380"/>
+                                <line x1="300" y1="0" x2="300" y2="380"/>
+                                <line x1="350" y1="0" x2="350" y2="380"/>
+                                <line x1="400" y1="0" x2="400" y2="380"/>
+                                <line x1="450" y1="0" x2="450" y2="380"/>
+                            </g>
 
-                            <!-- BLUE LINE (East-West Corridor) -->
-                            <path d="M 20,125 L 310,125" stroke="#3b82f6" stroke-width="5" stroke-linecap="round"
-                                fill="none" filter="url(#glowB)" opacity="0.9" />
-                            <circle r="5" fill="#60a5fa" filter="url(#glowB)">
-                                <animateMotion dur="10s" repeatCount="indefinite" rotate="auto">
-                                    <mpath href="#trainPathBlue" /></animateMotion>
-                            </circle>
-                            <circle r="9" fill="rgba(96,165,250,0.25)">
-                                <animateMotion dur="10s" repeatCount="indefinite" rotate="auto">
-                                    <mpath href="#trainPathBlue" /></animateMotion>
-                            </circle>
+                            <!-- ════════════════════════════════
+                                 BLUE LINE GROUP — East-West (E1)
+                                 ════════════════════════════════ -->
+                            <g id="svgBlueLine" style="transition:opacity 0.4s ease;">
+                                <!-- Line shadow/depth -->
+                                <path d="M 35,195 L 465,195" stroke="rgba(59,130,246,0.18)" stroke-width="11" stroke-linecap="round" fill="none"/>
+                                <!-- Main line -->
+                                <path d="M 35,192 L 465,192" stroke="url(#blueGrad)" stroke-width="7" stroke-linecap="round" fill="none" filter="url(#glowB)"/>
+                                <!-- Terminus ticks -->
+                                <line x1="35" y1="182" x2="35" y2="202" stroke="#3b82f6" stroke-width="3" stroke-linecap="round"/>
+                                <line x1="465" y1="182" x2="465" y2="202" stroke="#3b82f6" stroke-width="3" stroke-linecap="round"/>
+                                <!-- Station: Apparel Park (x=35) — label below -->
+                                <circle cx="35" cy="192" r="7" fill="#0f2044" stroke="#3b82f6" stroke-width="2.5" filter="url(#stGlow)" class="metro-station"/>
+                                <circle cx="35" cy="192" r="3.5" fill="#60a5fa"/>
+                                <line x1="35" y1="199" x2="35" y2="218" stroke="rgba(255,255,255,0.15)" stroke-width="1" stroke-dasharray="2,2"/>
+                                <text x="35" y="228" font-size="8.5" fill="rgba(255,255,255,0.75)" text-anchor="middle" font-family="Poppins,sans-serif" font-weight="600">Apparel Park</text>
+                                <text x="35" y="238" font-size="7" fill="rgba(148,163,184,0.7)" text-anchor="middle" font-family="Poppins,sans-serif">E1</text>
+                                <!-- Station: Vastral (x=95) — label above -->
+                                <circle cx="95" cy="192" r="7" fill="#0f2044" stroke="#3b82f6" stroke-width="2.5" filter="url(#stGlow)" class="metro-station"/>
+                                <circle cx="95" cy="192" r="3.5" fill="#60a5fa"/>
+                                <line x1="95" y1="185" x2="95" y2="170" stroke="rgba(255,255,255,0.15)" stroke-width="1" stroke-dasharray="2,2"/>
+                                <text x="95" y="163" font-size="8.5" fill="rgba(255,255,255,0.75)" text-anchor="middle" font-family="Poppins,sans-serif" font-weight="600">Vastral</text>
+                                <text x="95" y="153" font-size="7" fill="rgba(148,163,184,0.7)" text-anchor="middle" font-family="Poppins,sans-serif">E2</text>
+                                <!-- Station: Kankaria (x=155) — label below -->
+                                <circle cx="155" cy="192" r="7" fill="#0f2044" stroke="#3b82f6" stroke-width="2.5" filter="url(#stGlow)" class="metro-station"/>
+                                <circle cx="155" cy="192" r="3.5" fill="#60a5fa"/>
+                                <line x1="155" y1="199" x2="155" y2="218" stroke="rgba(255,255,255,0.15)" stroke-width="1" stroke-dasharray="2,2"/>
+                                <text x="155" y="228" font-size="8.5" fill="rgba(255,255,255,0.75)" text-anchor="middle" font-family="Poppins,sans-serif" font-weight="600">Kankaria</text>
+                                <text x="155" y="238" font-size="7" fill="rgba(148,163,184,0.7)" text-anchor="middle" font-family="Poppins,sans-serif">E3</text>
+                                <!-- Station: Kalupur (x=210) — label above -->
+                                <circle cx="210" cy="192" r="7" fill="#0f2044" stroke="#3b82f6" stroke-width="2.5" filter="url(#stGlow)" class="metro-station"/>
+                                <circle cx="210" cy="192" r="3.5" fill="#60a5fa"/>
+                                <line x1="210" y1="185" x2="210" y2="170" stroke="rgba(255,255,255,0.15)" stroke-width="1" stroke-dasharray="2,2"/>
+                                <text x="210" y="163" font-size="8.5" fill="rgba(255,255,255,0.75)" text-anchor="middle" font-family="Poppins,sans-serif" font-weight="600">Kalupur</text>
+                                <text x="210" y="153" font-size="7" fill="rgba(148,163,184,0.7)" text-anchor="middle" font-family="Poppins,sans-serif">E4</text>
+                                <!-- Station: Gheekanta (x=310) — label above -->
+                                <circle cx="310" cy="192" r="7" fill="#0f2044" stroke="#3b82f6" stroke-width="2.5" filter="url(#stGlow)" class="metro-station"/>
+                                <circle cx="310" cy="192" r="3.5" fill="#60a5fa"/>
+                                <line x1="310" y1="185" x2="310" y2="170" stroke="rgba(255,255,255,0.15)" stroke-width="1" stroke-dasharray="2,2"/>
+                                <text x="310" y="163" font-size="8.5" fill="rgba(255,255,255,0.75)" text-anchor="middle" font-family="Poppins,sans-serif" font-weight="600">Gheekanta</text>
+                                <text x="310" y="153" font-size="7" fill="rgba(148,163,184,0.7)" text-anchor="middle" font-family="Poppins,sans-serif">E6</text>
+                                <!-- Station: Doordarshan (x=380) — label below -->
+                                <circle cx="380" cy="192" r="7" fill="#0f2044" stroke="#3b82f6" stroke-width="2.5" filter="url(#stGlow)" class="metro-station"/>
+                                <circle cx="380" cy="192" r="3.5" fill="#60a5fa"/>
+                                <line x1="380" y1="199" x2="380" y2="218" stroke="rgba(255,255,255,0.15)" stroke-width="1" stroke-dasharray="2,2"/>
+                                <text x="380" y="228" font-size="8.5" fill="rgba(255,255,255,0.75)" text-anchor="middle" font-family="Poppins,sans-serif" font-weight="600">Doordarshan</text>
+                                <text x="380" y="238" font-size="7" fill="rgba(148,163,184,0.7)" text-anchor="middle" font-family="Poppins,sans-serif">E7</text>
+                                <!-- Station: Thaltej (x=465) — label above -->
+                                <circle cx="465" cy="192" r="7" fill="#0f2044" stroke="#3b82f6" stroke-width="2.5" filter="url(#stGlow)" class="metro-station"/>
+                                <circle cx="465" cy="192" r="3.5" fill="#60a5fa"/>
+                                <line x1="465" y1="185" x2="465" y2="170" stroke="rgba(255,255,255,0.15)" stroke-width="1" stroke-dasharray="2,2"/>
+                                <text x="465" y="163" font-size="8.5" fill="rgba(255,255,255,0.75)" text-anchor="middle" font-family="Poppins,sans-serif" font-weight="600">Thaltej</text>
+                                <text x="465" y="153" font-size="7" fill="rgba(148,163,184,0.7)" text-anchor="middle" font-family="Poppins,sans-serif">E8</text>
+                            </g>
 
-                            <!-- GREEN LINE (North-South Corridor) -->
-                            <path d="M 180,25 L 180,215" stroke="#22c55e" stroke-width="5" stroke-linecap="round"
-                                fill="none" filter="url(#glowG)" opacity="0.9" />
-                            <circle r="5" fill="#4ade80" filter="url(#glowG)">
-                                <animateMotion dur="8s" repeatCount="indefinite" rotate="auto">
-                                    <mpath href="#trainPathGreen" /></animateMotion>
-                            </circle>
-                            <circle r="9" fill="rgba(74,222,128,0.25)">
-                                <animateMotion dur="8s" repeatCount="indefinite" rotate="auto">
-                                    <mpath href="#trainPathGreen" /></animateMotion>
-                            </circle>
+                            <!-- ════════════════════════════════
+                                 GREEN LINE GROUP — North-South (G1)
+                                 ════════════════════════════════ -->
+                            <g id="svgGreenLine" style="transition:opacity 0.4s ease;">
+                                <!-- Line shadow/depth -->
+                                <path d="M 263,35 L 263,345" stroke="rgba(34,197,94,0.18)" stroke-width="11" stroke-linecap="round" fill="none"/>
+                                <!-- Main line -->
+                                <path d="M 260,35 L 260,345" stroke="url(#greenGrad)" stroke-width="7" stroke-linecap="round" fill="none" filter="url(#glowG)"/>
+                                <!-- Terminus ticks -->
+                                <line x1="250" y1="35" x2="270" y2="35" stroke="#22c55e" stroke-width="3" stroke-linecap="round"/>
+                                <line x1="250" y1="345" x2="270" y2="345" stroke="#22c55e" stroke-width="3" stroke-linecap="round"/>
+                                <!-- Station: Motera (y=35) — label right -->
+                                <circle cx="260" cy="35" r="7" fill="#0a2918" stroke="#22c55e" stroke-width="2.5" filter="url(#stGlow)" class="metro-station"/>
+                                <circle cx="260" cy="35" r="3.5" fill="#4ade80"/>
+                                <line x1="267" y1="35" x2="284" y2="35" stroke="rgba(255,255,255,0.15)" stroke-width="1" stroke-dasharray="2,2"/>
+                                <text x="290" y="39" font-size="8.5" fill="rgba(255,255,255,0.75)" text-anchor="start" font-family="Poppins,sans-serif" font-weight="600">Motera</text>
+                                <text x="290" y="30" font-size="7" fill="rgba(148,163,184,0.7)" text-anchor="start" font-family="Poppins,sans-serif">N1</text>
+                                <!-- Station: Sabarmati (y=80) — label left -->
+                                <circle cx="260" cy="80" r="7" fill="#0a2918" stroke="#22c55e" stroke-width="2.5" filter="url(#stGlow)" class="metro-station"/>
+                                <circle cx="260" cy="80" r="3.5" fill="#4ade80"/>
+                                <line x1="253" y1="80" x2="234" y2="80" stroke="rgba(255,255,255,0.15)" stroke-width="1" stroke-dasharray="2,2"/>
+                                <text x="228" y="84" font-size="8.5" fill="rgba(255,255,255,0.75)" text-anchor="end" font-family="Poppins,sans-serif" font-weight="600">Sabarmati</text>
+                                <text x="228" y="74" font-size="7" fill="rgba(148,163,184,0.7)" text-anchor="end" font-family="Poppins,sans-serif">N2</text>
+                                <!-- Station: Ranip (y=120) — label right -->
+                                <circle cx="260" cy="120" r="7" fill="#0a2918" stroke="#22c55e" stroke-width="2.5" filter="url(#stGlow)" class="metro-station"/>
+                                <circle cx="260" cy="120" r="3.5" fill="#4ade80"/>
+                                <line x1="267" y1="120" x2="284" y2="120" stroke="rgba(255,255,255,0.15)" stroke-width="1" stroke-dasharray="2,2"/>
+                                <text x="290" y="124" font-size="8.5" fill="rgba(255,255,255,0.75)" text-anchor="start" font-family="Poppins,sans-serif" font-weight="600">Ranip</text>
+                                <text x="290" y="114" font-size="7" fill="rgba(148,163,184,0.7)" text-anchor="start" font-family="Poppins,sans-serif">N3</text>
+                                <!-- Station: AEC (y=155) — label left -->
+                                <circle cx="260" cy="155" r="7" fill="#0a2918" stroke="#22c55e" stroke-width="2.5" filter="url(#stGlow)" class="metro-station"/>
+                                <circle cx="260" cy="155" r="3.5" fill="#4ade80"/>
+                                <line x1="253" y1="155" x2="234" y2="155" stroke="rgba(255,255,255,0.15)" stroke-width="1" stroke-dasharray="2,2"/>
+                                <text x="228" y="159" font-size="8.5" fill="rgba(255,255,255,0.75)" text-anchor="end" font-family="Poppins,sans-serif" font-weight="600">AEC</text>
+                                <text x="228" y="149" font-size="7" fill="rgba(148,163,184,0.7)" text-anchor="end" font-family="Poppins,sans-serif">N4</text>
+                                <!-- Station: Shreyas (y=240) — label right -->
+                                <circle cx="260" cy="240" r="7" fill="#0a2918" stroke="#22c55e" stroke-width="2.5" filter="url(#stGlow)" class="metro-station"/>
+                                <circle cx="260" cy="240" r="3.5" fill="#4ade80"/>
+                                <line x1="267" y1="240" x2="284" y2="240" stroke="rgba(255,255,255,0.15)" stroke-width="1" stroke-dasharray="2,2"/>
+                                <text x="290" y="244" font-size="8.5" fill="rgba(255,255,255,0.75)" text-anchor="start" font-family="Poppins,sans-serif" font-weight="600">Shreyas</text>
+                                <text x="290" y="234" font-size="7" fill="rgba(148,163,184,0.7)" text-anchor="start" font-family="Poppins,sans-serif">N6</text>
+                                <!-- Station: GNLU (y=300) — label left -->
+                                <circle cx="260" cy="300" r="7" fill="#0a2918" stroke="#22c55e" stroke-width="2.5" filter="url(#stGlow)" class="metro-station"/>
+                                <circle cx="260" cy="300" r="3.5" fill="#4ade80"/>
+                                <line x1="253" y1="300" x2="234" y2="300" stroke="rgba(255,255,255,0.15)" stroke-width="1" stroke-dasharray="2,2"/>
+                                <text x="228" y="304" font-size="8.5" fill="rgba(255,255,255,0.75)" text-anchor="end" font-family="Poppins,sans-serif" font-weight="600">GNLU</text>
+                                <text x="228" y="294" font-size="7" fill="rgba(148,163,184,0.7)" text-anchor="end" font-family="Poppins,sans-serif">N7</text>
+                                <!-- Station: GIFT City (y=345) — label right, PHASE 2 -->
+                                <circle cx="260" cy="345" r="7" fill="#0a2918" stroke="#4ade80" stroke-width="2" stroke-dasharray="4,2" filter="url(#stGlow)" class="metro-station"/>
+                                <circle cx="260" cy="345" r="3.5" fill="#86efac"/>
+                                <line x1="267" y1="345" x2="284" y2="345" stroke="rgba(255,255,255,0.15)" stroke-width="1" stroke-dasharray="2,2"/>
+                                <text x="290" y="349" font-size="8.5" fill="rgba(255,255,255,0.6)" text-anchor="start" font-family="Poppins,sans-serif" font-weight="600">GIFT City</text>
+                                <text x="290" y="339" font-size="7" fill="rgba(74,222,128,0.7)" text-anchor="start" font-family="Poppins,sans-serif">Phase 2 ✦</text>
+                            </g>
 
-                            <!-- Blue Line Stations -->
-                            <circle cx="20" cy="125" r="6" fill="#1e3a5f" stroke="#3b82f6" stroke-width="2.5" />
-                            <circle cx="60" cy="125" r="6" fill="#1e3a5f" stroke="#3b82f6" stroke-width="2.5" />
-                            <circle cx="100" cy="125" r="6" fill="#1e3a5f" stroke="#3b82f6" stroke-width="2.5" />
-                            <circle cx="140" cy="125" r="6" fill="#1e3a5f" stroke="#3b82f6" stroke-width="2.5" />
-                            <!-- Interchange (Blue + Green) -->
-                            <circle cx="180" cy="125" r="10" fill="#1e293b" stroke="white" stroke-width="2.5" />
-                            <circle cx="180" cy="125" r="6" fill="#3b82f6" />
-                            <circle cx="220" cy="125" r="6" fill="#1e3a5f" stroke="#3b82f6" stroke-width="2.5" />
-                            <circle cx="260" cy="125" r="6" fill="#1e3a5f" stroke="#3b82f6" stroke-width="2.5" />
-                            <circle cx="310" cy="125" r="6" fill="#1e3a5f" stroke="#3b82f6" stroke-width="2.5" />
+                            <!-- ══════════════════════
+                                 ANIMATED TRAINS
+                                 ══════════════════════ -->
+                            <g id="svgBlueTrains" style="transition:opacity 0.4s ease;">
+                                <!-- Blue train 1 (forward) -->
+                                <g filter="url(#glowB)">
+                                    <circle r="6" fill="#93c5fd">
+                                        <animateMotion dur="12s" begin="0s" repeatCount="indefinite"><mpath href="#trainPathBlue"/></animateMotion>
+                                    </circle>
+                                    <circle r="11" fill="rgba(147,197,253,0.2)">
+                                        <animateMotion dur="12s" begin="0s" repeatCount="indefinite"><mpath href="#trainPathBlue"/></animateMotion>
+                                    </circle>
+                                </g>
+                                <!-- Blue train 2 (return) -->
+                                <g filter="url(#glowB)">
+                                    <circle r="6" fill="#93c5fd">
+                                        <animateMotion dur="12s" begin="6s" repeatCount="indefinite"><mpath href="#trainPathBlue2"/></animateMotion>
+                                    </circle>
+                                    <circle r="11" fill="rgba(147,197,253,0.2)">
+                                        <animateMotion dur="12s" begin="6s" repeatCount="indefinite"><mpath href="#trainPathBlue2"/></animateMotion>
+                                    </circle>
+                                </g>
+                            </g>
 
-                            <!-- Green Line Stations -->
-                            <circle cx="180" cy="25" r="6" fill="#0f3d1a" stroke="#22c55e" stroke-width="2.5" />
-                            <circle cx="180" cy="55" r="6" fill="#0f3d1a" stroke="#22c55e" stroke-width="2.5" />
-                            <circle cx="180" cy="85" r="6" fill="#0f3d1a" stroke="#22c55e" stroke-width="2.5" />
-                            <circle cx="180" cy="155" r="6" fill="#0f3d1a" stroke="#22c55e" stroke-width="2.5" />
-                            <circle cx="180" cy="185" r="6" fill="#0f3d1a" stroke="#22c55e" stroke-width="2.5" />
-                            <circle cx="180" cy="215" r="6" fill="#0f3d1a" stroke="#22c55e" stroke-width="2.5" />
+                            <g id="svgGreenTrains" style="transition:opacity 0.4s ease;">
+                                <!-- Green train 1 (forward) -->
+                                <g filter="url(#glowG)">
+                                    <circle r="6" fill="#86efac">
+                                        <animateMotion dur="10s" begin="0s" repeatCount="indefinite"><mpath href="#trainPathGreen"/></animateMotion>
+                                    </circle>
+                                    <circle r="11" fill="rgba(134,239,172,0.2)">
+                                        <animateMotion dur="10s" begin="0s" repeatCount="indefinite"><mpath href="#trainPathGreen"/></animateMotion>
+                                    </circle>
+                                </g>
+                                <!-- Green train 2 (return) -->
+                                <g filter="url(#glowG)">
+                                    <circle r="6" fill="#86efac">
+                                        <animateMotion dur="10s" begin="5s" repeatCount="indefinite"><mpath href="#trainPathGreen2"/></animateMotion>
+                                    </circle>
+                                    <circle r="11" fill="rgba(134,239,172,0.2)">
+                                        <animateMotion dur="10s" begin="5s" repeatCount="indefinite"><mpath href="#trainPathGreen2"/></animateMotion>
+                                    </circle>
+                                </g>
+                            </g>
 
-                            <!-- Station Labels — Blue Line -->
-                            <text x="20" y="145" font-size="6.5" fill="rgba(255,255,255,0.55)" text-anchor="middle"
-                                font-family="Poppins,sans-serif">Apparel Park</text>
-                            <text x="60" y="145" font-size="6.5" fill="rgba(255,255,255,0.55)" text-anchor="middle"
-                                font-family="Poppins,sans-serif">Vastral</text>
-                            <text x="100" y="145" font-size="6.5" fill="rgba(255,255,255,0.55)" text-anchor="middle"
-                                font-family="Poppins,sans-serif">Kankaria</text>
-                            <text x="140" y="145" font-size="6.5" fill="rgba(255,255,255,0.55)" text-anchor="middle"
-                                font-family="Poppins,sans-serif">Kalupur</text>
-                            <text x="180" y="148" font-size="7.5" fill="white" text-anchor="middle"
-                                font-family="Poppins,sans-serif" font-weight="700">Old High Court</text>
-                            <text x="220" y="145" font-size="6.5" fill="rgba(255,255,255,0.55)" text-anchor="middle"
-                                font-family="Poppins,sans-serif">Gheekanta</text>
-                            <text x="260" y="145" font-size="6.5" fill="rgba(255,255,255,0.55)" text-anchor="middle"
-                                font-family="Poppins,sans-serif">Doordarshan</text>
-                            <text x="310" y="145" font-size="6.5" fill="rgba(255,255,255,0.55)" text-anchor="middle"
-                                font-family="Poppins,sans-serif">Thaltej</text>
+                            <!-- ★ INTERCHANGE GROUP -->
+                            <g id="svgIxStation" style="transition:opacity 0.4s ease;">
+                                <!-- Outer ring pulse -->
+                                <circle cx="260" cy="192" r="18" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.12)" stroke-width="1">
+                                    <animate attributeName="r" values="18;22;18" dur="2.5s" repeatCount="indefinite"/>
+                                    <animate attributeName="opacity" values="1;0.3;1" dur="2.5s" repeatCount="indefinite"/>
+                                </circle>
+                                <circle cx="260" cy="192" r="14" fill="#1e293b" stroke="white" stroke-width="2.5" filter="url(#ixGlow)"/>
+                                <circle cx="260" cy="192" r="8" fill="#3b82f6"/>
+                                <circle cx="260" cy="192" r="4" fill="white" opacity="0.9"/>
+                                <!-- IX label below -->
+                                <text x="260" y="217" font-size="9" fill="white" text-anchor="middle" font-family="Poppins,sans-serif" font-weight="800">Old High Court</text>
+                                <text x="260" y="228" font-size="7.5" fill="rgba(251,191,36,0.9)" text-anchor="middle" font-family="Poppins,sans-serif" font-weight="700">⇄ INTERCHANGE</text>
+                            </g>
 
-                            <!-- Station Labels — Green Line -->
-                            <text x="197" y="28" font-size="6.5" fill="rgba(255,255,255,0.5)"
-                                font-family="Poppins,sans-serif">Motera</text>
-                            <text x="197" y="58" font-size="6.5" fill="rgba(255,255,255,0.5)"
-                                font-family="Poppins,sans-serif">Sabarmati</text>
-                            <text x="197" y="88" font-size="6.5" fill="rgba(255,255,255,0.5)"
-                                font-family="Poppins,sans-serif">Ranip</text>
-                            <text x="197" y="158" font-size="6.5" fill="rgba(255,255,255,0.5)"
-                                font-family="Poppins,sans-serif">AEC</text>
-                            <text x="197" y="188" font-size="6.5" fill="rgba(255,255,255,0.5)"
-                                font-family="Poppins,sans-serif">Shreyas</text>
-                            <text x="197" y="218" font-size="6.5" fill="rgba(255,255,255,0.5)"
-                                font-family="Poppins,sans-serif">GNLU</text>
+                            <!-- (legend moved to HTML below SVG for interactivity -->
 
-                            <!-- Line Legend -->
-                            <rect x="15" y="237" width="12" height="4" rx="2" fill="#3b82f6" />
-                            <text x="31" y="241" font-size="7" fill="rgba(255,255,255,0.65)"
-                                font-family="Poppins,sans-serif">Blue Line (E-W)</text>
-                            <rect x="120" y="237" width="12" height="4" rx="2" fill="#22c55e" />
-                            <text x="136" y="241" font-size="7" fill="rgba(255,255,255,0.65)"
-                                font-family="Poppins,sans-serif">Green Line (N-S)</text>
-                            <circle cx="245" cy="239" r="4" fill="none" stroke="white" stroke-width="1.5" />
-                            <text x="253" y="242" font-size="7" fill="rgba(255,255,255,0.65)"
-                                font-family="Poppins,sans-serif">Interchange</text>
                         </svg>
+                        </div>
+
+                        <!-- ── Interactive Line Filter Tabs ── -->
+                        <div class="map-line-filters" id="mapLineFilters">
+                            <button class="map-line-btn active" id="filterAll" onclick="metroFilter('all')">
+                                <span class="btn-dot" style="background:linear-gradient(135deg,#3b82f6,#22c55e);"></span>
+                                All Lines
+                            </button>
+                            <button class="map-line-btn" id="filterBlue" onclick="metroFilter('blue')">
+                                <span class="btn-dot" style="background:#3b82f6;"></span>
+                                Blue Line
+                                <span class="btn-badge" style="background:rgba(59,130,246,0.15);color:#60a5fa;">E-W</span>
+                            </button>
+                            <button class="map-line-btn" id="filterGreen" onclick="metroFilter('green')">
+                                <span class="btn-dot" style="background:#22c55e;"></span>
+                                Green Line
+                                <span class="btn-badge" style="background:rgba(34,197,94,0.15);color:#4ade80;">N-S</span>
+                            </button>
+                            <button class="map-line-btn" id="filterIx" onclick="metroFilter('ix')">
+                                <span style="width:10px;height:10px;border-radius:50%;background:#1e293b;border:2px solid white;display:inline-block;vertical-align:middle;"></span>
+                                Interchange
+                            </button>
+                        </div>
+
+                        <!-- Active filter info chip -->
+                        <div class="map-filter-info" id="mapFilterInfo" style="display:none;">
+                            <span id="filterInfoText"></span>
+                            <button class="filter-clear-btn" onclick="metroFilter('all')">✕ Clear</button>
+                        </div>
 
                         <!-- Bottom footer -->
-                        <div style="margin-top:16px;display:flex;justify-content:space-between;align-items:center;">
-                            <div style="font-size:11px;color:rgba(255,255,255,0.4);">Ahmedabad Metro Network · 2 Lines Active</div>
-                            <div style="font-size:11px;font-weight:700;color:#60a5fa;">
-                                <i class="fas fa-train" style="margin-right:4px;"></i>32 trains running
+                        <div class="map-footer">
+                            <div class="map-footer-left">
+                                <span class="map-footer-dot blue-dot"></span>
+                                <span>Ahmedabad Metro Network</span>
+                                <span class="map-footer-sep">·</span>
+                                <span id="activeLineLabel" style="color:#4ade80;">2 Lines Active</span>
+                            </div>
+                            <div class="map-footer-right">
+                                <i class="fas fa-train"></i>
+                                <span id="trainCount">32 trains running</span>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <style>
+                /* ══════════════════════════════════════
+                   PREMIUM METRO MAP CARD STYLES
+                   ══════════════════════════════════════ */
+                .metro-map-card {
+                    background: linear-gradient(145deg, #080e24 0%, #0d1535 40%, #0a1628 70%, #060d1f 100%);
+                    border-radius: 24px;
+                    padding: 22px 22px 18px;
+                    position: relative;
+                    overflow: hidden;
+                    box-shadow:
+                        0 0 0 1px rgba(255,255,255,0.07),
+                        0 25px 60px rgba(15,23,42,0.7),
+                        0 8px 32px rgba(59,130,246,0.18),
+                        inset 0 1px 0 rgba(255,255,255,0.06);
+                    transition: transform 0.4s ease, box-shadow 0.4s ease;
+                }
+                .metro-map-card:hover {
+                    transform: translateY(-4px);
+                    box-shadow:
+                        0 0 0 1px rgba(255,255,255,0.1),
+                        0 35px 80px rgba(15,23,42,0.8),
+                        0 12px 48px rgba(59,130,246,0.25),
+                        inset 0 1px 0 rgba(255,255,255,0.08);
+                }
+                /* Ambient glow orbs */
+                .map-orb {
+                    position: absolute;
+                    border-radius: 50%;
+                    pointer-events: none;
+                    filter: blur(55px);
+                }
+                .map-orb-blue {
+                    top: -60px; right: -60px;
+                    width: 220px; height: 220px;
+                    background: radial-gradient(circle, rgba(59,130,246,0.22), transparent 70%);
+                    animation: orbFloat1 8s ease-in-out infinite;
+                }
+                .map-orb-purple {
+                    top: 40%; left: -50px;
+                    width: 160px; height: 160px;
+                    background: radial-gradient(circle, rgba(139,92,246,0.15), transparent 70%);
+                    animation: orbFloat2 10s ease-in-out infinite 2s;
+                }
+                .map-orb-green {
+                    bottom: -40px; right: 30%;
+                    width: 180px; height: 180px;
+                    background: radial-gradient(circle, rgba(34,197,94,0.15), transparent 70%);
+                    animation: orbFloat1 12s ease-in-out infinite 4s;
+                }
+                @keyframes orbFloat1 {
+                    0%,100% { transform: translate(0,0) scale(1); }
+                    50% { transform: translate(12px,-16px) scale(1.08); }
+                }
+                @keyframes orbFloat2 {
+                    0%,100% { transform: translate(0,0) scale(1); }
+                    50% { transform: translate(-10px,14px) scale(1.06); }
+                }
+
+                /* Header */
+                .map-header {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    margin-bottom: 14px;
+                }
+                .map-title {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    font-size: 13px;
+                    font-weight: 800;
+                    color: rgba(255,255,255,0.92);
+                    letter-spacing: 0.5px;
+                }
+                .map-icon {
+                    font-size: 18px;
+                    line-height: 1;
+                }
+                .map-live-badge {
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    background: rgba(34,197,94,0.12);
+                    border: 1px solid rgba(34,197,94,0.28);
+                    border-radius: 20px;
+                    padding: 5px 12px;
+                    font-size: 10px;
+                    font-weight: 800;
+                    color: #22c55e;
+                    letter-spacing: 1.5px;
+                }
+                .live-dot-pulse {
+                    width: 7px;
+                    height: 7px;
+                    background: #22c55e;
+                    border-radius: 50%;
+                    box-shadow: 0 0 0 0 rgba(34,197,94,0.6);
+                    animation: livePulse 1.8s ease-out infinite;
+                }
+                @keyframes livePulse {
+                    0% { box-shadow: 0 0 0 0 rgba(34,197,94,0.6); }
+                    70% { box-shadow: 0 0 0 7px rgba(34,197,94,0); }
+                    100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+                }
+
+                /* Stats row */
+                .map-stats-row {
+                    display: flex;
+                    align-items: center;
+                    gap: 0;
+                    background: rgba(255,255,255,0.04);
+                    border: 1px solid rgba(255,255,255,0.07);
+                    border-radius: 14px;
+                    padding: 10px 16px;
+                    margin-bottom: 16px;
+                }
+                .map-stat {
+                    flex: 1;
+                    text-align: center;
+                }
+                .map-stat-val {
+                    display: block;
+                    font-size: 20px;
+                    font-weight: 800;
+                    line-height: 1.1;
+                    font-family: 'Poppins', sans-serif;
+                }
+                .map-stat-label {
+                    display: block;
+                    font-size: 9px;
+                    font-weight: 600;
+                    color: rgba(148,163,184,0.7);
+                    text-transform: uppercase;
+                    letter-spacing: 0.8px;
+                    margin-top: 2px;
+                }
+                .map-stat-divider {
+                    width: 1px;
+                    height: 32px;
+                    background: rgba(255,255,255,0.08);
+                    flex-shrink: 0;
+                }
+
+                /* SVG wrapper */
+                .metro-svg-wrap {
+                    background: rgba(0,0,0,0.25);
+                    border-radius: 16px;
+                    border: 1px solid rgba(255,255,255,0.05);
+                    overflow: hidden;
+                    position: relative;
+                }
+                .metro-svg-wrap::before {
+                    content: '';
+                    position: absolute;
+                    inset: 0;
+                    background:
+                        radial-gradient(ellipse at 52% 50%, rgba(59,130,246,0.06) 0%, transparent 60%),
+                        radial-gradient(ellipse at 52% 50%, rgba(34,197,94,0.05) 0%, transparent 55%);
+                    pointer-events: none;
+                    z-index: 0;
+                }
+                #metroMapSVG { position: relative; z-index: 1; }
+
+                /* Station hover effect */
+                .metro-station {
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                }
+                .metro-station:hover {
+                    filter: url(#ixGlow);
+                    transform-origin: center;
+                }
+
+                /* Map footer */
+                .map-footer {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    margin-top: 14px;
+                    padding-top: 12px;
+                    border-top: 1px solid rgba(255,255,255,0.06);
+                }
+                .map-footer-left {
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    font-size: 11px;
+                    color: rgba(148,163,184,0.7);
+                    font-weight: 500;
+                }
+                .map-footer-dot {
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 50%;
+                    flex-shrink: 0;
+                }
+                .blue-dot { background: #3b82f6; }
+                .map-footer-sep { opacity: 0.4; }
+                .map-footer-right {
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    font-size: 11.5px;
+                    font-weight: 700;
+                    color: #60a5fa;
+                }
+                .map-footer-right i { font-size: 12px; }
+
+                /* ── Line Filter Tabs ── */
+                .map-line-filters {
+                    display: flex;
+                    gap: 8px;
+                    margin-top: 14px;
+                    flex-wrap: wrap;
+                }
+                .map-line-btn {
+                    display: flex;
+                    align-items: center;
+                    gap: 7px;
+                    padding: 7px 14px;
+                    border-radius: 30px;
+                    border: 1px solid rgba(255,255,255,0.1);
+                    background: rgba(255,255,255,0.04);
+                    color: rgba(255,255,255,0.55);
+                    font-size: 11.5px;
+                    font-weight: 700;
+                    font-family: 'Poppins', sans-serif;
+                    cursor: pointer;
+                    transition: all 0.25s ease;
+                    outline: none;
+                    white-space: nowrap;
+                }
+                .map-line-btn:hover {
+                    background: rgba(255,255,255,0.09);
+                    color: rgba(255,255,255,0.85);
+                    border-color: rgba(255,255,255,0.22);
+                    transform: translateY(-1px);
+                }
+                .map-line-btn.active {
+                    background: rgba(255,255,255,0.1);
+                    color: white;
+                    border-color: rgba(255,255,255,0.28);
+                    box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+                }
+                #filterBlue.active {
+                    background: rgba(59,130,246,0.18);
+                    border-color: rgba(59,130,246,0.45);
+                    color: #93c5fd;
+                    box-shadow: 0 2px 16px rgba(59,130,246,0.2);
+                }
+                #filterGreen.active {
+                    background: rgba(34,197,94,0.18);
+                    border-color: rgba(34,197,94,0.45);
+                    color: #86efac;
+                    box-shadow: 0 2px 16px rgba(34,197,94,0.2);
+                }
+                #filterIx.active {
+                    background: rgba(251,191,36,0.12);
+                    border-color: rgba(251,191,36,0.35);
+                    color: #fde68a;
+                    box-shadow: 0 2px 16px rgba(251,191,36,0.15);
+                }
+                .btn-dot {
+                    width: 9px;
+                    height: 9px;
+                    border-radius: 50%;
+                    flex-shrink: 0;
+                    display: inline-block;
+                }
+                .btn-badge {
+                    font-size: 9px;
+                    padding: 1px 6px;
+                    border-radius: 20px;
+                    font-weight: 800;
+                    letter-spacing: 0.5px;
+                }
+
+                /* Filter info chip */
+                .map-filter-info {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    margin-top: 10px;
+                    padding: 7px 12px;
+                    background: rgba(255,255,255,0.04);
+                    border: 1px solid rgba(255,255,255,0.08);
+                    border-radius: 10px;
+                    font-size: 11px;
+                    color: rgba(148,163,184,0.85);
+                    font-weight: 500;
+                    animation: fadeInDown 0.3s ease;
+                }
+                @keyframes fadeInDown {
+                    from { opacity:0; transform:translateY(-6px); }
+                    to   { opacity:1; transform:translateY(0); }
+                }
+                .filter-clear-btn {
+                    background: rgba(255,255,255,0.07);
+                    border: 1px solid rgba(255,255,255,0.12);
+                    border-radius: 20px;
+                    padding: 2px 10px;
+                    color: rgba(255,255,255,0.6);
+                    font-size: 10px;
+                    font-weight: 700;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+                .filter-clear-btn:hover {
+                    background: rgba(255,255,255,0.14);
+                    color: white;
+                }
+
+                /* SVG group fade transitions */
+                #metroMapSVG g[id] {
+                    transition: opacity 0.4s ease;
+                }
+                </style>
+
+                <script>
+                /* ══════════════════════════════════════
+                   METRO MAP INTERACTIVE FILTER
+                   ══════════════════════════════════════ */
+                (function() {
+                    // Map of filter mode → which SVG group IDs to show/dim
+                    const config = {
+                        all: {
+                            show: ['svgBlueLine','svgGreenLine','svgIxStation','svgBlueTrains','svgGreenTrains'],
+                            dim:  [],
+                            label: '2 Lines Active',
+                            trains: '32 trains running',
+                            info: null
+                        },
+                        blue: {
+                            show: ['svgBlueLine','svgBlueTrains','svgIxStation'],
+                            dim:  ['svgGreenLine','svgGreenTrains'],
+                            label: 'Blue Line Active',
+                            trains: '16 trains running',
+                            info: '🔵 Blue Line (E-W) · 8 Stations · Apparel Park → Thaltej'
+                        },
+                        green: {
+                            show: ['svgGreenLine','svgGreenTrains','svgIxStation'],
+                            dim:  ['svgBlueLine','svgBlueTrains'],
+                            label: 'Green Line Active',
+                            trains: '16 trains running',
+                            info: '🟢 Green Line (N-S) · 7 Stations · Motera → GIFT City'
+                        },
+                        ix: {
+                            show: ['svgIxStation','svgBlueLine','svgGreenLine','svgBlueTrains','svgGreenTrains'],
+                            dim:  [],
+                            label: 'Interchange Station',
+                            trains: '32 trains running',
+                            info: '⇄ Old High Court — Blue × Green interchange point'
+                        }
+                    };
+
+                    window.metroFilter = function(mode) {
+                        const svg = document.getElementById('metroMapSVG');
+                        if (!svg) return;
+
+                        const cfg = config[mode];
+
+                        // Dim everything first
+                        ['svgBlueLine','svgGreenLine','svgIxStation','svgBlueTrains','svgGreenTrains'].forEach(id => {
+                            const el = svg.getElementById(id);
+                            if (el) {
+                                if (cfg.dim.includes(id)) {
+                                    el.style.opacity = '0.12';
+                                    el.style.filter = 'grayscale(1)';
+                                } else {
+                                    el.style.opacity = '1';
+                                    el.style.filter = '';
+                                }
+                            }
+                        });
+
+                        // Interchange glow on ix mode
+                        const ixEl = svg.getElementById('svgIxStation');
+                        if (ixEl) {
+                            ixEl.style.opacity = '1';
+                            ixEl.style.filter = mode === 'ix' ? 'drop-shadow(0 0 8px rgba(251,191,36,0.8))' : '';
+                        }
+
+                        // Update buttons
+                        ['filterAll','filterBlue','filterGreen','filterIx'].forEach(id => {
+                            const btn = document.getElementById(id);
+                            if (btn) btn.classList.remove('active');
+                        });
+                        const activeBtn = { all:'filterAll', blue:'filterBlue', green:'filterGreen', ix:'filterIx' }[mode];
+                        const activeBtnEl = document.getElementById(activeBtn);
+                        if (activeBtnEl) activeBtnEl.classList.add('active');
+
+                        // Update footer
+                        const label = document.getElementById('activeLineLabel');
+                        if (label) {
+                            label.textContent = cfg.label;
+                            label.style.color = mode === 'blue' ? '#60a5fa' : mode === 'green' ? '#4ade80' : mode === 'ix' ? '#fde68a' : '#4ade80';
+                        }
+                        const trainEl = document.getElementById('trainCount');
+                        if (trainEl) trainEl.textContent = cfg.trains;
+
+                        // Filter info chip
+                        const infoBox = document.getElementById('mapFilterInfo');
+                        const infoText = document.getElementById('filterInfoText');
+                        if (infoBox && infoText) {
+                            if (cfg.info) {
+                                infoText.textContent = cfg.info;
+                                infoBox.style.display = 'flex';
+                            } else {
+                                infoBox.style.display = 'none';
+                            }
+                        }
+                    };
+                })();
+                </script>
             </div>
         </div>
     </section>
@@ -2632,33 +3212,32 @@
 
     <!-- ============ TESTIMONIALS ============ -->
     <section id="testimonials" class="py-5 position-relative"
-        style="overflow: hidden; background: linear-gradient(180deg, #f8f9ff 0%, #fff 100%);">
+        style="background: linear-gradient(180deg, #f8f9ff 0%, #fff 100%); overflow: hidden;">
         <div class="page-blob"
             style="width:300px;height:300px;background:rgba(240,147,251,0.06);top:-60px;right:-40px;animation:blobMorph 16s ease-in-out infinite 3s;">
         </div>
-        <div class="container py-5 position-relative" style="z-index:1;">
+
+        <!-- Heading and slider inside container -->
+        <div class="container position-relative" style="z-index:1;">
             <div class="text-center mb-5" data-aos="fade-up">
                 <h6 class="text-primary fw-bold text-uppercase ls-2">Testimonials</h6>
                 <h2 class="fw-bold display-5 mt-2">What Commuters Say</h2>
                 <p class="text-muted mt-2">Real feedback from verified MetroFlow users</p>
             </div>
 
-            <div class="testimonial-carousel-wrap" id="testimonials-container">
-                <button class="carousel-nav-btn prev" onclick="moveTestimonialCarousel(-1)"><i class="fas fa-chevron-left"></i></button>
-                <button class="carousel-nav-btn next" onclick="moveTestimonialCarousel(1)"><i class="fas fa-chevron-right"></i></button>
-                <div class="testimonial-track" id="testimonialTrack">
-                    <!-- JS injects slides -->
-                    <div class="testimonial-slide">
-                        <div class="col-12 text-center py-4">
-                            <div class="spinner-border text-primary" role="status" style="width: 2rem; height: 2rem;"></div>
-                            <p class="mt-2 small text-muted">Loading testimonials...</p>
-                        </div>
+            <!-- Single-item auto-scrolling slider -->
+            <div class="testi-slider-outer" id="testimonials-container">
+                <div class="testi-slider-track" id="testimonialTrack">
+                    <!-- JS injects cards -->
+                    <div class="testi-loading">
+                        <div class="spinner-border text-primary" role="status" style="width:1.8rem;height:1.8rem;"></div>
+                        <span class="ms-3 small text-muted">Loading reviews…</span>
                     </div>
                 </div>
-                <div class="carousel-dots" id="carouselDots"></div>
             </div>
         </div>
     </section>
+
 
     <!-- ============ FAQ ============ -->
     <section id="faq" class="py-5" style="background: #fff;">
@@ -3149,96 +3728,72 @@
             });
         }
 
-        // 4. Load Testimonials — Carousel Version
+        // 4. Load Testimonials — Single item auto-scroll
         let testimonialSlideIdx = 0;
         let testimonialAutoplay = null;
 
         async function loadTestimonials() {
             const track = document.getElementById('testimonialTrack');
-            const dotsContainer = document.getElementById('carouselDots');
             if (!track) return;
 
-            let allCards = [];
             const stars = '<i class="fas fa-star"></i>'.repeat(5);
+
+            function makeCard(t) {
+                return `<div class="testimonial-card">
+                    <p class="testimonial-text">${t.text}</p>
+                    <div class="testimonial-user">
+                        <div class="testimonial-avatar">${t.user.charAt(0).toUpperCase()}</div>
+                        <div>
+                            <div class="fw-bold" style="font-size:0.88rem;">${t.user}</div>
+                            <div class="testimonial-stars">${stars}</div>
+                        </div>
+                    </div>
+                </div>`;
+            }
+
+            let cards = [];
             try {
                 const res = await fetch('/api/public/testimonials');
                 const data = await res.json();
                 if (data.success && data.testimonials.length > 0) {
-                    allCards = data.testimonials.map(t => `
-                        <div class="testimonial-card">
-                            <p class="testimonial-text">${t.text}</p>
-                            <div class="testimonial-user">
-                                <div class="testimonial-avatar">${t.user.charAt(0).toUpperCase()}</div>
-                                <div>
-                                    <div class="fw-bold" style="font-size:0.9rem;">${t.user}</div>
-                                    <div class="testimonial-stars">${stars}</div>
-                                </div>
-                            </div>
-                        </div>`);
+                    cards = data.testimonials.map(makeCard);
                 }
             } catch(_) {}
 
-            if (!allCards.length) {
-                allCards = [
+            // Fallback cards if API is empty
+            if (!cards.length) {
+                [
                     { text: 'The QR ticketing makes my daily commute so much faster! No more queues.', user: 'Rohit S.' },
                     { text: "Dynamic pricing is fair and transparent. Best metro app I've used.", user: 'Amara P.' },
                     { text: 'Love the real-time station status. I can plan my journey perfectly now.', user: 'Priya K.' },
                     { text: 'Wallet recharges are instant. I never worry about cash for tickets anymore.', user: 'Vikram R.' },
                     { text: 'The monthly pass saves me nearly ₹800 every month. Highly recommend!', user: 'Sneha M.' },
                     { text: 'Beautiful dashboard, super smooth experience. MetroFlow is the future!', user: 'Karan T.' },
-                ].map(t => `
-                    <div class="testimonial-card">
-                        <p class="testimonial-text">${t.text}</p>
-                        <div class="testimonial-user">
-                            <div class="testimonial-avatar">${t.user.charAt(0)}</div>
-                            <div>
-                                <div class="fw-bold" style="font-size:0.9rem;">${t.user}</div>
-                                <div class="testimonial-stars">${stars}</div>
-                            </div>
-                        </div>
-                    </div>`);
+                ].forEach(t => cards.push(makeCard(t)));
             }
 
-            const perSlide = window.innerWidth < 769 ? 1 : 3;
-            const slides = [];
-            for (let i = 0; i < allCards.length; i += perSlide) slides.push(allCards.slice(i, i + perSlide));
+            track.innerHTML = cards.join('');
+            const total = cards.length;
 
-            track.innerHTML = slides.map(s => `<div class="testimonial-slide">${s.join('')}</div>`).join('');
-
-            if (dotsContainer && slides.length > 1) {
-                dotsContainer.innerHTML = slides.map((_, i) =>
-                    `<button class="carousel-dot ${i===0?'active':''}" onclick="goToTestimonialSlide(${i})"></button>`
-                ).join('');
-            }
-            if (slides.length > 1) {
-                testimonialAutoplay = setInterval(() => moveTestimonialCarousel(1), 5000);
-                const wrap = document.querySelector('.testimonial-carousel-wrap');
+            if (total > 1) {
+                testimonialAutoplay = setInterval(() => {
+                    testimonialSlideIdx = (testimonialSlideIdx + 1) % total;
+                    track.style.transform = `translateX(-${testimonialSlideIdx * 100}%)`;
+                }, 4000);
+                
+                const wrap = document.getElementById('testimonials-container');
                 if (wrap) {
                     wrap.addEventListener('mouseenter', () => clearInterval(testimonialAutoplay));
                     wrap.addEventListener('mouseleave', () => {
-                        testimonialAutoplay = setInterval(() => moveTestimonialCarousel(1), 5000);
+                        testimonialAutoplay = setInterval(() => {
+                            testimonialSlideIdx = (testimonialSlideIdx + 1) % total;
+                            track.style.transform = `translateX(-${testimonialSlideIdx * 100}%)`;
+                        }, 4000);
                     });
                 }
             }
         }
 
-        window.goToTestimonialSlide = function(idx) {
-            const track = document.getElementById('testimonialTrack');
-            const dots = document.querySelectorAll('.carousel-dot');
-            const total = track ? track.children.length : 1;
-            testimonialSlideIdx = Math.max(0, Math.min(idx, total - 1));
-            track.style.transform = `translateX(-${testimonialSlideIdx * 100}%)`;
-            dots.forEach((d, i) => d.classList.toggle('active', i === testimonialSlideIdx));
-        };
-
-        window.moveTestimonialCarousel = function(dir) {
-            const track = document.getElementById('testimonialTrack');
-            const total = track ? track.children.length : 1;
-            let next = testimonialSlideIdx + dir;
-            if (next >= total) next = 0;
-            if (next < 0) next = total - 1;
-            goToTestimonialSlide(next);
-        };
 
         // 5. Load Stations
         async function loadStations() {

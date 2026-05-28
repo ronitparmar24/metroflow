@@ -3037,3 +3037,101 @@ body:not(.dark-mode) .tw-tearline::after {
     100% { color: inherit; text-shadow: none; }
 }
 .counter-flash { animation: counterFlash 0.6s ease; }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   TESTIMONIAL SLIDER — Single item auto-scroll
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Outer: clips overflow */
+.testi-slider-outer {
+    overflow: hidden;
+    position: relative;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 12px 20px 20px;
+}
+
+/* Scrolling track */
+.testi-slider-track {
+    display: flex;
+    flex-direction: row;      /* explicit horizontal */
+    flex-wrap: nowrap;         /* never stack vertically */
+    align-items: stretch;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform;
+}
+
+/* Loading state */
+.testi-loading {
+    display: flex;
+    align-items: center;
+    padding: 20px 0;
+}
+
+/* Individual testimonial card */
+.testimonial-card {
+    width: 100%;
+    min-width: 100%;
+    flex-shrink: 0;
+    background: white;
+    border-radius: 20px;
+    padding: 28px 24px 22px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+    border: 1px solid rgba(0,0,0,0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    cursor: default;
+}
+.testimonial-card::before {
+    content: '\201C';
+    position: absolute;
+    top: 10px;
+    left: 20px;
+    font-size: 52px;
+    line-height: 1;
+    font-family: Georgia, serif;
+    color: rgba(102,126,234,0.13);
+    font-weight: 900;
+}
+.testimonial-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(102,126,234,0.12);
+}
+.testimonial-text {
+    font-size: 14px;
+    color: #475569;
+    line-height: 1.7;
+    margin-bottom: 20px;
+    padding-top: 22px;
+}
+.testimonial-user {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.testimonial-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    font-size: 16px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.testimonial-stars {
+    color: #f59e0b;
+    font-size: 12px;
+    margin-top: 3px;
+    letter-spacing: 1px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .testi-slider-outer {
+        padding: 12px 5px 20px;
+    }
+}
