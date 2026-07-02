@@ -1164,3 +1164,239 @@
 }
 .sos-tip-title { font-size: 13px; font-weight: 700; }
 .sos-tip-desc { font-size: 11px; color: #94a3b8; }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   FLOATING CONTEXT MENU — Glassmorphism popup (right-click sidebar)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Floating Menu Card ─────────────────────────────────────────────────── */
+.ctx-menu {
+    position: fixed;
+    z-index: 99999;
+    min-width: 210px;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border-radius: 16px;
+    padding: 8px;
+    box-shadow:
+        0 4px 6px rgba(0, 0, 0, 0.04),
+        0 12px 40px rgba(0, 0, 0, 0.12),
+        0 0 0 1px rgba(0, 0, 0, 0.06);
+    opacity: 0;
+    transform: scale(0.92) translateY(-6px);
+    pointer-events: none;
+    transition:
+        opacity 0.18s cubic-bezier(0.4, 0, 0.2, 1),
+        transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform-origin: top left;
+}
+
+.ctx-menu.visible {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    pointer-events: all;
+}
+
+/* Dark mode */
+.dark-mode .ctx-menu {
+    background: rgba(18, 10, 36, 0.96);
+    box-shadow:
+        0 4px 6px rgba(0, 0, 0, 0.2),
+        0 12px 40px rgba(0, 0, 0, 0.45),
+        0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+/* ── Section Label ──────────────────────────────────────────────────────── */
+.ctx-menu-label {
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #94a3b8;
+    padding: 4px 10px 6px;
+    margin-top: 2px;
+}
+
+.dark-mode .ctx-menu-label {
+    color: rgba(255, 255, 255, 0.35);
+}
+
+/* ── Divider ────────────────────────────────────────────────────────────── */
+.ctx-menu-divider {
+    height: 1px;
+    background: rgba(0, 0, 0, 0.06);
+    margin: 4px 8px;
+    border: none;
+}
+
+.dark-mode .ctx-menu-divider {
+    background: rgba(255, 255, 255, 0.07);
+}
+
+/* ── Menu Item ──────────────────────────────────────────────────────────── */
+.ctx-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 9px 10px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: #374151;
+    transition:
+        background 0.15s ease,
+        color 0.15s ease,
+        transform 0.12s ease;
+    user-select: none;
+    text-decoration: none;
+    border: none;
+    background: transparent;
+    width: 100%;
+    text-align: left;
+}
+
+.dark-mode .ctx-menu-item {
+    color: rgba(255, 255, 255, 0.82);
+}
+
+.ctx-menu-item:hover {
+    background: rgba(102, 126, 234, 0.07);
+    color: #667eea;
+    transform: translateX(2px);
+}
+
+.dark-mode .ctx-menu-item:hover {
+    background: rgba(255, 255, 255, 0.07);
+    color: #a78bfa;
+}
+
+/* Active / highlighted item — warm orange, exactly like the screenshot */
+.ctx-menu-item.active {
+    background: rgba(249, 115, 22, 0.10);
+    color: #f97316;
+    font-weight: 700;
+}
+
+.dark-mode .ctx-menu-item.active {
+    background: rgba(249, 115, 22, 0.16);
+    color: #fb923c;
+}
+
+.ctx-menu-item.active:hover {
+    background: rgba(249, 115, 22, 0.16);
+    color: #ea6d0e;
+}
+
+/* ── Item Icon ──────────────────────────────────────────────────────────── */
+.ctx-menu-item .ctx-item-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    flex-shrink: 0;
+    background: rgba(0, 0, 0, 0.04);
+    color: inherit;
+    transition: background 0.15s ease;
+}
+
+.dark-mode .ctx-menu-item .ctx-item-icon {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.ctx-menu-item:hover .ctx-item-icon {
+    background: rgba(102, 126, 234, 0.10);
+}
+
+.ctx-menu-item.active .ctx-item-icon {
+    background: rgba(249, 115, 22, 0.15);
+}
+
+.dark-mode .ctx-menu-item.active .ctx-item-icon {
+    background: rgba(249, 115, 22, 0.20);
+}
+
+/* ── Item Label ─────────────────────────────────────────────────────────── */
+.ctx-item-label {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ── Enter animation per item ───────────────────────────────────────────── */
+.ctx-menu.visible .ctx-menu-item {
+    animation: ctxItemIn 0.2s ease both;
+}
+
+.ctx-menu.visible .ctx-menu-item:nth-child(1) { animation-delay: 0.02s; }
+.ctx-menu.visible .ctx-menu-item:nth-child(2) { animation-delay: 0.04s; }
+.ctx-menu.visible .ctx-menu-item:nth-child(3) { animation-delay: 0.06s; }
+.ctx-menu.visible .ctx-menu-item:nth-child(4) { animation-delay: 0.08s; }
+.ctx-menu.visible .ctx-menu-item:nth-child(5) { animation-delay: 0.10s; }
+.ctx-menu.visible .ctx-menu-item:nth-child(6) { animation-delay: 0.12s; }
+
+@keyframes ctxItemIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   GROUPED SIDEBAR SECTIONS
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.sidebar-group {
+    margin: 4px 0 2px;
+}
+
+.sidebar-group-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 28px 4px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.sidebar-group-label {
+    font-size: 9.5px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.9px;
+    color: #94a3b8;
+}
+
+.dark-mode .sidebar-group-label {
+    color: rgba(255, 255, 255, 0.35);
+}
+
+.sidebar-group-arrow {
+    font-size: 9px;
+    color: #cbd5e1;
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.dark-mode .sidebar-group-arrow {
+    color: rgba(255, 255, 255, 0.25);
+}
+
+.sidebar-group.collapsed .sidebar-group-arrow {
+    transform: rotate(-90deg);
+}
+
+.sidebar-group-items {
+    overflow: hidden;
+    max-height: 600px;
+    transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.25s ease;
+    opacity: 1;
+}
+
+.sidebar-group.collapsed .sidebar-group-items {
+    max-height: 0;
+    opacity: 0;
+}

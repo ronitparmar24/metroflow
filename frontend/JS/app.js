@@ -1,6 +1,33 @@
+// ============================================================
+// GLOBAL FILE:// FETCH INTERCEPTOR
+// When HTML pages are opened directly as file://, the browser
+// treats relative URLs like /api/stations as file:///C:/api/stations
+// which fails with CORS errors. This interceptor transparently
+// rewrites any relative URL to http://localhost:5000/... so all
+// fetch() calls across every page work without modification.
+// ============================================================
+(function patchFetchForFileProtocol() {
+    if (window.location.protocol !== 'file:') return; // Only applies to file://
+
+    const FLASK_BASE = 'http://localhost:5000';
+    const _nativeFetch = window.fetch.bind(window);
+
+    window.fetch = function (input, init) {
+        // Rewrite relative URLs (starting with /) to absolute localhost URLs
+        if (typeof input === 'string' && input.startsWith('/')) {
+            input = FLASK_BASE + input;
+        } else if (input instanceof Request && input.url.startsWith('/')) {
+            input = new Request(FLASK_BASE + input.url, input);
+        }
+        return _nativeFetch(input, init);
+    };
+})();
+
 class MetroAPI {
     constructor() {
-        this.baseUrl = '/api';
+        // When opened as file://, relative URLs break — use absolute localhost URL instead
+        const isFile = window.location.protocol === 'file:';
+        this.baseUrl = (isFile ? 'http://localhost:5000' : '') + '/api';
     }
 
     // Generic API Call Function
@@ -34,12 +61,13 @@ class MetroAPI {
                     return data;
                 }
 
-                // For all other checks (like /me), handle redirection
+                // Always redirect to the server-hosted login page so cookies work
                 const path = window.location.pathname;
+                const onProtectedPage = path.includes('dashboard') || path.includes('admin') ||
+                    path.includes('profile') || path.includes('ticket');
 
-                // If we are INSIDE the app (Dashboard/Profile), kick user out
-                if (path.includes('dashboard') || path.includes('profile') || path.includes('ticket')) {
-                    window.location.href = 'login.html';
+                if (onProtectedPage || window.location.protocol === 'file:') {
+                    window.location.href = 'http://localhost:5000/login.html';
                     throw new Error('Session expired. Redirecting...');
                 }
 
@@ -68,7 +96,8 @@ class MetroAPI {
         if (result && result.success) {
             return result.user;
         } else {
-            window.location.href = 'login.html';
+            // Use absolute server URL so session cookies work
+            window.location.href = 'http://localhost:5000/login.html';
             return null;
         }
     }
@@ -78,10 +107,10 @@ class MetroAPI {
         // We don't catch here anymore because call() handles the silence for us
         const result = await this.call('/me');
         if (result && result.success) {
-            // User IS logged in -> Go to Dashboard
+            // User IS logged in -> Go to Dashboard (use server URL for cookie compatibility)
             const path = window.location.pathname;
             if (path.includes('login.html') || path.includes('register.html') || path === '/' || path.includes('index.html')) {
-                window.location.href = 'dashboard.html';
+                window.location.href = 'http://localhost:5000/dashboard.html';
             }
             return result.user;
         }

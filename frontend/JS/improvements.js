@@ -474,24 +474,26 @@
             const data = await res.json();
             if (!data.success) return;
 
-            document.getElementById('catTickets').textContent = `₹${Math.round(data.categories.tickets)}`;
-            document.getElementById('catPasses').textContent = `₹${Math.round(data.categories.passes)}`;
-            document.getElementById('catTotal').textContent = `₹${Math.round(data.categories.recharges)}`;
-            document.getElementById('offpeakSavings').textContent = `₹${data.offpeak_savings}`;
-            document.getElementById('avgTripCost').textContent = `₹${data.avg_trip_cost}`;
-            document.getElementById('monthTripsCount').textContent = data.month_trips;
+            const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+            setEl('catTickets', `₹${Math.round(data.categories.tickets)}`);
+            setEl('catPasses', `₹${Math.round(data.categories.passes)}`);
+            setEl('catTotal', `₹${Math.round(data.categories.recharges)}`);
+            setEl('offpeakSavings', `₹${data.offpeak_savings}`);
+            setEl('avgTripCost', `₹${data.avg_trip_cost}`);
+            setEl('monthTripsCount', data.month_trips);
 
             // Budget ring
             const budget = data.budget || 0;
             const spent = data.month_spent || 0;
-            document.getElementById('budgetSpent').textContent = `₹${Math.round(spent)}`;
-            document.getElementById('budgetTotal').textContent = budget > 0 ? `₹${budget}` : 'No budget set';
+            setEl('budgetSpent', `₹${Math.round(spent)}`);
+            setEl('budgetTotal', budget > 0 ? `₹${budget}` : 'No budget set');
             if (budget > 0) {
                 const pct = Math.min(spent / budget, 1);
                 const arc = document.getElementById('budgetArc');
                 if (arc) arc.style.strokeDashoffset = 326.7 * (1 - pct);
             }
-            if (data.budget) document.getElementById('budgetInput').value = data.budget;
+            const budgetInput = document.getElementById('budgetInput');
+            if (data.budget && budgetInput) budgetInput.value = data.budget;
         } catch (e) { console.log('Spending load:', e); }
     }
 
@@ -987,10 +989,12 @@
     async function loadJourneyPlanner() {
         // Populate station dropdowns
         try {
-            const res = await fetch('/api/stations/list', { credentials: 'include' });
+            const res = await fetch('/api/stations', { credentials: 'include' });
             const data = await res.json();
             if (!data.success) return;
-            const stations = data.stations || [];
+            // Backend returns station names as strings; normalise to [{name}] objects
+            const rawStations = data.stations || [];
+            const stations = rawStations.map(s => typeof s === 'string' ? { name: s } : s);
             const srcSelect = document.getElementById('jpSource');
             const dstSelect = document.getElementById('jpDest');
             if (!srcSelect || !dstSelect) return;
@@ -1245,15 +1249,13 @@
     })();
 
     // ═══════════════════════════════════════════════════════════════
-    //  NEXT TRAIN COUNTDOWN WIDGET
+    //  NEXT TRAIN COUNTDOWN WIDGET — disabled (HTML already has #nextTrainCard)
     // ═══════════════════════════════════════════════════════════════
     (() => {
-        const dashSection = document.getElementById('dashboard-section');
-        if (!dashSection) return;
-
-        // Create widget
-        const widget = document.createElement('div');
-        widget.id = 'nextTrainWidget';
+        // Intentionally skipped: the dashboard HTML has a built-in
+        // #nextTrainCard with live countdown. Injecting a second widget
+        // caused visual overlap and layout glitches.
+        return;
         widget.style.cssText = `
             background:linear-gradient(135deg,rgba(102,126,234,0.06),rgba(118,75,162,0.04));
             border:1px solid rgba(102,126,234,0.1);border-radius:20px;padding:20px 24px;
@@ -1285,10 +1287,13 @@
             </div>
         `;
 
-        // Insert at top of dashboard
-        const firstChild = dashSection.querySelector('.row, .glass-card, h2, #smartGreetingBanner');
-        if (firstChild) dashSection.insertBefore(widget, firstChild.nextSibling);
-        else dashSection.prepend(widget);
+        // Insert near top of dashboard (safely — avoid "not a child" error)
+        const firstChild = dashSection.querySelector(':scope > .row, :scope > .glass-card, :scope > h2, :scope > #smartGreetingBanner');
+        if (firstChild && firstChild.parentNode === dashSection) {
+            dashSection.insertBefore(widget, firstChild.nextSibling);
+        } else {
+            dashSection.prepend(widget);
+        }
 
         // Countdown logic — simulate random interval 2–8 min
         let totalSec = Math.floor(Math.random() * 360) + 120; // 2-8 min

@@ -3135,3 +3135,354 @@ body:not(.dark-mode) .tw-tearline::after {
         padding: 12px 5px 20px;
     }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   DASHBOARD UI FIX — light + dark mode glitch corrections
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Glass card base (light) ── */
+.glass-card {
+    color: #1e293b;
+}
+.glass-card p,
+.glass-card span:not([style]),
+.glass-card small:not([style]),
+.glass-card label {
+    color: #475569;
+}
+
+/* ── Glass card dark mode ── */
+.dark-mode .glass-card {
+    background: rgba(30, 15, 55, 0.85) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #e2e8f0 !important;
+}
+.dark-mode .glass-card p,
+.dark-mode .glass-card span:not([style]),
+.dark-mode .glass-card small:not([style]),
+.dark-mode .glass-card label,
+.dark-mode .glass-card .text-muted {
+    color: rgba(255, 255, 255, 0.65) !important;
+}
+.dark-mode .glass-card h1,
+.dark-mode .glass-card h2,
+.dark-mode .glass-card h3 {
+    color: #f1f5f9 !important;
+}
+
+/* ── Stat cards (light) ── */
+.stat-card-modern {
+    background: white;
+    color: #1e293b;
+}
+body:not(.dark-mode) .stat-card-modern .stat-value {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* ── Stat cards (dark) ── */
+.dark-mode .stat-card-modern {
+    background: rgba(30, 15, 55, 0.9) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    color: #e2e8f0 !important;
+}
+.dark-mode .stat-card-modern p,
+.dark-mode .stat-card-modern small {
+    color: rgba(255, 255, 255, 0.65) !important;
+}
+.dark-mode .stat-card-modern .d-flex > div:last-child {
+    background: rgba(255, 255, 255, 0.12) !important;
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* ── Metro status strip ── */
+.dash-metro-strip {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 14px;
+    padding: 10px 20px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+.dark-mode .dash-metro-strip {
+    background: rgba(30, 15, 55, 0.85) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: #e2e8f0 !important;
+}
+.strip-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+.strip-divider {
+    width: 1px;
+    height: 16px;
+    background: rgba(0, 0, 0, 0.1);
+}
+.dark-mode .strip-divider {
+    background: rgba(255, 255, 255, 0.12);
+}
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    box-shadow: 0 0 6px currentColor;
+    animation: stripPulse 2s ease-in-out infinite;
+}
+@keyframes stripPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.15); }
+}
+
+/* ── Daily tip card ── */
+.daily-tip-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+    border-radius: 14px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 16px rgba(34, 197, 94, 0.08);
+}
+.dark-mode .daily-tip-card {
+    background: rgba(30, 15, 55, 0.85) !important;
+    border-color: rgba(34, 197, 94, 0.25) !important;
+    color: #e2e8f0 !important;
+}
+.dark-mode .daily-tip-card #dailyTipText {
+    color: #d1fae5 !important;
+}
+.tip-icon {
+    width: 36px;
+    height: 36px;
+    background: rgba(34, 197, 94, 0.12);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #16a34a;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+.dark-mode .tip-icon {
+    background: rgba(34, 197, 94, 0.18);
+    color: #4ade80;
+}
+
+/* ── Dash badges row ── */
+.dash-badges-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+.dash-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border-radius: 50px;
+    font-size: 11px;
+    font-weight: 700;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    color: #475569;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+.dash-badge.earned {
+    background: rgba(34, 197, 94, 0.1);
+    border-color: rgba(34, 197, 94, 0.3);
+    color: #15803d;
+}
+.dash-badge.locked {
+    opacity: 0.55;
+}
+.dark-mode .dash-badge {
+    background: rgba(255, 255, 255, 0.07) !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+.dark-mode .dash-badge.earned {
+    background: rgba(34, 197, 94, 0.15) !important;
+    border-color: rgba(34, 197, 94, 0.3) !important;
+    color: #4ade80 !important;
+}
+
+/* ── Next train card (#nextTrainCard in HTML) dark mode ── */
+.dark-mode #nextTrainCard {
+    background: rgba(30, 15, 55, 0.85) !important;
+    border-left-color: #3b82f6 !important;
+}
+.dark-mode #nextTrainCard h6,
+.dark-mode #nextTrainCard p {
+    color: #e2e8f0 !important;
+}
+.dark-mode #nextTrainCard .text-muted,
+.dark-mode #nextTrainCard small {
+    color: rgba(255, 255, 255, 0.55) !important;
+}
+
+/* ── Streak & carbon mini-cards (inside glass-card) ── */
+.dark-mode #travelStreak { color: #fb923c !important; }
+.dark-mode #carbonSaved  { color: #4ade80 !important; }
+/* Light-mode label fix: hardcoded colors are fine on white, leave them */
+body:not(.dark-mode) [style*="color: #9a3412"] { color: #9a3412 !important; }
+body:not(.dark-mode) [style*="color: #166534"] { color: #166534 !important; }
+/* Dark mode overrides for those inline colors */
+.dark-mode [style*="color: #9a3412"]  { color: #fdba74 !important; }
+.dark-mode [style*="color: #166534"]  { color: #86efac !important; }
+.dark-mode [style*="color: #94a3b8"]  { color: rgba(255, 255, 255, 0.5) !important; }
+.dark-mode [style*="color: #64748b"]  { color: rgba(255, 255, 255, 0.55) !important; }
+.dark-mode [style*="color: #475569"]  { color: rgba(255, 255, 255, 0.6) !important; }
+.dark-mode [style*="color: #334155"]  { color: #e2e8f0 !important; }
+.dark-mode [style*="color: #1e293b"]  { color: #f1f5f9 !important; }
+
+/* ── Live feed ticker ── */
+#liveFeedTicker {
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(102, 126, 234, 0.15);
+    border-radius: 16px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.07);
+}
+.dark-mode #liveFeedTicker {
+    background: rgba(30, 15, 55, 0.85) !important;
+    border-color: rgba(102, 126, 234, 0.25) !important;
+    color: #e2e8f0 !important;
+}
+.live-feed-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+.live-feed-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.live-feed-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    color: #475569;
+    animation: notifSlideIn 0.4s ease forwards;
+}
+.dark-mode .live-feed-item { color: rgba(255, 255, 255, 0.7) !important; }
+.live-feed-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #22c55e;
+    flex-shrink: 0;
+    box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
+}
+.live-feed-user { font-weight: 700; color: #667eea; }
+.dark-mode .live-feed-user { color: #818cf8 !important; }
+.live-feed-route { font-weight: 600; }
+.live-feed-meta { color: #94a3b8; }
+.live-feed-pulse {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ef4444;
+    display: inline-block;
+    animation: stripPulse 1.5s infinite;
+}
+
+/* ── Smart tips card ── */
+.smart-tips-card {
+    margin-bottom: 20px;
+}
+.smart-tip-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+.dark-mode .smart-tip-item {
+    border-bottom-color: rgba(255, 255, 255, 0.06) !important;
+}
+.smart-tip-item:last-child { border-bottom: none; }
+.smart-tip-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.smart-tip-content { flex: 1; }
+.smart-tip-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 2px;
+}
+.dark-mode .smart-tip-title { color: #f1f5f9 !important; }
+.smart-tip-desc {
+    font-size: 11px;
+    color: #64748b;
+}
+.dark-mode .smart-tip-desc { color: rgba(255, 255, 255, 0.55) !important; }
+.smart-tip-priority {
+    font-size: 9px;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+}
+
+/* ── Weather advisory card ── */
+#weatherAdvisoryCard {
+    margin-bottom: 20px;
+}
+.dark-mode .weather-advisory-strip {
+    background: rgba(30, 15, 55, 0.7) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+.weather-advisory-strip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    background: rgba(79, 172, 254, 0.06);
+    border-top: 1px solid rgba(79, 172, 254, 0.1);
+    font-size: 12px;
+    color: #475569;
+}
+
+/* ── Quick-action button dark fix ── */
+.dark-mode .quick-action-btn {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: #e2e8f0 !important;
+}
+.dark-mode .quick-action-btn h6,
+.dark-mode .quick-action-btn span,
+.dark-mode .quick-action-btn small {
+    color: #e2e8f0 !important;
+}

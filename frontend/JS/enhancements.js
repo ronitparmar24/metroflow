@@ -1124,3 +1124,207 @@ async function loadEmergencySOS() {
     document.addEventListener('DOMContentLoaded', () => setTimeout(attach, 600));
     window.addEventListener('load', () => setTimeout(attach, 2500));
 })();
+
+// ═══════════════════════════════════════════════════════════════════════
+//  SIDEBAR GROUP COLLAPSE/EXPAND
+// ═══════════════════════════════════════════════════════════════════════
+window.toggleSidebarGroup = function (groupId) {
+    const group = document.getElementById(groupId);
+    if (!group) return;
+    group.classList.toggle('collapsed');
+};
+
+// ═══════════════════════════════════════════════════════════════════════
+//  FLOATING CONTEXT MENU — right-click / long-press on sidebar links
+// ═══════════════════════════════════════════════════════════════════════
+(function initCtxMenu() {
+    const GROUPS = {
+        main: [
+            { icon: 'fa-th-large',    label: 'Dashboard',       section: 'dashboard'    },
+            { icon: 'fa-ticket-alt',  label: 'Book Ticket',      section: 'book-ticket'  },
+            { icon: 'fa-list-ul',     label: 'My Tickets',       section: 'my-tickets'   }
+        ],
+        finance: [
+            { icon: 'fa-wallet',         label: 'Wallet',        section: 'wallet'       },
+            { icon: 'fa-credit-card',    label: 'Metro Card',    section: 'metro-card'   },
+            { icon: 'fa-calendar-check', label: 'Monthly Pass',  section: 'monthly-pass' },
+            { icon: 'fa-exchange-alt',   label: 'Transactions',  section: 'transactions' }
+        ],
+        travel: [
+            { icon: 'fa-route',           label: 'Journey Planner',  section: 'journey-planner'  },
+            { icon: 'fa-satellite-dish',  label: 'Live Trains',       section: 'live-trains'      },
+            { icon: 'fa-map-marked-alt',  label: 'Metro Map',         section: 'metro-map'        },
+            { icon: 'fa-history',         label: 'Journey History',   section: 'journey-history'  },
+            { icon: 'fa-calculator',      label: 'Fare Calculator',   section: 'fare-calculator'  }
+        ],
+        insights: [
+            { icon: 'fa-chart-bar',   label: 'Analytics',          section: 'analytics'       },
+            { icon: 'fa-chart-pie',   label: 'My Spending',        section: 'spending'        }
+        ],
+        account: [
+            { icon: 'fa-user-circle', label: 'My Profile',    section: 'profile'      },
+            { icon: 'fa-trophy',      label: 'Achievements',  section: 'achievements' },
+            { icon: 'fa-cog',         label: 'Settings',      section: 'settings'     }
+        ],
+        more: [
+            { icon: 'fa-comment-alt',      label: 'Feedback',        section: 'feedback'       },
+            { icon: 'fa-search-location',  label: 'Lost & Found',    section: 'lost-found'     },
+            { icon: 'fa-exclamation-circle',label: 'Emergency SOS',  section: 'emergency-sos'  }
+        ]
+    };
+
+    const GROUP_LABELS = {
+        main: 'Main', finance: 'Finance', travel: 'Travel',
+        insights: 'Insights', account: 'Account', more: 'More'
+    };
+
+    let menu = null;
+    let hideTimer = null;
+    let longPressTimer = null;
+    let currentActiveSection = 'dashboard';
+
+    function getMenu() {
+        if (!menu) menu = document.getElementById('ctxMenu');
+        return menu;
+    }
+
+    function getCurrentSection() {
+        // Read from active sidebar link
+        const active = document.querySelector('.sidebar-link.active[data-section]');
+        return active ? active.dataset.section : currentActiveSection;
+    }
+
+    function buildMenu(groupKey) {
+        const m = getMenu();
+        if (!m) return;
+
+        const items = GROUPS[groupKey] || [];
+        const label = GROUP_LABELS[groupKey] || groupKey;
+        const activeSec = getCurrentSection();
+
+        let html = `<div class="ctx-menu-label">${label}</div>`;
+
+        items.forEach(item => {
+            const isActive = item.section === activeSec;
+            html += `
+                <button class="ctx-menu-item${isActive ? ' active' : ''}"
+                        onclick="showSection('${item.section}');hideCtxMenu()"
+                        role="menuitem">
+                    <span class="ctx-item-icon"><i class="fas ${item.icon}"></i></span>
+                    <span class="ctx-item-label">${item.label}</span>
+                    ${isActive ? '<i class="fas fa-check" style="font-size:10px;opacity:0.6;"></i>' : ''}
+                </button>`;
+        });
+
+        m.innerHTML = html;
+    }
+
+    function positionMenu(x, y) {
+        const m = getMenu();
+        if (!m) return;
+
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        const mw = 220; // approximate menu width
+        const mh = m.offsetHeight || 240;
+
+        // Flip left if would overflow right
+        const left = (x + mw > vw - 12) ? x - mw : x;
+        // Flip up if would overflow bottom
+        const top  = (y + mh > vh - 12) ? y - mh : y;
+
+        m.style.left = Math.max(8, left) + 'px';
+        m.style.top  = Math.max(8, top)  + 'px';
+    }
+
+    window.showCtxMenu = function (e, groupKey) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+
+        buildMenu(groupKey);
+
+        const m = getMenu();
+        if (!m) return;
+
+        // Position off-screen first to allow measuring height
+        m.style.left = '-9999px';
+        m.style.top  = '-9999px';
+        m.classList.remove('visible');
+
+        requestAnimationFrame(() => {
+            positionMenu(e.clientX + 6, e.clientY + 4);
+            m.classList.add('visible');
+        });
+    };
+
+    window.hideCtxMenu = function () {
+        const m = getMenu();
+        if (!m) return;
+        m.classList.remove('visible');
+    };
+
+    // ── Attach to sidebar links ───────────────────────────────────────────
+    function attachListeners() {
+        document.querySelectorAll('.sidebar-link[data-ctx-group]').forEach(link => {
+            const group = link.dataset.ctxGroup;
+
+            // Right-click → context menu
+            link.addEventListener('contextmenu', e => {
+                window.showCtxMenu(e, group);
+            });
+
+            // Long-press (touch) → context menu
+            link.addEventListener('touchstart', e => {
+                longPressTimer = setTimeout(() => {
+                    // Synthesize position from touch
+                    const t = e.touches[0];
+                    const fakeEvt = { clientX: t.clientX, clientY: t.clientY, preventDefault: () => {}, stopPropagation: () => {} };
+                    window.showCtxMenu(fakeEvt, group);
+                }, 500);
+            }, { passive: true });
+
+            link.addEventListener('touchend', () => {
+                if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+            });
+
+            link.addEventListener('touchmove', () => {
+                if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+            });
+        });
+
+        // Dismiss on outside click / Escape
+        document.addEventListener('click', e => {
+            const m = getMenu();
+            if (m && !m.contains(e.target)) window.hideCtxMenu();
+        });
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') window.hideCtxMenu();
+        });
+
+        // Scroll or resize → hide
+        window.addEventListener('scroll', window.hideCtxMenu, { passive: true });
+        window.addEventListener('resize', window.hideCtxMenu, { passive: true });
+    }
+
+    // ── Keep active state in sync with showSection ────────────────────────
+    const _origShow = window.showSection;
+    if (typeof _origShow === 'function') {
+        window.showSection = function (section) {
+            currentActiveSection = section;
+            // Update active class on sidebar links
+            document.querySelectorAll('.sidebar-link[data-section]').forEach(l => {
+                l.classList.toggle('active', l.dataset.section === section);
+            });
+            _origShow(section);
+        };
+    }
+
+    // Init after DOM ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => setTimeout(attachListeners, 800));
+    } else {
+        setTimeout(attachListeners, 800);
+    }
+})();

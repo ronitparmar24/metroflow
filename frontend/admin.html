@@ -1579,7 +1579,22 @@
     </div>
 
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-    <!-- app.js removed - API functionality is built-in below -->
+    <!-- Fetch interceptor: fixes relative /api/ URLs when page is opened as file:// -->
+    <script>
+        (function patchFetchForFileProtocol() {
+            if (window.location.protocol !== 'file:') return;
+            const FLASK_BASE = 'http://localhost:5000';
+            const _nativeFetch = window.fetch.bind(window);
+            window.fetch = function (input, init) {
+                if (typeof input === 'string' && input.startsWith('/')) {
+                    input = FLASK_BASE + input;
+                } else if (input instanceof Request && input.url.startsWith('/')) {
+                    input = new Request(FLASK_BASE + input.url, input);
+                }
+                return _nativeFetch(input, init);
+            };
+        })();
+    </script>
     <script>
         // Initialize AOS
         AOS.init({ duration: 600, once: true });
@@ -3030,7 +3045,43 @@
         setInterval(runHealthCheck, 30000);
 
         /* --- INIT --- */
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            // ── AUTH GUARD ──────────────────────────────────────────────────
+            // Check session before loading any data. If not logged in, redirect.
+            const apiBase = window.location.protocol === 'file:' ? 'http://localhost:5000' : '';
+            try {
+                const authRes = await fetch(apiBase + '/api/me', { credentials: 'include' });
+                if (authRes.status === 401) {
+                    document.body.innerHTML = `
+                        <div style="display:flex;align-items:center;justify-content:center;height:100vh;
+                            background:linear-gradient(135deg,#667eea,#764ba2);font-family:'Poppins',sans-serif;">
+                            <div style="background:white;border-radius:20px;padding:40px 48px;text-align:center;
+                                box-shadow:0 20px 60px rgba(0,0,0,0.3);max-width:380px;">
+                                <div style="font-size:48px;margin-bottom:16px;">🔐</div>
+                                <h3 style="color:#1e293b;font-weight:800;margin-bottom:8px;">Session Expired</h3>
+                                <p style="color:#64748b;font-size:0.9rem;margin-bottom:24px;">
+                                    You need to be logged in as Admin to access this page.
+                                </p>
+                                <a href="http://localhost:5000/login.html"
+                                   style="display:inline-block;background:linear-gradient(135deg,#667eea,#764ba2);
+                                   color:white;padding:12px 32px;border-radius:12px;text-decoration:none;
+                                   font-weight:700;font-size:1rem;">
+                                    Go to Login →
+                                </a>
+                            </div>
+                        </div>`;
+                    return; // Stop loading the rest of the page
+                }
+                const authData = await authRes.json();
+                if (authData.user && authData.user.role !== 'ADMIN') {
+                    window.location.href = apiBase + '/dashboard.html';
+                    return;
+                }
+            } catch (e) {
+                console.warn('Auth check failed, proceeding anyway:', e);
+            }
+            // ── END AUTH GUARD ───────────────────────────────────────────────
+
             updateAdminGreeting();
             loadDashboard();
             loadRevenueChart();
@@ -3041,6 +3092,7 @@
             // Feature S: start ticker + draw initial sparklines after first data load
             setTimeout(() => { updateSparklines(); initAdminRefreshTicker(); }, 1200);
         });
+
 
         // ══════════════════════════════════════════════════════════════════
         // Feature NN: 7-Day Revenue Trend Canvas Sparkline (Stripe/Amplitude style)
@@ -3198,7 +3250,7 @@
             // Try to load real data from API, fallback to sample
             async function loadNNRevenueData() {
                 try {
-                    const r = await fetch('/api/admin/reports/daily-revenue', { credentials: 'include' });
+                    const r = await fetch('/api/admin/reports/financial?period=daily', { credentials: 'include' });
                     if (r.ok) {
                         const d = await r.json();
                         drawRevenueChart(d.data || d.revenue || d.values);

@@ -777,7 +777,8 @@
 
             try {
                 // Direct fetch to get previous_login data from backend
-                const response = await fetch('/api/login', {
+                const apiBase = window.location.protocol === 'file:' ? 'http://localhost:5000' : '';
+                const response = await fetch(apiBase + '/api/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password }),
@@ -831,10 +832,10 @@
                         setTimeout(() => toast.classList.add('show'), 1200);
                     }
 
-                    // Redirect after animation
+                    // Redirect after animation — use server URL so session cookie is preserved
                     setTimeout(() => {
-                        if (result.user.role === 'ADMIN') window.location.href = 'admin.html';
-                        else window.location.href = 'dashboard.html';
+                        if (result.user.role === 'ADMIN') window.location.href = 'http://localhost:5000/admin.html';
+                        else window.location.href = 'http://localhost:5000/dashboard.html';
                     }, 2500);
                 } else {
                     throw new Error(result.error || 'Invalid credentials');

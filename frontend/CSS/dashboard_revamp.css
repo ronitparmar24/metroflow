@@ -1,0 +1,1052 @@
+/* ============================================================
+   METROFLOW DASHBOARD — COMPLETE UI REVAMP
+   Fixes layout issues & elevates visual quality
+   ============================================================ */
+
+/* ── Google Font: Inter for sharper dashboard typography ── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+/* ══════════════════════════════════════════════════════
+   INSTANT FARE PULSE — Live Journey Intelligence Widget
+   Unique feature: Real-time fare + crowd + next train
+   ══════════════════════════════════════════════════════ */
+
+.fare-pulse-card {
+    background: rgba(255,255,255,0.97);
+    border-radius: 24px;
+    padding: 22px 26px;
+    box-shadow: 0 12px 40px rgba(102,126,234,0.15), 0 2px 0 rgba(255,255,255,0.9);
+    border: 1px solid rgba(102,126,234,0.12);
+    position: relative;
+    overflow: hidden;
+    transition: box-shadow 0.3s ease;
+}
+
+.fare-pulse-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #667eea, #f5576c, #00f2fe, #38ef7d);
+    background-size: 300% 100%;
+    animation: fpGradientShift 4s ease infinite;
+}
+
+@keyframes fpGradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.fare-pulse-card:hover {
+    box-shadow: 0 20px 60px rgba(102,126,234,0.22), 0 2px 0 rgba(255,255,255,0.9);
+}
+
+.dark-mode .fare-pulse-card {
+    background: rgba(20,15,40,0.92) !important;
+    border-color: rgba(102,126,234,0.2) !important;
+}
+
+/* Header */
+.fp-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+}
+
+.fp-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.fp-pulse-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 0 0 rgba(34,197,94,0.5);
+    animation: fpPulse 2s ease-out infinite;
+    flex-shrink: 0;
+}
+
+@keyframes fpPulse {
+    0% { box-shadow: 0 0 0 0 rgba(34,197,94,0.6); }
+    70% { box-shadow: 0 0 0 10px rgba(34,197,94,0); }
+    100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+}
+
+.fp-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: #1e293b;
+    letter-spacing: -0.3px;
+}
+
+.dark-mode .fp-title { color: white; }
+
+.fp-live-badge {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: white;
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 1.2px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    text-transform: uppercase;
+}
+
+.fp-time-display {
+    font-size: 13px;
+    font-weight: 700;
+    color: #667eea;
+    background: rgba(102,126,234,0.08);
+    padding: 5px 12px;
+    border-radius: 10px;
+    letter-spacing: 0.5px;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Route row */
+.fp-route-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.fp-station-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(102,126,234,0.05);
+    border: 1.5px solid rgba(102,126,234,0.12);
+    border-radius: 14px;
+    padding: 10px 14px;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.fp-station-wrap:focus-within {
+    border-color: #667eea;
+    background: rgba(102,126,234,0.08);
+}
+
+.dark-mode .fp-station-wrap {
+    background: rgba(102,126,234,0.08);
+    border-color: rgba(102,126,234,0.2);
+}
+
+.fp-station-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.fp-from-dot {
+    background: #667eea;
+    box-shadow: 0 0 0 3px rgba(102,126,234,0.2);
+}
+
+.fp-to-dot {
+    background: #f5576c;
+    box-shadow: 0 0 0 3px rgba(245,87,108,0.2);
+}
+
+.fp-select {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+    outline: none;
+    cursor: pointer;
+    min-width: 0;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.dark-mode .fp-select {
+    color: rgba(255,255,255,0.9);
+}
+
+.fp-select option {
+    background: white;
+    color: #334155;
+    font-size: 13px;
+}
+
+.fp-swap-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(102,126,234,0.2);
+    background: white;
+    color: #667eea;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(102,126,234,0.12);
+}
+
+.fp-swap-btn:hover {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border-color: transparent;
+    transform: rotate(180deg) scale(1.1);
+    box-shadow: 0 6px 20px rgba(102,126,234,0.35);
+}
+
+.dark-mode .fp-swap-btn {
+    background: rgba(102,126,234,0.12);
+    border-color: rgba(102,126,234,0.25);
+}
+
+/* Results */
+.fp-results {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    animation: fpResultsIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+@keyframes fpResultsIn {
+    from { opacity:0; transform: translateY(8px) scale(0.97); }
+    to   { opacity:1; transform: translateY(0) scale(1); }
+}
+
+.fp-result-pill {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border-radius: 16px;
+    font-size: 13px;
+    flex: 1;
+    min-width: 100px;
+    transition: transform 0.2s ease;
+}
+
+.fp-result-pill:hover { transform: translateY(-3px); }
+
+.fp-result-pill i {
+    font-size: 18px;
+    opacity: 0.85;
+    flex-shrink: 0;
+}
+
+.fp-fare-pill {
+    background: linear-gradient(135deg, rgba(102,126,234,0.1), rgba(118,75,162,0.06));
+    border: 1px solid rgba(102,126,234,0.15);
+    color: #667eea;
+}
+
+.fp-time-pill {
+    background: linear-gradient(135deg, rgba(245,158,11,0.1), rgba(217,119,6,0.06));
+    border: 1px solid rgba(245,158,11,0.15);
+    color: #d97706;
+}
+
+.fp-crowd-pill {
+    background: linear-gradient(135deg, rgba(34,197,94,0.1), rgba(22,163,74,0.06));
+    border: 1px solid rgba(34,197,94,0.15);
+    color: #16a34a;
+}
+
+.fp-depart-pill {
+    background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(37,99,235,0.06));
+    border: 1px solid rgba(59,130,246,0.15);
+    color: #2563eb;
+}
+
+.fp-result-val {
+    font-size: 16px;
+    font-weight: 900;
+    line-height: 1.1;
+    color: inherit;
+}
+
+.fp-result-label {
+    font-size: 10px;
+    font-weight: 600;
+    opacity: 0.65;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 1px;
+}
+
+/* Book button */
+.fp-book-btn {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    border-radius: 14px;
+    padding: 12px 22px;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    box-shadow: 0 4px 16px rgba(102,126,234,0.35);
+    flex-shrink: 0;
+    letter-spacing: 0.2px;
+}
+
+.fp-book-btn:hover {
+    transform: translateY(-3px) scale(1.04);
+    box-shadow: 0 10px 30px rgba(102,126,234,0.45);
+}
+
+/* Idle state */
+.fp-idle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #94a3b8;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 4px 0;
+}
+
+.fp-idle-icon {
+    font-size: 20px;
+    color: #c7d2fe;
+    flex-shrink: 0;
+}
+
+.dark-mode .fp-idle { color: rgba(255,255,255,0.4); }
+
+/* Crowd level color overrides applied via JS */
+.fp-crowd-busy .fp-crowd-pill { background: linear-gradient(135deg,rgba(239,68,68,0.1),rgba(220,38,38,0.06)); border-color: rgba(239,68,68,0.2); color: #dc2626; }
+.fp-crowd-moderate .fp-crowd-pill { background: linear-gradient(135deg,rgba(245,158,11,0.1),rgba(217,119,6,0.06)); border-color: rgba(245,158,11,0.2); color: #d97706; }
+
+/* Responsive */
+@media (max-width: 640px) {
+    .fare-pulse-card { padding: 18px 16px; }
+    .fp-route-row { flex-wrap: wrap; }
+    .fp-station-wrap { min-width: calc(50% - 28px); }
+    .fp-swap-btn { order: 3; margin: 0 auto; }
+    .fp-results { gap: 8px; }
+    .fp-result-pill { min-width: calc(50% - 4px); flex: 0 0 calc(50% - 4px); }
+    .fp-book-btn { width: 100%; text-align: center; padding: 14px; }
+}
+
+
+
+/* ══════════════════════════════════════════════════════
+   1. WELCOME GREETING — Bigger, richer, more breathing room
+   ══════════════════════════════════════════════════════ */
+#dashboard-section > .mb-4:first-child {
+    padding: 8px 0 4px;
+}
+
+#dashGreeting {
+    font-size: 2rem !important;
+    font-weight: 900 !important;
+    color: white !important;
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.15);
+}
+
+#dashSubGreeting {
+    font-size: 1rem !important;
+    color: rgba(255,255,255,0.75) !important;
+    font-weight: 500;
+}
+
+/* ══════════════════════════════════════════════════════
+   2. SMART GREETING BANNER — Completely redesigned
+   Fix: broken layout, cramped content, no minimum height
+   ══════════════════════════════════════════════════════ */
+#smartGreetingBanner {
+    border-radius: 22px !important;
+    padding: 22px 28px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 20px !important;
+    margin-bottom: 24px !important;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 60%, #8b5cf6 100%) !important;
+    box-shadow: 0 10px 40px rgba(102,126,234,0.35) !important;
+    position: relative;
+    overflow: hidden;
+    min-height: 90px;
+    flex-wrap: nowrap !important;
+}
+
+/* Decorative shine */
+#smartGreetingBanner::before {
+    content: '';
+    position: absolute;
+    top: -60%;
+    right: -10%;
+    width: 280px;
+    height: 280px;
+    background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 65%);
+    pointer-events: none;
+}
+
+#smartGreetingBanner::after {
+    content: '';
+    position: absolute;
+    bottom: -80px;
+    left: 30%;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 65%);
+    pointer-events: none;
+}
+
+#greetingIcon {
+    font-size: 38px !important;
+    flex-shrink: 0 !important;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+    animation: greetingIconBounce 3s ease-in-out infinite;
+}
+
+@keyframes greetingIconBounce {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-4px) rotate(-5deg); }
+}
+
+#greetingTitle {
+    font-size: 17px !important;
+    font-weight: 800 !important;
+    color: white !important;
+    line-height: 1.3;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.15);
+}
+
+#greetingSubtitle {
+    font-size: 13px !important;
+    color: rgba(255,255,255,0.82) !important;
+    margin-top: 4px !important;
+    line-height: 1.4;
+    font-weight: 500;
+}
+
+#greetingBadge {
+    background: rgba(255,255,255,0.2) !important;
+    border: 1px solid rgba(255,255,255,0.25) !important;
+    border-radius: 50px !important;
+    padding: 7px 18px !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+    color: white !important;
+    white-space: nowrap !important;
+    backdrop-filter: blur(8px);
+    flex-shrink: 0;
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+}
+
+/* ══════════════════════════════════════════════════════
+   3. LIVE METRO STATUS STRIP — Redesigned as a premium bar
+   Fix: low contrast, too compact, blends with background
+   ══════════════════════════════════════════════════════ */
+.dash-metro-strip {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0 !important;
+    padding: 0 !important;
+    background: rgba(255,255,255,0.14) !important;
+    backdrop-filter: blur(20px) !important;
+    border-radius: 16px !important;
+    border: 1px solid rgba(255,255,255,0.22) !important;
+    margin-bottom: 24px !important;
+    flex-wrap: nowrap !important;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.15) !important;
+}
+
+.dash-metro-strip .strip-item {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    color: white !important;
+    padding: 14px 20px !important;
+    flex: 1;
+    justify-content: center;
+    position: relative;
+    transition: background 0.2s ease;
+    flex-direction: row;
+}
+
+.dash-metro-strip .strip-item > div:not(.status-dot) {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    line-height: 1.2;
+}
+
+.dash-metro-strip .strip-item:hover {
+    background: rgba(255,255,255,0.08);
+}
+
+.dash-metro-strip .strip-item .status-label {
+    font-size: 10px;
+    font-weight: 600;
+    opacity: 0.65;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.dash-metro-strip .strip-divider {
+    width: 1px !important;
+    height: 36px !important;
+    background: rgba(255,255,255,0.15) !important;
+    flex-shrink: 0;
+}
+
+.dash-metro-strip .status-dot {
+    width: 9px !important;
+    height: 9px !important;
+    border-radius: 50% !important;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 3px rgba(34,197,94,0.2);
+}
+
+/* Fix the "Updated just now" item */
+.dash-metro-strip .strip-item.ms-auto {
+    flex: 0 0 auto !important;
+    justify-content: flex-end;
+    gap: 6px !important;
+    padding-right: 20px !important;
+    font-size: 11px !important;
+    opacity: 0.6;
+    font-weight: 600 !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   4. DAILY TIP CARD — Enhanced with proper contrast
+   ══════════════════════════════════════════════════════ */
+.daily-tip-card {
+    background: rgba(255,255,255,0.95) !important;
+    border: none !important;
+    border-radius: 20px !important;
+    padding: 20px 24px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 18px !important;
+    margin-bottom: 24px !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08), 0 1px 0 rgba(255,255,255,0.8) !important;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.daily-tip-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    background: linear-gradient(180deg, #22c55e, #16a34a);
+    border-radius: 20px 0 0 20px;
+}
+
+.daily-tip-card:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 12px 40px rgba(34,197,94,0.18), 0 4px 20px rgba(0,0,0,0.08) !important;
+}
+
+.tip-icon {
+    width: 48px !important;
+    height: 48px !important;
+    border-radius: 14px !important;
+    background: linear-gradient(135deg, #22c55e, #16a34a) !important;
+    display: grid !important;
+    place-items: center !important;
+    color: white !important;
+    font-size: 20px !important;
+    flex-shrink: 0 !important;
+    box-shadow: 0 4px 16px rgba(34,197,94,0.35);
+}
+
+#dailyTipText {
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    color: #1e293b !important;
+    line-height: 1.55;
+}
+
+/* Dark mode daily tip */
+.dark-mode .daily-tip-card {
+    background: rgba(255,255,255,0.07) !important;
+    border: 1px solid rgba(34,197,94,0.2) !important;
+}
+
+.dark-mode #dailyTipText {
+    color: rgba(255,255,255,0.9) !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   5. ACHIEVEMENT BADGES ROW — Premium pill badges
+   Fix: white-on-purple blending, poor contrast
+   ══════════════════════════════════════════════════════ */
+.dash-badges-row {
+    display: flex !important;
+    gap: 10px !important;
+    flex-wrap: wrap !important;
+    margin-bottom: 28px !important;
+    align-items: center;
+}
+
+/* Section label before badges */
+.dash-badges-row::before {
+    content: '🏅 Achievements';
+    display: block;
+    width: 100%;
+    font-size: 11px;
+    font-weight: 800;
+    color: rgba(255,255,255,0.7);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+}
+
+.dash-badge {
+    display: flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+    padding: 9px 16px !important;
+    border-radius: 50px !important;
+    font-size: 12.5px !important;
+    font-weight: 700 !important;
+    backdrop-filter: blur(12px);
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    cursor: pointer;
+    text-shadow: none;
+    white-space: nowrap;
+}
+
+.dash-badge.earned {
+    background: rgba(255,255,255,0.95) !important;
+    border: 1.5px solid rgba(34,197,94,0.3) !important;
+    color: #1e293b !important;
+    box-shadow: 0 2px 12px rgba(34,197,94,0.15), 0 1px 4px rgba(0,0,0,0.05) !important;
+}
+
+.dash-badge.earned:hover {
+    transform: translateY(-3px) scale(1.04) !important;
+    box-shadow: 0 8px 24px rgba(34,197,94,0.25), 0 4px 10px rgba(0,0,0,0.08) !important;
+}
+
+.dash-badge.locked {
+    background: rgba(255,255,255,0.1) !important;
+    border: 1.5px solid rgba(255,255,255,0.15) !important;
+    color: rgba(255,255,255,0.5) !important;
+    opacity: 0.7 !important;
+    filter: none !important;
+}
+
+.dash-badge.locked:hover {
+    transform: translateY(-2px) !important;
+    background: rgba(255,255,255,0.15) !important;
+}
+
+/* Dark mode badges */
+.dark-mode .dash-badge.earned {
+    background: rgba(34,197,94,0.12) !important;
+    border-color: rgba(34,197,94,0.25) !important;
+    color: rgba(255,255,255,0.95) !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   6. STAT CARDS — Richer gradient backgrounds, bolder numbers
+   ══════════════════════════════════════════════════════ */
+.stat-card-modern {
+    border-radius: 22px !important;
+    padding: 24px 22px !important;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.1) !important;
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    border: 1px solid rgba(255,255,255,0.6) !important;
+}
+
+.stat-card-modern:hover {
+    transform: translateY(-8px) scale(1.02) !important;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.18) !important;
+}
+
+.stat-card-modern.gradient-1 {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white;
+    border: none !important;
+}
+.stat-card-modern.gradient-2 {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important;
+    color: white;
+    border: none !important;
+}
+.stat-card-modern.gradient-3 {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%) !important;
+    color: white;
+    border: none !important;
+}
+.stat-card-modern.gradient-4 {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important;
+    color: white;
+    border: none !important;
+}
+
+/* Override the broken gradient text on colored cards */
+.stat-card-modern.gradient-1 .stat-value,
+.stat-card-modern.gradient-2 .stat-value,
+.stat-card-modern.gradient-3 .stat-value,
+.stat-card-modern.gradient-4 .stat-value {
+    background: none !important;
+    -webkit-background-clip: unset !important;
+    background-clip: unset !important;
+    -webkit-text-fill-color: white !important;
+    color: white !important;
+    font-size: 2.1rem !important;
+    font-weight: 900 !important;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.stat-card-modern .stat-icon-box {
+    background: rgba(255,255,255,0.2) !important;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.25) !important;
+    width: 46px !important;
+    height: 46px !important;
+    border-radius: 14px !important;
+    font-size: 20px !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+}
+
+.stat-card-modern .text-white {
+    color: rgba(255,255,255,0.85) !important;
+    -webkit-text-fill-color: rgba(255,255,255,0.85) !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+}
+
+/* Fix % badge on colored cards */
+.stat-card-modern [style*="rgba(255,255,255,0.2)"] {
+    background: rgba(255,255,255,0.18) !important;
+    color: white !important;
+    border-radius: 8px !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   7. QUICK ACTIONS — Polished glass cards
+   ══════════════════════════════════════════════════════ */
+.glass-card {
+    background: rgba(255,255,255,0.96) !important;
+    backdrop-filter: blur(24px) !important;
+    border-radius: 24px !important;
+    padding: 28px !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.08), 0 1px 0 rgba(255,255,255,0.8) !important;
+    border: 1px solid rgba(255,255,255,0.5) !important;
+    transition: all 0.3s ease !important;
+}
+
+.glass-card:hover {
+    transform: translateY(-4px) !important;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.14) !important;
+}
+
+.dark-mode .glass-card {
+    background: rgba(30,20,50,0.85) !important;
+    border-color: rgba(255,255,255,0.1) !important;
+}
+
+.quick-action-btn {
+    border-radius: 20px !important;
+    padding: 22px 16px !important;
+    border: 2px solid rgba(102,126,234,0.12) !important;
+    background: linear-gradient(135deg, rgba(102,126,234,0.04), rgba(118,75,162,0.02)) !important;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    text-align: center !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.quick-action-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 0;
+}
+
+.quick-action-btn:hover::before {
+    opacity: 1;
+}
+
+.quick-action-btn:hover {
+    border-color: transparent !important;
+    color: white !important;
+    transform: translateY(-6px) scale(1.03) !important;
+    box-shadow: 0 16px 40px rgba(102,126,234,0.35) !important;
+}
+
+.quick-action-btn > * {
+    position: relative;
+    z-index: 1;
+}
+
+.quick-action-btn i {
+    font-size: 36px !important;
+    margin-bottom: 12px !important;
+    display: block;
+    transition: all 0.3s ease;
+}
+
+.quick-action-btn:hover i {
+    background: none !important;
+    -webkit-background-clip: unset !important;
+    -webkit-text-fill-color: white !important;
+    transform: scale(1.15);
+}
+
+/* ══════════════════════════════════════════════════════
+   8. SAVINGS / RANK / WEEKLY CARDS — Better spacing
+   ══════════════════════════════════════════════════════ */
+.savings-card {
+    border-radius: 22px !important;
+    padding: 28px !important;
+    box-shadow: 0 10px 36px rgba(102,126,234,0.35) !important;
+}
+
+.rank-card {
+    border-radius: 22px !important;
+    padding: 28px !important;
+    box-shadow: 0 10px 36px rgba(245,158,11,0.35) !important;
+}
+
+.rank-badge {
+    width: 68px !important;
+    height: 68px !important;
+    border-radius: 50% !important;
+    background: rgba(255,255,255,0.22) !important;
+    font-size: 32px !important;
+    border: 2px solid rgba(255,255,255,0.35) !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+/* ══════════════════════════════════════════════════════
+   9. NEXT TRAIN COUNTDOWN CARD — Bolder display
+   ══════════════════════════════════════════════════════ */
+#nextTrainTimerDisplay {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
+    border-radius: 18px !important;
+    padding: 16px 26px !important;
+    box-shadow: 0 6px 24px rgba(59,130,246,0.4) !important;
+}
+
+#nextTrainCountdown {
+    font-size: 36px !important;
+    font-weight: 900 !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   10. EMERGENCY STRIP — Subtle but clearly visible
+   ══════════════════════════════════════════════════════ */
+.dash-emergency-strip {
+    border-radius: 16px !important;
+    padding: 14px 22px !important;
+    background: rgba(255,255,255,0.92) !important;
+    border: 1.5px solid rgba(239,68,68,0.15) !important;
+    box-shadow: 0 2px 12px rgba(239,68,68,0.06) !important;
+}
+
+.dark-mode .dash-emergency-strip {
+    background: rgba(30,15,15,0.7) !important;
+    border-color: rgba(239,68,68,0.2) !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   11. SECTION HEADINGS INSIDE GLASS CARDS
+   ══════════════════════════════════════════════════════ */
+.glass-card h4,
+.glass-card h5 {
+    color: #1e293b !important;
+    font-weight: 800 !important;
+}
+
+.dark-mode .glass-card h4,
+.dark-mode .glass-card h5 {
+    color: white !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   12. SMART JOURNEY PLANNER WIDGET
+   ══════════════════════════════════════════════════════ */
+#planJourneyBtn {
+    border-radius: 16px !important;
+    padding: 15px !important;
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.3px;
+    box-shadow: 0 6px 24px rgba(102,126,234,0.4) !important;
+}
+
+.planner-step {
+    border-radius: 16px !important;
+    padding: 14px 18px !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   13. RESPONSIVE FIXES
+   ══════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+    #smartGreetingBanner {
+        flex-wrap: wrap !important;
+        padding: 18px 20px !important;
+        gap: 14px !important;
+    }
+
+    #greetingBadge {
+        width: 100%;
+        text-align: center;
+    }
+
+    .dash-metro-strip {
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+        padding: 12px 16px !important;
+    }
+
+    .dash-metro-strip .strip-item {
+        flex: 0 0 auto;
+        padding: 8px 14px !important;
+        font-size: 12px !important;
+    }
+
+    .dash-metro-strip .strip-divider {
+        display: none !important;
+    }
+
+    #dashGreeting {
+        font-size: 1.5rem !important;
+    }
+
+    .stat-card-modern {
+        padding: 20px !important;
+    }
+
+    .glass-card {
+        padding: 20px !important;
+        border-radius: 20px !important;
+    }
+
+    .dash-badges-row {
+        gap: 8px !important;
+    }
+
+    .dash-badge {
+        padding: 7px 13px !important;
+        font-size: 11.5px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    #dashGreeting {
+        font-size: 1.3rem !important;
+    }
+
+    .dash-metro-strip .strip-item {
+        font-size: 11px !important;
+        padding: 6px 10px !important;
+    }
+
+    .stat-card-modern.gradient-1 .stat-value,
+    .stat-card-modern.gradient-2 .stat-value,
+    .stat-card-modern.gradient-3 .stat-value,
+    .stat-card-modern.gradient-4 .stat-value {
+        font-size: 1.8rem !important;
+    }
+
+    #greetingIcon {
+        font-size: 28px !important;
+    }
+
+    #greetingTitle {
+        font-size: 15px !important;
+    }
+}
+
+/* ══════════════════════════════════════════════════════
+   14. SCROLL ANIMATION IMPROVEMENTS
+   ══════════════════════════════════════════════════════ */
+[data-aos="fade-up"] {
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   15. LOW BALANCE BANNER — Polished
+   ══════════════════════════════════════════════════════ */
+#lowBalanceWarning > div {
+    border-radius: 18px !important;
+    box-shadow: 0 6px 24px rgba(245,158,11,0.2) !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   16. GLASS CARD HEADER ICON BOXES
+   ══════════════════════════════════════════════════════ */
+.glass-card [style*="width:42px"] {
+    box-shadow: 0 4px 14px rgba(102,126,234,0.25) !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   17. NEXT TRAIN CARD — Cleaner look
+   ══════════════════════════════════════════════════════ */
+#nextTrainCard {
+    border-left: 4px solid #3b82f6 !important;
+    border-radius: 22px !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   18. WEEKLY BAR CHART — Improved bars
+   ══════════════════════════════════════════════════════ */
+.weekly-bar {
+    border-radius: 8px 8px 4px 4px !important;
+    min-height: 4px !important;
+}
+
+.weekly-bar-label {
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    color: #64748b !important;
+    margin-top: 6px !important;
+}
+
+.dark-mode .weekly-bar-label {
+    color: rgba(255,255,255,0.5) !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   19. ACHIEVEMENT GRID (full achievements section)
+   ══════════════════════════════════════════════════════ */
+.ach-scroll-row {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(102,126,234,0.3) transparent;
+}
+
+/* ══════════════════════════════════════════════════════
+   20. OVERALL PAGE BACKGROUND REFINEMENT
+   Adds subtle animated gradient depth
+   ══════════════════════════════════════════════════════ */
+body:not(.dark-mode) {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 40%, #8b5cf6 70%, #6d28d9 100%) !important;
+    background-attachment: fixed !important;
+}
