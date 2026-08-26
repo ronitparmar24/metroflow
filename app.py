@@ -237,9 +237,12 @@ def api_register():
         if not re.match(r'^[a-zA-Z0-9@_$]+$', username):
             return jsonify({'success': False, 'error': 'Username can only contain letters, numbers, @, _ and $'}), 400
         
-        # Password is already SHA-256 hashed by frontend (64 hex chars)
-        if not password or len(password) != 64:
-            return jsonify({'success': False, 'error': 'Invalid password format'}), 400
+        # Accept both plain-text passwords and pre-hashed SHA-256 passwords (64 hex chars)
+        if not password or len(password) < 6:
+            return jsonify({'success': False, 'error': 'Password must be at least 6 characters'}), 400
+        # If password is not already SHA-256 hashed, hash it server-side
+        if len(password) != 64:
+            password = hash_password(password)
         
         # Email validation (optional but validate format if provided)
         if email:
@@ -348,8 +351,11 @@ def api_login():
             _record_failed_attempt(ip)
             return jsonify({'success': False, 'error': 'Invalid credentials'}), 401
         
-        # Verify password (frontend sends SHA-256 hash directly)
-        if password != user['password']:
+        # Verify password — accept both plain-text and pre-hashed (SHA-256, 64 hex chars)
+        stored_password = user['password']
+        # If frontend sends plain text (not 64-char hex), hash it before comparing
+        password_to_check = password if len(password) == 64 else hash_password(password)
+        if password_to_check != stored_password:
             _record_failed_attempt(ip)
             return jsonify({'success': False, 'error': 'Invalid credentials'}), 401
         
@@ -560,16 +566,18 @@ def api_change_password():
         
         user = get_current_user()
         
-        # Verify old password
-        if not verify_password(old_password, user['password']):  # type: ignore
+        # Verify old password — handle both plain-text and pre-hashed passwords
+        stored_hash = user['password']  # type: ignore
+        old_hash_check = old_password if len(old_password) == 64 else hash_password(old_password)
+        if old_hash_check != stored_hash:
             return jsonify({'success': False, 'error': 'Old password incorrect'}), 400
         
-        # Check if new password is same as old
-        if verify_password(new_password, user['password']):  # type: ignore
-            return jsonify({'success': False, 'error': 'New password must be different'}), 400
+        # Hash new password if not already hashed
+        new_hash = new_password if len(new_password) == 64 else hash_password(new_password)
         
-        # Update password
-        new_hash = hash_password(new_password)
+        # Check if new password is same as old
+        if new_hash == stored_hash:
+            return jsonify({'success': False, 'error': 'New password must be different'}), 400
         if db.update_user_password(user['username'], new_hash):  # type: ignore
             return jsonify({
                 'success': True,
@@ -6705,6 +6713,144 @@ def api_commute_insights():
     except Exception as e:
         logger.error(f"Commute insights error: {e}")
         return jsonify({'success': True, 'insights': {}}), 200
+
+
+# ============================================================================
+# FEATURE: WEEKLY DIGEST
+# ============================================================================
+
+@app.route('/api/user/weekly-digest', methods=['GET'])
+@require_login
+def api_weekly_digest():
+    """Weekly digest — all stats scoped to the current week (last 7 days)."""
+    try:
+        user = get_current_user()
+        username = user['username']  # type: ignore
+        conn = db.get_db_connection()
+        cursor = conn.cursor(dictionary=True, buffered=True)
+
+        # ── Trips, spend, and km this week ────────────────────────────────
+        cursor.execute("""
+            SELECT
+                COUNT(*) AS trips,
+                COALESCE(SUM(fare), 0) AS total_spent,
+                COALESCE(SUM(distance), 0) AS total_km
+            FROM tickets
+            WHERE username = %s AND cancelled = FALSE
+              AND travelDate >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+              AND travelDate <= CURDATE()
+        """, (username,))
+        week = cast(Dict[str, Any], cursor.fetchone())
+        trips_this_week = int(week['trips'] or 0)
+        total_spent = round(float(week['total_spent'] or 0), 2)
+        total_km = round(float(week['total_km'] or 0), 1)
+        # CO2 saved in grams (120g/km car vs 30g/km metro => 90g/km saved)
+        co2_saved_g = round(total_km * 90)
+
+        # ── Last week for comparison ───────────────────────────────────────
+        cursor.execute("""
+            SELECT COUNT(*) AS trips
+            FROM tickets
+            WHERE username = %s AND cancelled = FALSE
+              AND travelDate >= DATE_SUB(CURDATE(), INTERVAL 14 DAY)
+              AND travelDate < DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+        """, (username,))
+        last_week_row = cast(Dict[str, Any], cursor.fetchone())
+        last_week_trips = int(last_week_row['trips'] or 0)
+        week_change = round(((trips_this_week - last_week_trips) / max(last_week_trips, 1)) * 100)
+
+        # ── Top route this week ────────────────────────────────────────────
+        cursor.execute("""
+            SELECT source, destination, COUNT(*) AS cnt
+            FROM tickets
+            WHERE username = %s AND cancelled = FALSE
+              AND travelDate >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+              AND travelDate <= CURDATE()
+            GROUP BY source, destination
+            ORDER BY cnt DESC
+            LIMIT 1
+        """, (username,))
+        top_route_row = cast(Dict[str, Any], cursor.fetchone())
+        top_route = None
+        if top_route_row:
+            src = top_route_row['source'].replace('_', ' ').title()
+            dst = top_route_row['destination'].replace('_', ' ').title()
+            top_route = {'source': src, 'destination': dst, 'count': int(top_route_row['cnt'])}
+
+        # ── Timing split this week ─────────────────────────────────────────
+        cursor.execute("""
+            SELECT
+                SUM(CASE WHEN travelTime IN ('08:00','09:00','10:00','11:00','17:00','18:00','19:00') THEN 1 ELSE 0 END) AS peak_trips,
+                SUM(CASE WHEN travelTime NOT IN ('08:00','09:00','10:00','11:00','17:00','18:00','19:00') THEN 1 ELSE 0 END) AS offpeak_trips
+            FROM tickets
+            WHERE username = %s AND cancelled = FALSE
+              AND travelDate >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+              AND travelDate <= CURDATE()
+        """, (username,))
+        timing = cast(Dict[str, Any], cursor.fetchone())
+        peak_trips = int(timing['peak_trips'] or 0) if timing else 0
+        offpeak_trips = int(timing['offpeak_trips'] or 0) if timing else 0
+
+        # ── Daily activity this week (for chart) ─────────────────────────
+        cursor.execute("""
+            SELECT travelDate AS day, COUNT(*) AS cnt, COALESCE(SUM(fare), 0) AS spent
+            FROM tickets
+            WHERE username = %s AND cancelled = FALSE
+              AND travelDate >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+              AND travelDate <= CURDATE()
+            GROUP BY travelDate
+            ORDER BY travelDate
+        """, (username,))
+        daily_rows = cast(List[Dict[str, Any]], cursor.fetchall())
+        daily = [{'day': str(r['day']), 'trips': int(r['cnt']), 'spent': round(float(r['spent']), 2)}
+                 for r in daily_rows]
+
+        cursor.close()
+        conn.close()
+
+        # ── AI insight text ────────────────────────────────────────────────
+        if trips_this_week == 0:
+            ai_insight = "No trips recorded this week \u2014 hop on the metro and start building your weekly streak!"
+        elif trips_this_week == 1:
+            ai_insight = f"You made 1 trip this week covering {total_km} km. Keep going to build your streak!"
+        elif week_change > 0:
+            ai_insight = (f"Great week! You took {trips_this_week} trips (+{week_change}% vs last week), "
+                          f"saving {co2_saved_g}g of CO\u2082. Keep it up!")
+        elif week_change < 0:
+            ai_insight = (f"You took {trips_this_week} trips this week ({week_change}% vs last week). "
+                          f"Still saved {co2_saved_g}g CO\u2082!")
+        else:
+            ai_insight = (f"Consistent week! {trips_this_week} trips, {total_km} km covered, "
+                          f"and {co2_saved_g}g CO\u2082 saved vs driving.")
+
+        return jsonify({
+            'success': True,
+            'digest': {
+                'tripsThisWeek': trips_this_week,
+                'totalSpent': total_spent,
+                'kmCovered': total_km,
+                'co2SavedG': co2_saved_g,
+                'lastWeekTrips': last_week_trips,
+                'weekChange': week_change,
+                'topRoute': top_route,
+                'peakTrips': peak_trips,
+                'offpeakTrips': offpeak_trips,
+                'dailyActivity': daily,
+                'aiInsight': ai_insight
+            }
+        }), 200
+
+    except Exception as e:
+        logger.error(f"Weekly digest error: {e}")
+        return jsonify({
+            'success': True,
+            'digest': {
+                'tripsThisWeek': 0, 'totalSpent': 0, 'kmCovered': 0, 'co2SavedG': 0,
+                'lastWeekTrips': 0, 'weekChange': 0, 'topRoute': None,
+                'peakTrips': 0, 'offpeakTrips': 0, 'dailyActivity': [],
+                'aiInsight': 'Unable to load weekly digest. Please try again.'
+            }
+        }), 200
 
 
 # ============================================================================
