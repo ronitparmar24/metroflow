@@ -6729,6 +6729,20 @@ def api_weekly_digest():
         conn = db.get_db_connection()
         cursor = conn.cursor(dictionary=True, buffered=True)
 
+        # ── Determine reference date (anchor to latest ticket for robust demo data) ──
+        cursor.execute("SELECT MAX(travelDate) AS max_date FROM tickets WHERE username = %s AND cancelled = FALSE", (username,))
+        max_row = cast(Dict[str, Any], cursor.fetchone())
+        
+        anchor_date = date.today()
+        if max_row and max_row.get('max_date'):
+            md = max_row['max_date']
+            if isinstance(md, str):
+                anchor_date = datetime.strptime(md, '%Y-%m-%d').date()
+            elif isinstance(md, datetime):
+                anchor_date = md.date()
+            else:
+                anchor_date = md  # assuming datetime.date
+
         # ── Trips, spend, and km this week ────────────────────────────────
         cursor.execute("""
             SELECT
@@ -6737,9 +6751,9 @@ def api_weekly_digest():
                 COALESCE(SUM(distance), 0) AS total_km
             FROM tickets
             WHERE username = %s AND cancelled = FALSE
-              AND travelDate >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
-              AND travelDate <= CURDATE()
-        """, (username,))
+              AND travelDate >= DATE_SUB(%s, INTERVAL 7 DAY)
+              AND travelDate <= %s
+        """, (username, anchor_date, anchor_date))
         week = cast(Dict[str, Any], cursor.fetchone())
         trips_this_week = int(week['trips'] or 0)
         total_spent = round(float(week['total_spent'] or 0), 2)
@@ -6752,9 +6766,9 @@ def api_weekly_digest():
             SELECT COUNT(*) AS trips
             FROM tickets
             WHERE username = %s AND cancelled = FALSE
-              AND travelDate >= DATE_SUB(CURDATE(), INTERVAL 14 DAY)
-              AND travelDate < DATE_SUB(CURDATE(), INTERVAL 7 DAY)
-        """, (username,))
+              AND travelDate >= DATE_SUB(%s, INTERVAL 14 DAY)
+              AND travelDate < DATE_SUB(%s, INTERVAL 7 DAY)
+        """, (username, anchor_date, anchor_date))
         last_week_row = cast(Dict[str, Any], cursor.fetchone())
         last_week_trips = int(last_week_row['trips'] or 0)
         week_change = round(((trips_this_week - last_week_trips) / max(last_week_trips, 1)) * 100)
@@ -6764,12 +6778,12 @@ def api_weekly_digest():
             SELECT source, destination, COUNT(*) AS cnt
             FROM tickets
             WHERE username = %s AND cancelled = FALSE
-              AND travelDate >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
-              AND travelDate <= CURDATE()
+              AND travelDate >= DATE_SUB(%s, INTERVAL 7 DAY)
+              AND travelDate <= %s
             GROUP BY source, destination
             ORDER BY cnt DESC
             LIMIT 1
-        """, (username,))
+        """, (username, anchor_date, anchor_date))
         top_route_row = cast(Dict[str, Any], cursor.fetchone())
         top_route = None
         if top_route_row:
@@ -6784,9 +6798,9 @@ def api_weekly_digest():
                 SUM(CASE WHEN travelTime NOT IN ('08:00','09:00','10:00','11:00','17:00','18:00','19:00') THEN 1 ELSE 0 END) AS offpeak_trips
             FROM tickets
             WHERE username = %s AND cancelled = FALSE
-              AND travelDate >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
-              AND travelDate <= CURDATE()
-        """, (username,))
+              AND travelDate >= DATE_SUB(%s, INTERVAL 7 DAY)
+              AND travelDate <= %s
+        """, (username, anchor_date, anchor_date))
         timing = cast(Dict[str, Any], cursor.fetchone())
         peak_trips = int(timing['peak_trips'] or 0) if timing else 0
         offpeak_trips = int(timing['offpeak_trips'] or 0) if timing else 0
@@ -6796,11 +6810,11 @@ def api_weekly_digest():
             SELECT travelDate AS day, COUNT(*) AS cnt, COALESCE(SUM(fare), 0) AS spent
             FROM tickets
             WHERE username = %s AND cancelled = FALSE
-              AND travelDate >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
-              AND travelDate <= CURDATE()
+              AND travelDate >= DATE_SUB(%s, INTERVAL 7 DAY)
+              AND travelDate <= %s
             GROUP BY travelDate
             ORDER BY travelDate
-        """, (username,))
+        """, (username, anchor_date, anchor_date))
         daily_rows = cast(List[Dict[str, Any]], cursor.fetchall())
         daily = [{'day': str(r['day']), 'trips': int(r['cnt']), 'spent': round(float(r['spent']), 2)}
                  for r in daily_rows]
