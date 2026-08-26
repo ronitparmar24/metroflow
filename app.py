@@ -6822,14 +6822,29 @@ def api_weekly_digest():
         cursor.close()
         conn.close()
 
-        # ── AI insight text ────────────────────────────────────────────────
+        # ── AI insight text & Mock Data for 0 Trips ────────────────────────
         if trips_this_week == 0:
             import random
+            trips_this_week = random.randint(5, 12)
+            total_spent = round(trips_this_week * random.uniform(30.0, 50.0), 2)
+            total_km = round(trips_this_week * random.uniform(5.0, 15.0), 1)
+            co2_saved_g = round(total_km * 90)
+            last_week_trips = trips_this_week - random.randint(-2, 3)
+            if last_week_trips < 0: last_week_trips = 0
+            week_change = round(((trips_this_week - last_week_trips) / max(last_week_trips, 1)) * 100)
+            
+            top_route = {'source': 'Thaltej', 'destination': 'Kalupur Railway Station', 'count': trips_this_week // 2}
+            peak_trips = int(trips_this_week * 0.7)
+            offpeak_trips = trips_this_week - peak_trips
+            
+            daily = [
+                {'day': str(date.today() - timedelta(days=2)), 'trips': peak_trips, 'spent': total_spent * 0.6},
+                {'day': str(date.today() - timedelta(days=1)), 'trips': offpeak_trips, 'spent': total_spent * 0.4}
+            ]
+            
             ai_insight = random.choice([
-                "No trips yet? The average MetroMind commuter saves ₹350 and 12kg of CO\u2082 weekly. Book your first trip and watch your stats come alive!",
-                "Your weekly canvas is blank! Jump on the metro today—it's 3x faster than peak traffic and much greener for our city.",
-                "Zero trips so far. Did you know a single metro ride cuts your carbon footprint by over 90% compared to a car? Let's get moving!",
-                "No commute data found for this week. Start a new streak today and we'll track your fuel savings and carbon reduction right here!"
+                f"✨ Welcome! Here's a preview of your potential Weekly Digest. Book your first trip to start tracking real stats!",
+                f"🌱 Your weekly canvas is ready! Once you start riding, we'll track your fuel savings and carbon reduction right here."
             ])
         elif trips_this_week == 1:
             ai_insight = f"You made 1 trip this week covering {total_km} km. Keep going to build your streak!"
