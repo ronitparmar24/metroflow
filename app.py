@@ -6824,7 +6824,13 @@ def api_weekly_digest():
 
         # ── AI insight text ────────────────────────────────────────────────
         if trips_this_week == 0:
-            ai_insight = "No trips recorded this week \u2014 hop on the metro and start building your weekly streak!"
+            import random
+            ai_insight = random.choice([
+                "No trips yet? The average MetroMind commuter saves ₹350 and 12kg of CO\u2082 weekly. Book your first trip and watch your stats come alive!",
+                "Your weekly canvas is blank! Jump on the metro today—it's 3x faster than peak traffic and much greener for our city.",
+                "Zero trips so far. Did you know a single metro ride cuts your carbon footprint by over 90% compared to a car? Let's get moving!",
+                "No commute data found for this week. Start a new streak today and we'll track your fuel savings and carbon reduction right here!"
+            ])
         elif trips_this_week == 1:
             ai_insight = f"You made 1 trip this week covering {total_km} km. Keep going to build your streak!"
         elif week_change > 0:
